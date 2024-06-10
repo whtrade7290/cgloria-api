@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root:0000@localhost:3306/cgloria_dev"
+}
+
+model User {
+  id    BigInt     @id @default(autoincrement())
+  username  String @unique
+  password  String
+  create_at DateTime @default(now())
+  update_at DateTime @default(now())  
+  role Role @default(USER)
+  deleted Boolean @default(false)
+}
+
+model sermons {
+  id    BigInt     @id @default(autoincrement())
+  title  String
+  writer  String
+  create_at DateTime @default(now())
+  update_at DateTime @default(now())
+  deleted Boolean @default(false)
+}
+
+model columns {
+  id    BigInt     @id @default(autoincrement())
+  title  String
+  writer  String
+  create_at DateTime @default(now())
+  update_at DateTime @default(now())
+  deleted Boolean @default(false)
+}
+
+model weekly_bible_verses {
+  id    BigInt     @id @default(autoincrement())
+  title  String
+  writer  String
+  create_at DateTime @default(now())
+  update_at DateTime @default(now())
+  deleted Boolean @default(false)
+}
+
+model class_meeting {
+  id    BigInt     @id @default(autoincrement())
+  title  String
+  writer  String
+  create_at DateTime @default(now())
+  update_at DateTime @default(now())
+  deleted Boolean @default(false)
+}
+
+model sunday_school_photo_gallery {
+  id    BigInt     @id @default(autoincrement())
+  title  String
+  writer  String
+  create_at DateTime @default(now())
+  update_at DateTime @default(now())
+  deleted Boolean @default(false)
+}
+
+model sunday_school_resources {
+  id    BigInt     @id @default(autoincrement())
+  title  String
+  writer  String
+  create_at DateTime @default(now())
+  update_at DateTime @default(now())
+  deleted Boolean @default(false)
+}
+
+model general_forum {
+  id    BigInt     @id @default(autoincrement())
+  title  String
+  writer  String
+  create_at DateTime @default(now())
+  update_at DateTime @default(now())
+  deleted Boolean @default(false)
+}
+
+model photo_gallery {
+  id    BigInt     @id @default(autoincrement())
+  title  String
+  writer  String
+  create_at DateTime @default(now())
+  update_at DateTime @default(now())
+  deleted Boolean @default(false)
+}
+
+model testimonies {
+  id    BigInt     @id @default(autoincrement())
+  title  String
+  writer  String
+  create_at DateTime @default(now())
+  update_at DateTime @default(now())
+  deleted Boolean @default(false)
+}
+
+enum Role {
+  ADMIN
+  DIARY
+  USER
+  GUEST
+}

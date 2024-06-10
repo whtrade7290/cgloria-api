@@ -1,0 +1,28 @@
+{
+  "name": "cgloria-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon --exec npm run restart",
+    "start": "node src/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.15.0",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "detect-port": "^1.6.1",
+    "express": "^4.19.2",
+    "faker": "^5.5.3",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "mysql": "^2.18.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.3"
+  }
+}
