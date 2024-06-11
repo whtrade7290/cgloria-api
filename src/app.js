@@ -5,15 +5,14 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import morgan from 'morgan';
 import bcrypt from 'bcrypt';
-import {PrismaClient} from '@prisma/client';
-
-// const { PrismaClient } = require('@prisma/client');
-
+import { newToken } from '../src/utils/auth.js'
+import {login} from '../src/services/userService.js';
+import {getSermonList} from '../src/services/boardService.js';
 
 
 
 const app = express();
-const prisma = new PrismaClient();
+
 
 
 
@@ -52,7 +51,8 @@ app.post('/signup', async (req, res) => {
       create_at: user.create_at,
       update_at: user.update_at,
       role: user.role,
-      deleted: user.deleted
+      deleted: user.deleted,
+      // token
     }
     res.json(obj);
   } catch (error) {
@@ -65,45 +65,50 @@ app.post('/signup', async (req, res) => {
 
 app.post('/login', async (req, res) => {
   const {username, password } = req.body
-
-  console.log("username", username);
-  console.log("password", password);
+  /**
+   * Todo: 세션이나 쿠키 처리 하기 user,token
+   */
   try {
-    const user = await prisma.user.findUnique({
-      where: { username },    });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    const user = await login(username, password);
+
+  if (!user || !(await bcrypt.compare(password, user.password))) {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
-    
-    res.json({ message: 'Login successful' });
 
-    const obj = {
+    const token = newToken(user);
+    console.log("Todo: 세션이나 쿠키 처리 하기 user,token");
+    console.log("user: ", user.username);
+    console.log("token: ", token);
+    
+    const logedUser = {
       id: parseInt(user.id), 
       username: user.username,
-      password: user.password,
       create_at: user.create_at,
       update_at: user.update_at,
       role: user.role,
-      deleted: user.deleted
+      deleted: user.deleted,
+      token: token
     }
-    res.json(obj);
+
+    res.status(200).json({
+        success: true,
+        message: 'Login Success',
+        user: logedUser
+    });
+    
   } catch (error) {
     console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Error fetching users' });
   }
+  
 });
 
 app.get('/sermon', (req, res) => {
-  connection.query(`SELECT * FROM sermon`, (error, results, fields) => {
-    if (error) {
-      console.error('Error fetching contacts: ', error);
-      res.status(500).json({ error: 'Error fetching contacts' });
-      return;
-    }
-    res.json(results);
-  });
+ const data =  getSermonList()
+
+ console.log("data: ", data);
 });
 
 app.get('/', (req, res) => {
@@ -113,3 +118,5 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
+
+
