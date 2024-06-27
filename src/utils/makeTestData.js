@@ -1,19 +1,21 @@
 import faker from 'faker';
+import { prisma } from "../utils/prismaClient.js";
 
 async function createTestData() {
   // User 모델에 대한 테스트 데이터 생성
-  for (let i = 0; i < 20; i++) {
-    await prisma.user.create({
-      data: {
-        username: faker.internet.userName(),
-        password: faker.internet.password(),
-        role: 'USER'
-      }
-    });
-  }
+  // for (let i = 0; i < 20; i++) {
+  //   await prisma.user.create({
+  //     data: {
+  //       username: faker.internet.userName(),
+  //       password: faker.internet.password(),
+  //       role: 'USER'
+  //     }
+  //   });
+  // }
 
   // 나머지 모델에 대한 테스트 데이터 생성
-  const models = ['sermons', 'columns', 'weekly_bible_verses', 'class_meeting', 'sunday_school_photo_gallery', 'sunday_school_resources', 'general_forum', 'photo_gallery', 'testimonies'];
+  // const models = ['sermons', 'columns', 'weekly_bible_verses', 'class_meeting', 'sunday_school_photo_gallery', 'sunday_school_resources', 'general_forum', 'photo_gallery', 'testimonies'];
+const models = ['notice'];
 
   for (const model of models) {
     for (let i = 0; i < 20; i++) {
