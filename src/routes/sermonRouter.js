@@ -1,5 +1,5 @@
 import express from 'express';
-import { getSermonList, totalSermonCount, getSermonContent } from '../services/sermonService.js';
+import { getSermonList, totalSermonCount, getSermonContent, writeSermonContent } from '../services/sermonService.js';
 
 const router = express.Router();
 
@@ -30,5 +30,17 @@ router.post('/sermon_detail', async (req, res) => {
   }
 });
 
+
+
+router.post('/sermon_write',  async (req, res) => {
+  const {title, content, writer} = req.body;
+  console.log("req.body: ", req);
+  try {
+   const result = await writeSermonContent(title, content, writer)
+  } catch (error) {
+    console.error('Error fetching sermon:', error);
+    res.status(500).json({ error: 'Error fetching sermon' });
+  }
+})
 
 export default router;

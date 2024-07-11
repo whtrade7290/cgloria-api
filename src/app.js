@@ -7,8 +7,9 @@ import morgan from 'morgan';
 import bcrypt from 'bcrypt';
 import { signIn, signUp } from '../src/services/userService.js';
 
-
-import makeTestData from '../src/utils/makeTestData.js';
+// 테스트 데이터 생성
+// import makeTestData from '../src/utils/makeTestData.js';
+// makeTestData
 
 import sermonRouter from './routes/sermonRouter.js';
 import columnRouter from './routes/columnRouter.js';
@@ -18,6 +19,7 @@ import libraryRouter from './routes/libraryRouter.js';
 import generalForumRouter from './routes/generalForumRouter.js';
 import testimonyRouter from './routes/testimonyRouter.js';
 import noticeRouter from './routes/noticeRouter.js';
+
 const app = express();
 
 // server setup
@@ -32,7 +34,6 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(morgan('dev')); 
-
 app.use(express.json())
 app.use('/sermon', sermonRouter)
 app.use('/column', columnRouter)
@@ -43,7 +44,6 @@ app.use('/generalForum', generalForumRouter)
 app.use('/testimony', testimonyRouter)
 app.use('/notice', noticeRouter)
 
-makeTestData
 app.post('/signUp', async (req, res) => {
   const { username, password } = req.body;
 

@@ -26,6 +26,7 @@ model User {
 model sermons {
   id    BigInt     @id @default(autoincrement())
   title  String
+  content String @db.Text
   writer  String
   create_at DateTime @default(now())
   update_at DateTime @default(now())

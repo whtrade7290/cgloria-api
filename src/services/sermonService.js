@@ -33,11 +33,23 @@ export async function getSermonContent(id) {
     return {
         id: Number(data.id),
         title: data.title,
+        content: data.content,
         writer: data.writer,
         create_at: data.create_at,
         update_at: data.update_at,
         deleted: data.deleted
     }
+}
+
+export async function writeSermonContent(title, content, writer) {
+    return await prisma.sermons.create({
+        data: {
+        title: title,
+        content: content,
+        writer: writer,
+    },
+})
+
 }
 
 
