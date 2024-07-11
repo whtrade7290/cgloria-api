@@ -28,6 +28,9 @@ model sermons {
   title  String
   content String @db.Text
   writer  String
+  filename String
+  extension String
+  fileDate String
   create_at DateTime @default(now())
   update_at DateTime @default(now())
   deleted Boolean @default(false)
