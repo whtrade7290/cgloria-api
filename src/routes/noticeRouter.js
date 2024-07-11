@@ -6,7 +6,7 @@ const router = express.Router();
 router.post('/notice', async (req, res) => {
   const {startRow, pageSize} = req.body
   const data = await getNoticeList(startRow, pageSize)
-  res.send(data);
+  res.send(data); 
 });
 
 router.get('/notice_count', async (req, res) => {
