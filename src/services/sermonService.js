@@ -45,9 +45,6 @@ export async function getSermonContent(id) {
 }
 
 export async function writeSermonContent({title, content, writer, filename, extension, fileDate }) {
-    console.log("filename: ", filename);
-  console.log("extension: ", extension);
-  console.log("fileDate: ", fileDate);
     return await prisma.sermons.create({
         data: {
         title: title,

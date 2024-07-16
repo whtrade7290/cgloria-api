@@ -5,6 +5,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import morgan from 'morgan';
 import bcrypt from 'bcrypt';
+import path from 'path';
 import { signIn, signUp } from '../src/services/userService.js';
 
 // 테스트 데이터 생성
@@ -43,6 +44,9 @@ app.use('/library', libraryRouter)
 app.use('/generalForum', generalForumRouter)
 app.use('/testimony', testimonyRouter)
 app.use('/notice', noticeRouter)
+
+app.use('/uploads', express.static(path.join("", 'uploads')));
+
 
 app.post('/signUp', async (req, res) => {
   const { username, password } = req.body;

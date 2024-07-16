@@ -1,5 +1,6 @@
 import express from 'express';
-import { getNoticeList, totalNoticeCount, getNoticeContent } from '../services/noticeService.js';
+import { getNoticeList, totalNoticeCount, getNoticeContent, writeNoticeContent } from '../services/noticeService.js';
+import  upload  from "../utils/multer.js";
 
 const router = express.Router();
 
@@ -30,5 +31,25 @@ router.post('/notice_detail', async (req, res) => {
   }
 });
 
+router.post('/notice_write',upload.single('fileField'),  async (req, res) => {
+   const {title, content, writer} = req.body;
+
+   const fileData = req.fileData || {}; 
+
+  try {
+    await writeNoticeContent({
+      title,
+      content,
+      writer,
+      extension: fileData.extension ?? '',
+      fileDate: fileData.date ?? '',
+      filename: fileData.filename ?? ''
+    });
+ 
+  } catch (error) {
+    console.error('Error fetching notice:', error);
+    res.status(500).json({ error: 'Error fetching notice' });
+  }
+})
 
 export default router;

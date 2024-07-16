@@ -1,5 +1,6 @@
 import express from 'express';
-import { getTestimonyList, totalTestimonyCount, getTestimonyContent } from '../services/testimonyService.js';
+import { getTestimonyList, totalTestimonyCount, getTestimonyContent, writeTestimonyContent } from '../services/testimonyService.js';
+import  upload  from "../utils/multer.js";
 
 const router = express.Router();
 
@@ -29,6 +30,26 @@ router.post('/testimony_detail', async (req, res) => {
     res.status(500).json({ error: 'Error fetching testimony' });
   }
 });
+
+router.post('/testimony_write',upload.single('fileField'),  async (req, res) => {
+  const {title, content, writer} = req.body;
+  const fileData = req.fileData || {}; 
+
+  try {
+    await writeTestimonyContent({
+      title,
+      content,
+      writer,
+      extension: fileData.extension ?? '',
+      fileDate: fileData.date ?? '',
+      filename: fileData.filename ?? ''
+    });
+
+  } catch (error) {
+    console.error('Error fetching:', error);
+    res.status(500).json({ error: 'Error fetching testimony' });
+  }
+})
 
 
 export default router;

@@ -33,10 +33,27 @@ export async function getColumnContent(id) {
     return {
         id: Number(data.id),
         title: data.title,
+        content: data.content,
         writer: data.writer,
+        filename: data.filename,
+        extension: data.extension,
+        fileDate: data.fileDate,
         create_at: data.create_at,
         update_at: data.update_at,
         deleted: data.deleted
     }
 }
 
+export async function writeColumnContent({title, content, writer, filename, extension, fileDate }) {
+    return await prisma.columns.create({
+        data: {
+        title: title,
+        content: content,
+        writer: writer,
+        filename: filename,
+        extension: extension,
+        fileDate: fileDate
+    },
+})
+
+}

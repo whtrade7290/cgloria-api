@@ -1,5 +1,6 @@
 import express from 'express';
-import { getGeneralForumList, totalGeneralForumCount, getGeneralForumContent } from '../services/generalForumService.js';
+import { getGeneralForumList, totalGeneralForumCount, getGeneralForumContent, writeGeneralForumContent } from '../services/generalForumService.js';
+import  upload  from "../utils/multer.js";
 
 const router = express.Router();
 
@@ -29,6 +30,26 @@ router.post('/generalForum_detail', async (req, res) => {
     res.status(500).json({ error: 'Error fetching generalForum' });
   }
 });
+
+router.post('/generalForum_write',upload.single('fileField'),  async (req, res) => {
+  const {title, content, writer} = req.body;
+  const fileData = req.fileData || {}; 
+
+  try {
+    await writeGeneralForumContent({
+      title,
+      content,
+      writer,
+      extension: fileData.extension ?? '',
+      fileDate: fileData.date ?? '',
+      filename: fileData.filename ?? ''
+    });
+
+  } catch (error) {
+    console.error('Error fetching:', error);
+    res.status(500).json({ error: 'Error fetching generalForum' });
+  }
+})
 
 
 export default router;

@@ -1,5 +1,6 @@
 import express from 'express';
-import { getClassMeetingList, totalClassMeetingCount, getClassMeetingContent } from '../services/classMeetingService.js';
+import { getClassMeetingList, totalClassMeetingCount, getClassMeetingContent, writeClassMeetingContent } from '../services/classMeetingService.js';
+import  upload  from "../utils/multer.js";
 
 const router = express.Router();
 
@@ -29,6 +30,28 @@ router.post('/classMeeting_detail', async (req, res) => {
     res.status(500).json({ error: 'Error fetching classMeeting' });
   }
 });
+
+router.post('/classMeeting_write',upload.single('fileField'),  async (req, res) => {
+   const {title, content, writer} = req.body;
+
+   const fileData = req.fileData || {}; 
+
+  try {
+    await writeClassMeetingContent({
+      title,
+      content,
+      writer,
+      extension: fileData.extension ?? '',
+      fileDate: fileData.date ?? '',
+      filename: fileData.filename ?? ''
+    });
+ 
+  } catch (error) {
+    console.error('Error fetching classMeeting:', error);
+    res.status(500).json({ error: 'Error fetching classMeeting' });
+  }
+})
+
 
 
 export default router;

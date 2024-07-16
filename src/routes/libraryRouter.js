@@ -1,5 +1,6 @@
 import express from 'express';
-import { getLibraryList, totalLibraryCount, getLibraryContent } from '../services/libraryService.js';
+import { getLibraryList, totalLibraryCount, getLibraryContent, writeLibraryContent } from '../services/libraryService.js';
+import  upload  from "../utils/multer.js";
 
 const router = express.Router();
 
@@ -29,6 +30,27 @@ router.post('/library_detail', async (req, res) => {
     res.status(500).json({ error: 'Error fetching library' });
   }
 });
+
+router.post('/library_write',upload.single('fileField'),  async (req, res) => {
+   const {title, content, writer} = req.body;
+
+   const fileData = req.fileData || {}; 
+
+  try {
+    await writeLibraryContent({
+      title,
+      content,
+      writer,
+      extension: fileData.extension ?? '',
+      fileDate: fileData.date ?? '',
+      filename: fileData.filename ?? ''
+    });
+ 
+  } catch (error) {
+    console.error('Error fetching library:', error);
+    res.status(500).json({ error: 'Error fetching library' });
+  }
+})
 
 
 export default router;

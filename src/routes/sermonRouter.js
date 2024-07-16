@@ -1,24 +1,6 @@
 import express from 'express';
 import { getSermonList, totalSermonCount, getSermonContent, writeSermonContent } from '../services/sermonService.js';
-import multer from 'multer';
-
-let filename = "";
-let extension = "";
-let date = "";
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/')
-  },
-  filename: function (req, file, cb) {
-    const match = file.originalname.match(/^([\w\d_-]*)\.?([\w\d]*)$/);
-     filename = match[1];
-     extension = '.' + match[2];
-     date = Date.now().toString();
-    cb(null, filename + '_' + date + extension)
-  }
-})
-
-const upload = multer({ storage: storage })
+import  upload  from "../utils/multer.js";
 
 const router = express.Router();
 
@@ -49,25 +31,22 @@ router.post('/sermon_detail', async (req, res) => {
   }
 });
 
-
-
-router.post('/sermon_write',upload.single('avatar'),  async (req, res) => {
-  console.log("filename: ", filename);
-  console.log("extension: ", extension);
-  console.log("date: ", date);
+router.post('/sermon_write',upload.single('fileField'),  async (req, res) => {
   const {title, content, writer} = req.body;
-  const obj = {
-    title: title,
-    content: content,
-    writer: writer,
-    filename: filename,
-    extension: extension,
-    fileDate: date
-  }
+  const fileData = req.fileData || {}; 
+
   try {
-   const result = await writeSermonContent(obj)
+    await writeSermonContent({
+      title,
+      content,
+      writer,
+      extension: fileData.extension ?? '',
+      fileDate: fileData.date ?? '',
+      filename: fileData.filename ?? ''
+    });
+
   } catch (error) {
-    console.error('Error fetching sermon:', error);
+    console.error('Error fetching:', error);
     res.status(500).json({ error: 'Error fetching sermon' });
   }
 })
