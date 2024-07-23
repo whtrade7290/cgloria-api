@@ -20,6 +20,7 @@ import libraryRouter from './routes/libraryRouter.js';
 import generalForumRouter from './routes/generalForumRouter.js';
 import testimonyRouter from './routes/testimonyRouter.js';
 import noticeRouter from './routes/noticeRouter.js';
+import withDiaryRouter from './routes/withDiaryRouter.js';
 
 const app = express();
 
@@ -44,6 +45,7 @@ app.use('/library', libraryRouter)
 app.use('/generalForum', generalForumRouter)
 app.use('/testimony', testimonyRouter)
 app.use('/notice', noticeRouter)
+app.use('/withDiary', withDiaryRouter)
 
 app.use('/uploads', express.static(path.join("", 'uploads')));
 
@@ -79,6 +81,8 @@ app.post('/signIn', async (req, res) => {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
+
+    console.log("user: ", user);
     
     const logedUser = {
       id: parseInt(user.id), 
@@ -87,6 +91,7 @@ app.post('/signIn', async (req, res) => {
       update_at: user.update_at,
       role: user.role,
       deleted: user.deleted,
+      withDiary: user.withDiary ?? 0
     }
 
     res.status(200).json({

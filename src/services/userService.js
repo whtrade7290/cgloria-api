@@ -1,6 +1,6 @@
 import { prisma } from "../utils/prismaClient.js";
 
-export async function signIn(username, password) {
+export async function signIn(username) {
     
     return await prisma.user.findUnique({
       where: { username },    });

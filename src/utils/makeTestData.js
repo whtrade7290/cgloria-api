@@ -15,14 +15,15 @@ async function createTestData() {
 
   // 나머지 모델에 대한 테스트 데이터 생성
   // const models = ['sermons', 'columns', 'weekly_bible_verses', 'class_meeting', 'sunday_school_photo_gallery', 'sunday_school_resources', 'general_forum', 'photo_gallery', 'testimonies'];
-const models = ['notice'];
+const models = ['withDiary'];
 
   for (const model of models) {
     for (let i = 0; i < 20; i++) {
       await prisma[model].create({
         data: {
           title: faker.lorem.words(),
-          writer: faker.name.findName()
+          writer: faker.name.findName(),
+          content: faker.lorem.words()
         }
       });
     }
