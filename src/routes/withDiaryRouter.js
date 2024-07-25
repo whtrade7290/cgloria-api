@@ -13,7 +13,6 @@ router.post('/withDiary', async (req, res) => {
 router.post('/withDiary_count', async (req, res) => {
   const {withDiary} = req.body
   const count = await totalWithDiaryCount(withDiary);
-  console.log("count: ", count);
   res.json(count);
 });
 

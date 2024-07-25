@@ -21,6 +21,8 @@ import generalForumRouter from './routes/generalForumRouter.js';
 import testimonyRouter from './routes/testimonyRouter.js';
 import noticeRouter from './routes/noticeRouter.js';
 import withDiaryRouter from './routes/withDiaryRouter.js';
+import photoRouter from './routes/photoRouter.js';
+
 
 const app = express();
 
@@ -46,6 +48,7 @@ app.use('/generalForum', generalForumRouter)
 app.use('/testimony', testimonyRouter)
 app.use('/notice', noticeRouter)
 app.use('/withDiary', withDiaryRouter)
+app.use('/photo', photoRouter)
 
 app.use('/uploads', express.static(path.join("", 'uploads')));
 
