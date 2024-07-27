@@ -22,6 +22,7 @@ import testimonyRouter from './routes/testimonyRouter.js';
 import noticeRouter from './routes/noticeRouter.js';
 import withDiaryRouter from './routes/withDiaryRouter.js';
 import photoRouter from './routes/photoRouter.js';
+import schoolPhotoRouter from './routes/schoolPhotoRouter.js';
 
 
 const app = express();
@@ -49,6 +50,7 @@ app.use('/testimony', testimonyRouter)
 app.use('/notice', noticeRouter)
 app.use('/withDiary', withDiaryRouter)
 app.use('/photo', photoRouter)
+app.use('/school_photo', schoolPhotoRouter)
 
 app.use('/uploads', express.static(path.join("", 'uploads')));
 
