@@ -37,9 +37,7 @@ export async function getPhotoContent(id) {
         title: data.title,
         content: data.content,
         writer: data.writer,
-        filename: data.filename,
-        extension: data.extension,
-        fileDate: data.fileDate,
+        files: data.files,
         create_at: data.create_at,
         update_at: data.update_at,
         deleted: data.deleted

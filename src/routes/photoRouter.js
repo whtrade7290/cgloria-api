@@ -35,10 +35,12 @@ router.post('/photo_detail', async (req, res) => {
 router.post('/photo_write',upload.array('fileField', 6),  async (req, res) => {
 
   const {title, content, writer} = req.body;
-  const fileData = req.fileData || {}; 
+ 
 
   const pathList = req.files.map(({filename}) => {
 
+    console.log("filename: ", filename);
+    
     // '_'로 먼저 분리
     const temporary = filename.split('_');
 
