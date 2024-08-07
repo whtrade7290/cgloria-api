@@ -3,7 +3,9 @@ import { prisma } from "../utils/prismaClient.js";
 export async function getGeneralForumList(startRow, pageSize) {
     
     const data = await prisma.general_forum.findMany({
-
+    where: {
+        deleted: false
+    },    
     orderBy: {
         id: 'desc',
     },
@@ -20,7 +22,11 @@ export async function getGeneralForumList(startRow, pageSize) {
 
 export async function totalGeneralForumCount() {
 
-    return await prisma.general_forum.count();
+    return await prisma.general_forum.count({
+    where: {
+        deleted: false
+    },    
+    });
     
 }
 
@@ -56,6 +62,18 @@ export async function writeGeneralForumContent({title, content, writer, filename
     },
 })
 
+}
+
+export async function logicalDeleteGeneralForum(id) {
+   return prisma.general_forum.update({
+        where: {
+            id: id
+        },
+        data: {
+            deleted: true
+        }
+    })
+    
 }
 
 

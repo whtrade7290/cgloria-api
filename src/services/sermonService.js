@@ -3,7 +3,9 @@ import { prisma } from "../utils/prismaClient.js";
 export async function getSermonList(startRow, pageSize) {
     
     const data = await prisma.sermons.findMany({
-
+    where: {
+        deleted: false
+    },
     orderBy: {
         id: 'desc',
     },
@@ -20,7 +22,11 @@ export async function getSermonList(startRow, pageSize) {
 
 export async function totalSermonCount() {
 
-    return await prisma.sermons.count();
+    return await prisma.sermons.count({
+    where: {
+        deleted: false
+    },
+    });
     
 }
 
@@ -55,7 +61,18 @@ export async function writeSermonContent({title, content, writer, filename, exte
         fileDate: fileDate
     },
 })
+}
 
+export async function logicalDeleteSermon(id) {
+   return prisma.sermons.update({
+        where: {
+            id: id
+        },
+        data: {
+            deleted: true
+        }
+    })
+    
 }
 
 

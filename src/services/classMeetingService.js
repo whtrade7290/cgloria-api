@@ -3,7 +3,9 @@ import { prisma } from "../utils/prismaClient.js";
 export async function getClassMeetingList(startRow, pageSize) {
     
     const data = await prisma.class_meeting.findMany({
-
+    where: {
+        deleted: false
+    },
     orderBy: {
         id: 'desc',
     },
@@ -20,7 +22,11 @@ export async function getClassMeetingList(startRow, pageSize) {
 
 export async function totalClassMeetingCount() {
 
-    return await prisma.class_meeting.count();
+    return await prisma.class_meeting.count({
+    where: {
+        deleted: false
+    },
+    });
     
 }
 
@@ -56,6 +62,18 @@ export async function writeClassMeetingContent({title, content, writer, filename
     },
 })
 
+}
+
+export async function logicalDeleteClassMeeting(id) {
+   return prisma.class_meeting.update({
+        where: {
+            id: id
+        },
+        data: {
+            deleted: true
+        }
+    })
+    
 }
 
 

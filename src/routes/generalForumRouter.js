@@ -1,5 +1,5 @@
 import express from 'express';
-import { getGeneralForumList, totalGeneralForumCount, getGeneralForumContent, writeGeneralForumContent } from '../services/generalForumService.js';
+import { getGeneralForumList, totalGeneralForumCount, getGeneralForumContent, writeGeneralForumContent, logicalDeleteGeneralForum } from '../services/generalForumService.js';
 import  upload  from "../utils/multer.js";
 
 const router = express.Router();
@@ -50,6 +50,21 @@ router.post('/generalForum_write',upload.single('fileField'),  async (req, res) 
     res.status(500).json({ error: 'Error fetching generalForum' });
   }
 })
+
+router.post('/generalForum_delete', async (req, res) => {
+  const {id} = req.body;
+  try {
+    const result = await logicalDeleteGeneralForum(id);
+    
+    if (!result) {
+      return res.status(404).json({ error: 'Sermon not found' });
+    }
+    res.json(!!result);
+  } catch (error) {
+    console.error('Error fetching sermon:', error);
+    res.status(500).json({ error: 'Error fetching sermon' });
+  }
+});
 
 
 export default router;

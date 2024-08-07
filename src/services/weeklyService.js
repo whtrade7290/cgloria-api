@@ -3,7 +3,9 @@ import { prisma } from "../utils/prismaClient.js";
 export async function getWeeklyList(startRow, pageSize) {
     
     const data = await prisma.weekly_bible_verses.findMany({
-
+    where: {
+        deleted: false
+    },
     orderBy: {
         id: 'desc',
     },
@@ -20,7 +22,11 @@ export async function getWeeklyList(startRow, pageSize) {
 
 export async function totalWeeklyCount() {
 
-    return await prisma.weekly_bible_verses.count();
+    return await prisma.weekly_bible_verses.count({
+    where: {
+        deleted: false
+    },
+    });
     
 }
 
@@ -56,5 +62,17 @@ export async function writeWeeklyContent({title, content, writer, filename, exte
     },
 })
 
+}
+
+export async function logicalDeleteWeekly(id) {
+   return prisma.weekly_bible_verses.update({
+        where: {
+            id: id
+        },
+        data: {
+            deleted: true
+        }
+    })
+    
 }
 

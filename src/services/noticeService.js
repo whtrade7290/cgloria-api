@@ -3,7 +3,9 @@ import { prisma } from "../utils/prismaClient.js";
 export async function getNoticeList(startRow, pageSize) {
     
     const data = await prisma.notice.findMany({
-
+    where: {
+        deleted: false
+    },
     orderBy: {
         id: 'desc',
     },
@@ -20,7 +22,11 @@ export async function getNoticeList(startRow, pageSize) {
 
 export async function totalNoticeCount() {
 
-    return await prisma.notice.count();
+    return await prisma.notice.count({
+    where: {
+        deleted: false
+    },
+    });
     
 }
 
@@ -56,6 +62,18 @@ export async function writeNoticeContent({title, content, writer, filename, exte
     },
 })
 
+}
+
+export async function logicalDeleteNotice(id) {
+   return prisma.notice.update({
+        where: {
+            id: id
+        },
+        data: {
+            deleted: true
+        }
+    })
+    
 }
 
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { getWeeklyList, totalWeeklyCount, getWeeklyContent, writeWeeklyContent } from '../services/weeklyService.js';
+import { getWeeklyList, totalWeeklyCount, getWeeklyContent, writeWeeklyContent,logicalDeleteWeekly } from '../services/weeklyService.js';
 import  upload  from "../utils/multer.js";
 
 const router = express.Router();
@@ -50,6 +50,21 @@ router.post('/weekly_write',upload.single('fileField'),  async (req, res) => {
     res.status(500).json({ error: 'Error fetching weekly' });
   }
 })
+
+router.post('/weekly_delete', async (req, res) => {
+  const {id} = req.body;
+  try {
+    const result = await logicalDeleteWeekly(id);
+    
+    if (!result) {
+      return res.status(404).json({ error: 'Weekly not found' });
+    }
+    res.json(!!result);
+  } catch (error) {
+    console.error('Error fetching Weekly:', error);
+    res.status(500).json({ error: 'Error fetching Weekly' });
+  }
+});
 
 
 export default router;

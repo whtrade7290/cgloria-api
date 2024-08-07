@@ -1,5 +1,5 @@
 import express from 'express';
-import { getSermonList, totalSermonCount, getSermonContent, writeSermonContent } from '../services/sermonService.js';
+import { getSermonList, totalSermonCount, getSermonContent, writeSermonContent, logicalDeleteSermon } from '../services/sermonService.js';
 import  upload  from "../utils/multer.js";
 
 const router = express.Router();
@@ -50,5 +50,20 @@ router.post('/sermon_write',upload.single('fileField'),  async (req, res) => {
     res.status(500).json({ error: 'Error fetching sermon' });
   }
 })
+
+router.post('/sermon_delete', async (req, res) => {
+  const {id} = req.body;
+  try {
+    const result = await logicalDeleteSermon(id);
+    
+    if (!result) {
+      return res.status(404).json({ error: 'Sermon not found' });
+    }
+    res.json(!!result);
+  } catch (error) {
+    console.error('Error fetching sermon:', error);
+    res.status(500).json({ error: 'Error fetching sermon' });
+  }
+});
 
 export default router;

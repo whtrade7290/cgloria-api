@@ -3,7 +3,9 @@ import { prisma } from "../utils/prismaClient.js";
 export async function getTestimonyList(startRow, pageSize) {
     
     const data = await prisma.testimonies.findMany({
-
+    where: {
+        deleted: false
+    },
     orderBy: {
         id: 'desc',
     },
@@ -20,7 +22,11 @@ export async function getTestimonyList(startRow, pageSize) {
 
 export async function totalTestimonyCount() {
 
-    return await prisma.testimonies.count();
+    return await prisma.testimonies.count({
+    where: {
+        deleted: false
+    },        
+    });
     
 }
 
@@ -56,6 +62,18 @@ export async function writeTestimonyContent({title, content, writer, filename, e
     },
 })
 
+}
+
+export async function logicalDeleteTestimony(id) {
+   return prisma.testimonies.update({
+        where: {
+            id: id
+        },
+        data: {
+            deleted: true
+        }
+    })
+    
 }
 
 

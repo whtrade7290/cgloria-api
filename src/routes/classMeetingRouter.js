@@ -1,5 +1,5 @@
 import express from 'express';
-import { getClassMeetingList, totalClassMeetingCount, getClassMeetingContent, writeClassMeetingContent } from '../services/classMeetingService.js';
+import { getClassMeetingList, totalClassMeetingCount, getClassMeetingContent, writeClassMeetingContent, logicalDeleteClassMeeting } from '../services/classMeetingService.js';
 import  upload  from "../utils/multer.js";
 
 const router = express.Router();
@@ -51,6 +51,21 @@ router.post('/classMeeting_write',upload.single('fileField'),  async (req, res) 
     res.status(500).json({ error: 'Error fetching classMeeting' });
   }
 })
+
+router.post('/classMeeting_delete', async (req, res) => {
+  const {id} = req.body;
+  try {
+    const result = await logicalDeleteClassMeeting(id);
+    
+    if (!result) {
+      return res.status(404).json({ error: 'ClassMeeting not found' });
+    }
+    res.json(!!result);
+  } catch (error) {
+    console.error('Error fetching ClassMeeting:', error);
+    res.status(500).json({ error: 'Error fetching ClassMeeting' });
+  }
+});
 
 
 

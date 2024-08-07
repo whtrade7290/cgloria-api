@@ -3,7 +3,9 @@ import { prisma } from "../utils/prismaClient.js";
 export async function getColumnList(startRow, pageSize) {
     
     const data = await prisma.columns.findMany({
-
+    where: {
+        deleted: false
+    },  
     orderBy: {
         id: 'desc',
     },
@@ -20,7 +22,11 @@ export async function getColumnList(startRow, pageSize) {
 
 export async function totalColumnCount() {
 
-    return await prisma.columns.count();
+    return await prisma.columns.count({
+    where: {
+        deleted: false
+    },
+    });
     
 }
 
@@ -56,4 +62,16 @@ export async function writeColumnContent({title, content, writer, filename, exte
     },
 })
 
+}
+
+export async function logicalDeleteColumn(id) {
+   return prisma.columns.update({
+        where: {
+            id: id
+        },
+        data: {
+            deleted: true
+        }
+    })
+    
 }
