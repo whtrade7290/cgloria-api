@@ -1,39 +1,44 @@
-import express from 'express';
-import { getTestimonyList, totalTestimonyCount, getTestimonyContent, writeTestimonyContent, logicalDeleteTestimony } from '../services/testimonyService.js';
-import  upload  from "../utils/multer.js";
+import express from 'express'
+import {
+  getTestimonyList,
+  totalTestimonyCount,
+  getTestimonyContent,
+  writeTestimonyContent,
+  logicalDeleteTestimony
+} from '../services/testimonyService.js'
+import upload from '../utils/multer.js'
 
-const router = express.Router();
+const router = express.Router()
 
 router.post('/testimony', async (req, res) => {
-  const {startRow, pageSize} = req.body
+  const { startRow, pageSize } = req.body
   const data = await getTestimonyList(startRow, pageSize)
-  res.send(data);
-});
+  res.send(data)
+})
 
 router.get('/testimony_count', async (req, res) => {
-  const count = await totalTestimonyCount();
-  res.json(count);
-});
+  const count = await totalTestimonyCount()
+  res.json(count)
+})
 
 router.post('/testimony_detail', async (req, res) => {
-  const {id} = req.body;
+  const { id } = req.body
   try {
-    const content = await getTestimonyContent(id);
+    const content = await getTestimonyContent(id)
     if (!content) {
-      return res.status(404).json({ error: 'testimony not found' });
+      return res.status(404).json({ error: 'testimony not found' })
     }
-    console.log(content);
-    res.json(content);
-
+    console.log(content)
+    res.json(content)
   } catch (error) {
-    console.error('Error fetching testimony:', error);
-    res.status(500).json({ error: 'Error fetching testimony' });
+    console.error('Error fetching testimony:', error)
+    res.status(500).json({ error: 'Error fetching testimony' })
   }
-});
+})
 
-router.post('/testimony_write',upload.single('fileField'),  async (req, res) => {
-  const {title, content, writer} = req.body;
-  const fileData = req.fileData || {}; 
+router.post('/testimony_write', upload.single('fileField'), async (req, res) => {
+  const { title, content, writer } = req.body
+  const fileData = req.fileData || {}
 
   try {
     await writeTestimonyContent({
@@ -43,28 +48,26 @@ router.post('/testimony_write',upload.single('fileField'),  async (req, res) => 
       extension: fileData.extension ?? '',
       fileDate: fileData.date ?? '',
       filename: fileData.filename ?? ''
-    });
-
+    })
   } catch (error) {
-    console.error('Error fetching:', error);
-    res.status(500).json({ error: 'Error fetching testimony' });
+    console.error('Error fetching:', error)
+    res.status(500).json({ error: 'Error fetching testimony' })
   }
 })
 
 router.post('/testimony_delete', async (req, res) => {
-  const {id} = req.body;
+  const { id } = req.body
   try {
-    const result = await logicalDeleteTestimony(id);
-    
+    const result = await logicalDeleteTestimony(id)
+
     if (!result) {
-      return res.status(404).json({ error: 'Testimony not found' });
+      return res.status(404).json({ error: 'Testimony not found' })
     }
-    res.json(!!result);
+    res.json(!!result)
   } catch (error) {
-    console.error('Error fetching Testimony:', error);
-    res.status(500).json({ error: 'Error fetching Testimony' });
+    console.error('Error fetching Testimony:', error)
+    res.status(500).json({ error: 'Error fetching Testimony' })
   }
-});
+})
 
-
-export default router;
+export default router

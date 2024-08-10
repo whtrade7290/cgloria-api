@@ -1,40 +1,45 @@
-import express from 'express';
-import { getClassMeetingList, totalClassMeetingCount, getClassMeetingContent, writeClassMeetingContent, logicalDeleteClassMeeting } from '../services/classMeetingService.js';
-import  upload  from "../utils/multer.js";
+import express from 'express'
+import {
+  getClassMeetingList,
+  totalClassMeetingCount,
+  getClassMeetingContent,
+  writeClassMeetingContent,
+  logicalDeleteClassMeeting
+} from '../services/classMeetingService.js'
+import upload from '../utils/multer.js'
 
-const router = express.Router();
+const router = express.Router()
 
 router.post('/classMeeting', async (req, res) => {
-  const {startRow, pageSize} = req.body
+  const { startRow, pageSize } = req.body
   const data = await getClassMeetingList(startRow, pageSize)
-  res.send(data);
-});
+  res.send(data)
+})
 
 router.get('/classMeeting_count', async (req, res) => {
-  const count = await totalClassMeetingCount();
-  res.json(count);
-});
+  const count = await totalClassMeetingCount()
+  res.json(count)
+})
 
 router.post('/classMeeting_detail', async (req, res) => {
-  const {id} = req.body;
+  const { id } = req.body
   try {
-    const content = await getClassMeetingContent(id);
+    const content = await getClassMeetingContent(id)
     if (!content) {
-      return res.status(404).json({ error: 'classMeeting not found' });
+      return res.status(404).json({ error: 'classMeeting not found' })
     }
-    console.log(content);
-    res.json(content);
-
+    console.log(content)
+    res.json(content)
   } catch (error) {
-    console.error('Error fetching classMeeting:', error);
-    res.status(500).json({ error: 'Error fetching classMeeting' });
+    console.error('Error fetching classMeeting:', error)
+    res.status(500).json({ error: 'Error fetching classMeeting' })
   }
-});
+})
 
-router.post('/classMeeting_write',upload.single('fileField'),  async (req, res) => {
-   const {title, content, writer} = req.body;
+router.post('/classMeeting_write', upload.single('fileField'), async (req, res) => {
+  const { title, content, writer } = req.body
 
-   const fileData = req.fileData || {}; 
+  const fileData = req.fileData || {}
 
   try {
     await writeClassMeetingContent({
@@ -44,29 +49,26 @@ router.post('/classMeeting_write',upload.single('fileField'),  async (req, res) 
       extension: fileData.extension ?? '',
       fileDate: fileData.date ?? '',
       filename: fileData.filename ?? ''
-    });
- 
+    })
   } catch (error) {
-    console.error('Error fetching classMeeting:', error);
-    res.status(500).json({ error: 'Error fetching classMeeting' });
+    console.error('Error fetching classMeeting:', error)
+    res.status(500).json({ error: 'Error fetching classMeeting' })
   }
 })
 
 router.post('/classMeeting_delete', async (req, res) => {
-  const {id} = req.body;
+  const { id } = req.body
   try {
-    const result = await logicalDeleteClassMeeting(id);
-    
+    const result = await logicalDeleteClassMeeting(id)
+
     if (!result) {
-      return res.status(404).json({ error: 'ClassMeeting not found' });
+      return res.status(404).json({ error: 'ClassMeeting not found' })
     }
-    res.json(!!result);
+    res.json(!!result)
   } catch (error) {
-    console.error('Error fetching ClassMeeting:', error);
-    res.status(500).json({ error: 'Error fetching ClassMeeting' });
+    console.error('Error fetching ClassMeeting:', error)
+    res.status(500).json({ error: 'Error fetching ClassMeeting' })
   }
-});
+})
 
-
-
-export default router;
+export default router
