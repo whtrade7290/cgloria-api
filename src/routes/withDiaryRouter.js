@@ -3,7 +3,9 @@ import {
   getWithDiaryList,
   totalWithDiaryCount,
   writeWithDiaryContent,
-  getWithDiaryContent
+  getWithDiaryContent,
+  logicalDeleteWithDiary,
+  editWithDiaryContent
 } from '../services/withDiaryService.js'
 import upload from '../utils/multer.js'
 
@@ -40,7 +42,6 @@ router.post('/withDiary_write', upload.single('fileField'), async (req, res) => 
   const { title, content, writer, withDiaryNum } = req.body
   const fileData = req.fileData || {}
 
-  console.log('withDiaryNum: ', withDiaryNum)
   try {
     await writeWithDiaryContent({
       title,
@@ -51,6 +52,52 @@ router.post('/withDiary_write', upload.single('fileField'), async (req, res) => 
       filename: fileData.filename ?? '',
       withDiaryNum: Number(withDiaryNum)
     })
+  } catch (error) {
+    console.error('Error fetching:', error)
+    res.status(500).json({ error: 'Error fetching WithDiary' })
+  }
+})
+
+router.post('/withDiary_delete', async (req, res) => {
+  const { id } = req.body
+  try {
+    const result = await logicalDeleteWithDiary(id)
+
+    if (!result) {
+      return res.status(404).json({ error: 'WithDiary not found' })
+    }
+    res.json(!!result)
+  } catch (error) {
+    console.error('Error fetching WithDiary:', error)
+    res.status(500).json({ error: 'Error fetching WithDiary' })
+  }
+})
+
+router.post('/withDiary_edit', upload.single('fileField'), async (req, res) => {
+  const { title, content, id } = req.body
+  const fileData = req.fileData || {}
+
+  const data = {
+    id,
+    title,
+    content
+  }
+
+  if (fileData) {
+    Object.assign(data, {
+      extension: fileData.extension ?? '',
+      fileDate: fileData.date ?? '',
+      filename: fileData.filename ?? ''
+    })
+  }
+
+  try {
+    const result = await editWithDiaryContent(data)
+
+    if (!result) {
+      return res.status(404).json({ error: 'WithDiary not found' })
+    }
+    res.json(!!result)
   } catch (error) {
     console.error('Error fetching:', error)
     res.status(500).json({ error: 'Error fetching WithDiary' })

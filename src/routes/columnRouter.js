@@ -4,7 +4,8 @@ import {
   totalColumnCount,
   getColumnContent,
   writeColumnContent,
-  logicalDeleteColumn
+  logicalDeleteColumn,
+  editColumnContent
 } from '../services/columnService.js'
 import upload from '../utils/multer.js'
 
@@ -68,6 +69,37 @@ router.post('/column_delete', async (req, res) => {
   } catch (error) {
     console.error('Error fetching Column:', error)
     res.status(500).json({ error: 'Error fetching Column' })
+  }
+})
+
+router.post('/column_edit', upload.single('fileField'), async (req, res) => {
+  const { title, content, id } = req.body
+  const fileData = req.fileData || {}
+
+  const data = {
+    id,
+    title,
+    content
+  }
+
+  if (fileData) {
+    Object.assign(data, {
+      extension: fileData.extension ?? '',
+      fileDate: fileData.date ?? '',
+      filename: fileData.filename ?? ''
+    })
+  }
+
+  try {
+    const result = await editColumnContent(data)
+
+    if (!result) {
+      return res.status(404).json({ error: 'column not found' })
+    }
+    res.json(!!result)
+  } catch (error) {
+    console.error('Error fetching:', error)
+    res.status(500).json({ error: 'Error fetching column' })
   }
 })
 

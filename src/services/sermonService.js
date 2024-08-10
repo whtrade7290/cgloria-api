@@ -92,7 +92,6 @@ export function editSermonContent({ id, title, content, extension, fileDate, fil
       }
     })
   } else {
-    console.log('excute2')
     return prisma.sermons.update({
       where: {
         id: id

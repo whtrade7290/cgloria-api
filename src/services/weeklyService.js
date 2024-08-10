@@ -75,3 +75,32 @@ export async function logicalDeleteWeekly(id) {
     }
   })
 }
+
+export function editWeeklyContent({ id, title, content, extension, fileDate, filename }) {
+  if (extension !== '' && fileDate !== '' && filename !== '') {
+    return prisma.weekly_bible_verses.update({
+      where: {
+        id: id
+      },
+      data: {
+        title: title,
+        content: content,
+        update_at: new Date(),
+        extension: extension,
+        fileDate: fileDate,
+        filename: filename
+      }
+    })
+  } else {
+    return prisma.weekly_bible_verses.update({
+      where: {
+        id: id
+      },
+      data: {
+        title: title,
+        content: content,
+        update_at: new Date()
+      }
+    })
+  }
+}

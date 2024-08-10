@@ -4,7 +4,8 @@ import {
   totalTestimonyCount,
   getTestimonyContent,
   writeTestimonyContent,
-  logicalDeleteTestimony
+  logicalDeleteTestimony,
+  editTestimonyContent
 } from '../services/testimonyService.js'
 import upload from '../utils/multer.js'
 
@@ -66,6 +67,37 @@ router.post('/testimony_delete', async (req, res) => {
     res.json(!!result)
   } catch (error) {
     console.error('Error fetching Testimony:', error)
+    res.status(500).json({ error: 'Error fetching Testimony' })
+  }
+})
+
+router.post('/testimony_edit', upload.single('fileField'), async (req, res) => {
+  const { title, content, id } = req.body
+  const fileData = req.fileData || {}
+
+  const data = {
+    id,
+    title,
+    content
+  }
+
+  if (fileData) {
+    Object.assign(data, {
+      extension: fileData.extension ?? '',
+      fileDate: fileData.date ?? '',
+      filename: fileData.filename ?? ''
+    })
+  }
+
+  try {
+    const result = await editTestimonyContent(data)
+
+    if (!result) {
+      return res.status(404).json({ error: 'Testimony not found' })
+    }
+    res.json(!!result)
+  } catch (error) {
+    console.error('Error fetching:', error)
     res.status(500).json({ error: 'Error fetching Testimony' })
   }
 })

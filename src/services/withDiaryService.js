@@ -3,7 +3,8 @@ import { prisma } from '../utils/prismaClient.js'
 export async function getWithDiaryList(startRow, pageSize, withDiary) {
   const data = await prisma.withDiary.findMany({
     where: {
-      withDiaryNum: withDiary
+      withDiaryNum: withDiary,
+      deleted: false
     },
     orderBy: {
       id: 'desc'
@@ -22,7 +23,8 @@ export async function totalWithDiaryCount(withDiary) {
   console.log('withDiary: ', withDiary)
   return await prisma.withDiary.count({
     where: {
-      withDiaryNum: withDiary
+      withDiaryNum: withDiary,
+      deleted: false
     }
   })
 }
@@ -55,7 +57,7 @@ export async function writeWithDiaryContent({
   fileDate,
   withDiaryNum
 }) {
-  console.log('exrute2')
+
   return await prisma.withDiary.create({
     data: {
       title: title,
@@ -67,4 +69,44 @@ export async function writeWithDiaryContent({
       withDiaryNum: withDiaryNum
     }
   })
+}
+
+export async function logicalDeleteWithDiary(id) {
+  return prisma.withDiary.update({
+    where: {
+      id: id
+    },
+    data: {
+      deleted: true
+    }
+  })
+}
+
+export function editWithDiaryContent({ id, title, content, extension, fileDate, filename }) {
+  if (extension !== '' && fileDate !== '' && filename !== '') {
+    return prisma.withDiary.update({
+      where: {
+        id: id
+      },
+      data: {
+        title: title,
+        content: content,
+        update_at: new Date(),
+        extension: extension,
+        fileDate: fileDate,
+        filename: filename
+      }
+    })
+  } else {
+    return prisma.withDiary.update({
+      where: {
+        id: id
+      },
+      data: {
+        title: title,
+        content: content,
+        update_at: new Date()
+      }
+    })
+  }
 }

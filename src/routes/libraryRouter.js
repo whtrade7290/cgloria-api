@@ -3,7 +3,8 @@ import {
   getLibraryList,
   totalLibraryCount,
   getLibraryContent,
-  writeLibraryContent
+  writeLibraryContent,
+  editLibraryContent
 } from '../services/libraryService.js'
 import upload from '../utils/multer.js'
 
@@ -51,6 +52,37 @@ router.post('/library_write', upload.single('fileField'), async (req, res) => {
     })
   } catch (error) {
     console.error('Error fetching library:', error)
+    res.status(500).json({ error: 'Error fetching library' })
+  }
+})
+
+router.post('/library_edit', upload.single('fileField'), async (req, res) => {
+  const { title, content, id } = req.body
+  const fileData = req.fileData || {}
+
+  const data = {
+    id,
+    title,
+    content
+  }
+
+  if (fileData) {
+    Object.assign(data, {
+      extension: fileData.extension ?? '',
+      fileDate: fileData.date ?? '',
+      filename: fileData.filename ?? ''
+    })
+  }
+
+  try {
+    const result = await editLibraryContent(data)
+
+    if (!result) {
+      return res.status(404).json({ error: 'library not found' })
+    }
+    res.json(!!result)
+  } catch (error) {
+    console.error('Error fetching:', error)
     res.status(500).json({ error: 'Error fetching library' })
   }
 })

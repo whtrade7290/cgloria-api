@@ -4,7 +4,8 @@ import {
   totalGeneralForumCount,
   getGeneralForumContent,
   writeGeneralForumContent,
-  logicalDeleteGeneralForum
+  logicalDeleteGeneralForum,
+  editGeneralForumContent
 } from '../services/generalForumService.js'
 import upload from '../utils/multer.js'
 
@@ -61,12 +62,43 @@ router.post('/generalForum_delete', async (req, res) => {
     const result = await logicalDeleteGeneralForum(id)
 
     if (!result) {
-      return res.status(404).json({ error: 'Sermon not found' })
+      return res.status(404).json({ error: 'generalForum not found' })
     }
     res.json(!!result)
   } catch (error) {
     console.error('Error fetching sermon:', error)
-    res.status(500).json({ error: 'Error fetching sermon' })
+    res.status(500).json({ error: 'Error fetching generalForum' })
+  }
+})
+
+router.post('/generalForum_edit', upload.single('fileField'), async (req, res) => {
+  const { title, content, id } = req.body
+  const fileData = req.fileData || {}
+
+  const data = {
+    id,
+    title,
+    content
+  }
+
+  if (fileData) {
+    Object.assign(data, {
+      extension: fileData.extension ?? '',
+      fileDate: fileData.date ?? '',
+      filename: fileData.filename ?? ''
+    })
+  }
+
+  try {
+    const result = await editGeneralForumContent(data)
+
+    if (!result) {
+      return res.status(404).json({ error: 'generalForum not found' })
+    }
+    res.json(!!result)
+  } catch (error) {
+    console.error('Error fetching:', error)
+    res.status(500).json({ error: 'Error fetching generalForum' })
   }
 })
 

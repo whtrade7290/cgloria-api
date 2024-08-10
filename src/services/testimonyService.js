@@ -75,3 +75,32 @@ export async function logicalDeleteTestimony(id) {
     }
   })
 }
+
+export function editTestimonyContent({ id, title, content, extension, fileDate, filename }) {
+  if (extension !== '' && fileDate !== '' && filename !== '') {
+    return prisma.testimonies.update({
+      where: {
+        id: id
+      },
+      data: {
+        title: title,
+        content: content,
+        update_at: new Date(),
+        extension: extension,
+        fileDate: fileDate,
+        filename: filename
+      }
+    })
+  } else {
+    return prisma.testimonies.update({
+      where: {
+        id: id
+      },
+      data: {
+        title: title,
+        content: content,
+        update_at: new Date()
+      }
+    })
+  }
+}

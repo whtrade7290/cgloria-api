@@ -75,3 +75,32 @@ export async function logicalDeleteClassMeeting(id) {
     }
   })
 }
+
+export function editClassMeetingContent({ id, title, content, extension, fileDate, filename }) {
+  if (extension !== '' && fileDate !== '' && filename !== '') {
+    return prisma.class_meeting.update({
+      where: {
+        id: id
+      },
+      data: {
+        title: title,
+        content: content,
+        update_at: new Date(),
+        extension: extension,
+        fileDate: fileDate,
+        filename: filename
+      }
+    })
+  } else {
+    return prisma.class_meeting.update({
+      where: {
+        id: id
+      },
+      data: {
+        title: title,
+        content: content,
+        update_at: new Date()
+      }
+    })
+  }
+}

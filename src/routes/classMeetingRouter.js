@@ -4,7 +4,8 @@ import {
   totalClassMeetingCount,
   getClassMeetingContent,
   writeClassMeetingContent,
-  logicalDeleteClassMeeting
+  logicalDeleteClassMeeting,
+  editClassMeetingContent
 } from '../services/classMeetingService.js'
 import upload from '../utils/multer.js'
 
@@ -68,6 +69,37 @@ router.post('/classMeeting_delete', async (req, res) => {
   } catch (error) {
     console.error('Error fetching ClassMeeting:', error)
     res.status(500).json({ error: 'Error fetching ClassMeeting' })
+  }
+})
+
+router.post('/classMeeting_edit', upload.single('fileField'), async (req, res) => {
+  const { title, content, id } = req.body
+  const fileData = req.fileData || {}
+
+  const data = {
+    id,
+    title,
+    content
+  }
+
+  if (fileData) {
+    Object.assign(data, {
+      extension: fileData.extension ?? '',
+      fileDate: fileData.date ?? '',
+      filename: fileData.filename ?? ''
+    })
+  }
+
+  try {
+    const result = await editClassMeetingContent(data)
+
+    if (!result) {
+      return res.status(404).json({ error: 'classMeeting not found' })
+    }
+    res.json(!!result)
+  } catch (error) {
+    console.error('Error fetching:', error)
+    res.status(500).json({ error: 'Error fetching classMeeting' })
   }
 })
 
