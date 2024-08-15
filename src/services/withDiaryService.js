@@ -20,7 +20,6 @@ export async function getWithDiaryList(startRow, pageSize, withDiary) {
 }
 
 export async function totalWithDiaryCount(withDiary) {
-  console.log('withDiary: ', withDiary)
   return await prisma.withDiary.count({
     where: {
       withDiaryNum: withDiary,
@@ -57,7 +56,6 @@ export async function writeWithDiaryContent({
   fileDate,
   withDiaryNum
 }) {
-
   return await prisma.withDiary.create({
     data: {
       title: title,

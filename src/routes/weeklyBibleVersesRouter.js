@@ -29,7 +29,7 @@ router.post('/weekly_detail', async (req, res) => {
     if (!content) {
       return res.status(404).json({ error: 'weekly not found' })
     }
-    console.log(content)
+
     res.json(content)
   } catch (error) {
     console.error('Error fetching weekly:', error)

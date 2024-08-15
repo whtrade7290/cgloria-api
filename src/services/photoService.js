@@ -2,14 +2,15 @@ import { prisma } from '../utils/prismaClient.js'
 
 export async function getPhotoList(startRow, pageSize) {
   const data = await prisma.photo.findMany({
+    where: {
+      deleted: false
+    },
     orderBy: {
       id: 'desc'
     },
     take: pageSize,
     skip: startRow
   })
-
-  console.log('data: ', data)
 
   return data.map((item) => ({
     ...item,
@@ -18,7 +19,11 @@ export async function getPhotoList(startRow, pageSize) {
 }
 
 export async function totalPhotoCount() {
-  return await prisma.photo.count()
+  return await prisma.photo.count({
+    where: {
+      deleted: false
+    }
+  })
 }
 
 export async function getPhotoContent(id) {
@@ -39,7 +44,6 @@ export async function getPhotoContent(id) {
 }
 
 export async function writePhotoContent({ title, content, writer, files }) {
-  console.log('files: ', files)
   return await prisma.photo.create({
     data: {
       title: title,
@@ -48,4 +52,40 @@ export async function writePhotoContent({ title, content, writer, files }) {
       files: files
     }
   })
+}
+
+export async function logicalDeletePhoto(id) {
+  return prisma.photo.update({
+    where: {
+      id: id
+    },
+    data: {
+      deleted: true
+    }
+  })
+}
+
+export function editPhotoContent({ id, title, content, files }) {
+  if (files.length === 0) {
+    return prisma.photo.update({
+      where: {
+        id: id
+      },
+      data: {
+        title: title,
+        content: content
+      }
+    })
+  } else {
+    return prisma.photo.update({
+      where: {
+        id: id
+      },
+      data: {
+        title: title,
+        content: content,
+        files: JSON.stringify(files)
+      }
+    })
+  }
 }

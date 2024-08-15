@@ -28,7 +28,7 @@ router.post('/notice_detail', async (req, res) => {
     if (!content) {
       return res.status(404).json({ error: 'Notice not found' })
     }
-    console.log(content)
+
     res.json(content)
   } catch (error) {
     console.error('Error fetching notice:', error)

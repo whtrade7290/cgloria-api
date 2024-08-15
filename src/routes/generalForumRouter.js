@@ -29,7 +29,6 @@ router.post('/generalForum_detail', async (req, res) => {
     if (!content) {
       return res.status(404).json({ error: 'generalForum not found' })
     }
-    console.log(content)
     res.json(content)
   } catch (error) {
     console.error('Error fetching generalForum:', error)

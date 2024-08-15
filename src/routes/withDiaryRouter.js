@@ -30,7 +30,7 @@ router.post('/withDiary_detail', async (req, res) => {
     if (!content) {
       return res.status(404).json({ error: 'WithDiary not found' })
     }
-    console.log(content)
+
     res.json(content)
   } catch (error) {
     console.error('Error fetching WithDiary:', error)

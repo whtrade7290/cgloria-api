@@ -28,7 +28,7 @@ router.post('/library_detail', async (req, res) => {
     if (!content) {
       return res.status(404).json({ error: 'library not found' })
     }
-    console.log(content)
+
     res.json(content)
   } catch (error) {
     console.error('Error fetching library:', error)

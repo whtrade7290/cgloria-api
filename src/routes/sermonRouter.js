@@ -29,7 +29,7 @@ router.post('/sermon_detail', async (req, res) => {
     if (!content) {
       return res.status(404).json({ error: 'Sermon not found' })
     }
-    console.log(content)
+
     res.json(content)
   } catch (error) {
     console.error('Error fetching sermon:', error)
@@ -41,7 +41,6 @@ router.post('/sermon_write', upload.single('fileField'), async (req, res) => {
   const { title, content, writer } = req.body
   const fileData = req.fileData || {}
 
-  console.log('fileData: ', fileData)
   try {
     await writeSermonContent({
       title,

@@ -82,8 +82,6 @@ app.post('/signIn', async (req, res) => {
       return
     }
 
-    console.log('user: ', user)
-
     const logedUser = {
       id: parseInt(user.id),
       username: user.username,
