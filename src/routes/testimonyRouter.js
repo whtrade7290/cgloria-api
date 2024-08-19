@@ -5,7 +5,8 @@ import {
   getTestimonyContent,
   writeTestimonyContent,
   logicalDeleteTestimony,
-  editTestimonyContent
+  editTestimonyContent,
+  getMainTestimony
 } from '../services/testimonyService.js'
 import upload from '../utils/multer.js'
 
@@ -38,7 +39,7 @@ router.post('/testimony_detail', async (req, res) => {
 })
 
 router.post('/testimony_write', upload.single('fileField'), async (req, res) => {
-  const { title, content, writer } = req.body
+  const { title, content, writer, mainContent } = req.body
   const fileData = req.fileData || {}
 
   try {
@@ -46,6 +47,7 @@ router.post('/testimony_write', upload.single('fileField'), async (req, res) => 
       title,
       content,
       writer,
+      mainContent: mainContent === 'true',
       extension: fileData.extension ?? '',
       fileDate: fileData.date ?? '',
       filename: fileData.filename ?? ''
@@ -72,13 +74,14 @@ router.post('/testimony_delete', async (req, res) => {
 })
 
 router.post('/testimony_edit', upload.single('fileField'), async (req, res) => {
-  const { title, content, id } = req.body
+  const { title, content, id, mainContent } = req.body
   const fileData = req.fileData || {}
 
   const data = {
     id,
     title,
-    content
+    content,
+    mainContent: mainContent === 'true'
   }
 
   if (fileData) {
@@ -100,6 +103,12 @@ router.post('/testimony_edit', upload.single('fileField'), async (req, res) => {
     console.error('Error fetching:', error)
     res.status(500).json({ error: 'Error fetching Testimony' })
   }
+})
+
+router.get('/main_testimony', async (req, res) => {
+  const data = await getMainTestimony()
+  console.log('data: ', data)
+  res.send(data)
 })
 
 export default router

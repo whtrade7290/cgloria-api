@@ -41,7 +41,8 @@ export async function getTestimonyContent(id) {
     fileDate: data.fileDate,
     create_at: data.create_at,
     update_at: data.update_at,
-    deleted: data.deleted
+    deleted: data.deleted,
+    mainContent: data.mainContent
   }
 }
 
@@ -49,20 +50,46 @@ export async function writeTestimonyContent({
   title,
   content,
   writer,
+  mainContent,
   filename,
   extension,
   fileDate
 }) {
+  if (mainContent) {
+    prisma.$transaction(async (prisma) => {
+      const createResult = await prisma.testimonies.create({
+        data: {
+          title: title,
+          content: content,
+          writer: writer,
+          mainContent: mainContent,
+          filename: filename,
+          extension: extension,
+          fileDate: fileDate
+        }
+      })
+      return await prisma.testimonies.updateMany({
+        data: {
+          mainContent: !mainContent
+        },
+        where: {
+          id: { not: createResult.id }
+        }
+      })
+    })
+  } else {
   return await prisma.testimonies.create({
     data: {
       title: title,
       content: content,
       writer: writer,
+      mainContent: mainContent,
       filename: filename,
       extension: extension,
       fileDate: fileDate
     }
   })
+}
 }
 
 export async function logicalDeleteTestimony(id) {
@@ -76,31 +103,97 @@ export async function logicalDeleteTestimony(id) {
   })
 }
 
-export function editTestimonyContent({ id, title, content, extension, fileDate, filename }) {
-  if (extension !== '' && fileDate !== '' && filename !== '') {
-    return prisma.testimonies.update({
-      where: {
-        id: id
-      },
-      data: {
-        title: title,
-        content: content,
-        update_at: new Date(),
-        extension: extension,
-        fileDate: fileDate,
-        filename: filename
+  export async function editTestimonyContent({
+  id,
+  title,
+  content,
+  mainContent,
+  extension,
+  fileDate,
+  filename
+}) {
+  let result = {};
+
+  if (mainContent) {
+    result = await prisma.$transaction(async (prisma) => {
+      let updateResult;
+
+      if (extension !== '' && fileDate !== '' && filename !== '') {
+        console.log("1");
+        updateResult = await prisma.testimonies.update({
+          where: { id },
+          data: {
+            title,
+            content,
+            mainContent,
+            update_at: new Date(),
+            extension,
+            fileDate,
+            filename
+          }
+        });
+      } else {
+        console.log("2");
+        updateResult = await prisma.testimonies.update({
+          where: { id },
+          data: {
+            title,
+            content,
+            mainContent,
+            update_at: new Date()
+          }
+        });
       }
-    })
+
+      const updateManyResult = await prisma.testimonies.updateMany({
+        data: { mainContent: false },
+        where: { id: { not: updateResult.id } }
+      });
+
+      return { updateResult, updateManyResult };
+    });
   } else {
-    return prisma.testimonies.update({
-      where: {
-        id: id
-      },
-      data: {
-        title: title,
-        content: content,
-        update_at: new Date()
-      }
-    })
+    if (extension !== '' && fileDate !== '' && filename !== '') {
+      console.log("3");
+      result = await prisma.testimonies.update({
+        where: { id },
+        data: {
+          title,
+          content,
+          mainContent,
+          update_at: new Date(),
+          extension,
+          fileDate,
+          filename
+        }
+      });
+    } else {
+      console.log("4");
+      result = await prisma.testimonies.update({
+        where: { id },
+        data: {
+          title,
+          content,
+          mainContent,
+          update_at: new Date()
+        }
+      });
+    }
+  }
+
+  return result;
+}
+
+export async function getMainTestimony() {
+  const data = await prisma.testimonies.findFirstOrThrow({
+    where: {
+      deleted: false,
+      mainContent: true
+    }
+  })
+
+  return {
+    ...data,
+    id: Number(data.id)
   }
 }

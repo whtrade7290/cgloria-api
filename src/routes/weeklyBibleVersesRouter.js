@@ -5,7 +5,8 @@ import {
   getWeeklyContent,
   writeWeeklyContent,
   logicalDeleteWeekly,
-  editWeeklyContent
+  editWeeklyContent,
+  getMainWeekly
 } from '../services/weeklyService.js'
 import upload from '../utils/multer.js'
 
@@ -38,7 +39,7 @@ router.post('/weekly_detail', async (req, res) => {
 })
 
 router.post('/weekly_write', upload.single('fileField'), async (req, res) => {
-  const { title, content, writer } = req.body
+  const { title, content, writer, mainContent } = req.body
   const fileData = req.fileData || {}
 
   try {
@@ -46,6 +47,7 @@ router.post('/weekly_write', upload.single('fileField'), async (req, res) => {
       title,
       content,
       writer,
+      mainContent: mainContent === 'true',
       extension: fileData.extension ?? '',
       fileDate: fileData.date ?? '',
       filename: fileData.filename ?? ''
@@ -72,13 +74,14 @@ router.post('/weekly_delete', async (req, res) => {
 })
 
 router.post('/weekly_edit', upload.single('fileField'), async (req, res) => {
-  const { title, content, id } = req.body
+  const { title, content, id, mainContent } = req.body
   const fileData = req.fileData || {}
 
   const data = {
     id,
     title,
-    content
+    content,
+    mainContent: mainContent === 'true'
   }
 
   if (fileData) {
@@ -100,6 +103,12 @@ router.post('/weekly_edit', upload.single('fileField'), async (req, res) => {
     console.error('Error fetching:', error)
     res.status(500).json({ error: 'Error fetching weekly' })
   }
+})
+
+router.get('/main_weekly', async (req, res) => {
+  const data = await getMainWeekly()
+  console.log('data: ', data)
+  res.send(data)
 })
 
 export default router

@@ -41,7 +41,8 @@ export async function getSermonContent(id) {
     fileDate: data.fileDate,
     create_at: data.create_at,
     update_at: data.update_at,
-    deleted: data.deleted
+    deleted: data.deleted,
+    mainContent: data.mainContent
   }
 }
 
@@ -49,20 +50,46 @@ export async function writeSermonContent({
   title,
   content,
   writer,
+  mainContent,
   filename,
   extension,
   fileDate
 }) {
-  return await prisma.sermons.create({
-    data: {
-      title: title,
-      content: content,
-      writer: writer,
-      filename: filename,
-      extension: extension,
-      fileDate: fileDate
-    }
-  })
+  if (mainContent) {
+    prisma.$transaction(async (prisma) => {
+      const createResult = await prisma.sermons.create({
+        data: {
+          title: title,
+          content: content,
+          writer: writer,
+          mainContent: mainContent,
+          filename: filename,
+          extension: extension,
+          fileDate: fileDate
+        }
+      })
+      return await prisma.sermons.updateMany({
+        data: {
+          mainContent: !mainContent
+        },
+        where: {
+          id: { not: createResult.id }
+        }
+      })
+    })
+  } else {
+    return await prisma.sermons.create({
+      data: {
+        title: title,
+        content: content,
+        writer: writer,
+        mainContent: mainContent,
+        filename: filename,
+        extension: extension,
+        fileDate: fileDate
+      }
+    })
+  }
 }
 
 export async function logicalDeleteSermon(id) {
@@ -76,31 +103,98 @@ export async function logicalDeleteSermon(id) {
   })
 }
 
-export function editSermonContent({ id, title, content, extension, fileDate, filename }) {
-  if (extension !== '' && fileDate !== '' && filename !== '') {
-    return prisma.sermons.update({
-      where: {
-        id: id
-      },
-      data: {
-        title: title,
-        content: content,
-        update_at: new Date(),
-        extension: extension,
-        fileDate: fileDate,
-        filename: filename
+export async function editSermonContent({
+  id,
+  title,
+  content,
+  mainContent,
+  extension,
+  fileDate,
+  filename
+}) {
+  let result = {};
+
+  if (mainContent) {
+    result = await prisma.$transaction(async (prisma) => {
+      let updateResult;
+
+      if (extension !== '' && fileDate !== '' && filename !== '') {
+        updateResult = await prisma.sermons.update({
+          where: { id },
+          data: {
+            title,
+            content,
+            mainContent,
+            update_at: new Date(),
+            extension,
+            fileDate,
+            filename
+          }
+        });
+      } else {
+        updateResult = await prisma.sermons.update({
+          where: { id },
+          data: {
+            title,
+            content,
+            mainContent,
+            update_at: new Date()
+          }
+        });
       }
-    })
+
+      console.log("updateResult: ", updateResult);
+
+      const updateManyResult = await prisma.sermons.updateMany({
+        data: { mainContent: false },
+        where: { id: { not: updateResult.id } }
+      });
+
+      return { updateResult, updateManyResult };
+    });
   } else {
-    return prisma.sermons.update({
-      where: {
-        id: id
-      },
-      data: {
-        title: title,
-        content: content,
-        update_at: new Date()
-      }
-    })
+    if (extension !== '' && fileDate !== '' && filename !== '') {
+      result = await prisma.sermons.update({
+        where: { id },
+        data: {
+          title,
+          content,
+          mainContent,
+          update_at: new Date(),
+          extension,
+          fileDate,
+          filename
+        }
+      });
+    } else {
+      result = await prisma.sermons.update({
+        where: { id },
+        data: {
+          title,
+          content,
+          mainContent,
+          update_at: new Date()
+        }
+      });
+    }
+  }
+
+  return result;
+}
+
+
+export async function getMainSermon() {
+  const data = await prisma.sermons.findFirstOrThrow({
+    where: {
+      deleted: false,
+      mainContent: true
+    }
+  })
+
+  console.log("data: ", data);
+
+  return {
+    ...data,
+    id: Number(data.id)
   }
 }
