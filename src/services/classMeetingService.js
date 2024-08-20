@@ -32,17 +32,8 @@ export async function getClassMeetingContent(id) {
   })
 
   return {
-    id: Number(data.id),
-    title: data.title,
-    content: data.content,
-    writer: data.writer,
-    filename: data.filename,
-    extension: data.extension,
-    fileDate: data.fileDate,
-    create_at: data.create_at,
-    update_at: data.update_at,
-    deleted: data.deleted,
-    mainContent: data.mainContent
+    ...data,
+    id: Number(data.id)
   }
 }
 
