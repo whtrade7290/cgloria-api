@@ -13,7 +13,7 @@ const router = express.Router()
 
 router.post('/photo', async (req, res) => {
   const { startRow, pageSize } = req.body
- 
+
   const data = await getPhotoList(startRow, pageSize)
   res.send(data)
 })

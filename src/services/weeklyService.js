@@ -69,18 +69,18 @@ export async function writeWeeklyContent({
       })
     })
   } else {
-  return await prisma.weekly_bible_verses.create({
-    data: {
-      title: title,
-      content: content,
-      writer: writer,
-      mainContent: mainContent,
-      filename: filename,
-      extension: extension,
-      fileDate: fileDate
-    }
-  })
-}
+    return await prisma.weekly_bible_verses.create({
+      data: {
+        title: title,
+        content: content,
+        writer: writer,
+        mainContent: mainContent,
+        filename: filename,
+        extension: extension,
+        fileDate: fileDate
+      }
+    })
+  }
 }
 
 export async function logicalDeleteWeekly(id) {
@@ -103,14 +103,14 @@ export async function editWeeklyContent({
   fileDate,
   filename
 }) {
-  let result = {};
+  let result = {}
 
   if (mainContent) {
     result = await prisma.$transaction(async (prisma) => {
-      let updateResult;
+      let updateResult
 
       if (extension !== '' && fileDate !== '' && filename !== '') {
-        console.log("1");
+        console.log('1')
         updateResult = await prisma.weekly_bible_verses.update({
           where: { id },
           data: {
@@ -122,9 +122,9 @@ export async function editWeeklyContent({
             fileDate,
             filename
           }
-        });
+        })
       } else {
-        console.log("2");
+        console.log('2')
         updateResult = await prisma.weekly_bible_verses.update({
           where: { id },
           data: {
@@ -133,19 +133,19 @@ export async function editWeeklyContent({
             mainContent,
             update_at: new Date()
           }
-        });
+        })
       }
 
       const updateManyResult = await prisma.weekly_bible_verses.updateMany({
         data: { mainContent: false },
         where: { id: { not: updateResult.id } }
-      });
+      })
 
-      return { updateResult, updateManyResult };
-    });
+      return { updateResult, updateManyResult }
+    })
   } else {
     if (extension !== '' && fileDate !== '' && filename !== '') {
-      console.log("3");
+      console.log('3')
       result = await prisma.weekly_bible_verses.update({
         where: { id },
         data: {
@@ -157,9 +157,9 @@ export async function editWeeklyContent({
           fileDate,
           filename
         }
-      });
+      })
     } else {
-      console.log("4");
+      console.log('4')
       result = await prisma.weekly_bible_verses.update({
         where: { id },
         data: {
@@ -168,11 +168,11 @@ export async function editWeeklyContent({
           mainContent,
           update_at: new Date()
         }
-      });
+      })
     }
   }
 
-  return result;
+  return result
 }
 
 export async function getMainWeekly() {

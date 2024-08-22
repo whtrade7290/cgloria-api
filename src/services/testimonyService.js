@@ -69,18 +69,18 @@ export async function writeTestimonyContent({
       })
     })
   } else {
-  return await prisma.testimonies.create({
-    data: {
-      title: title,
-      content: content,
-      writer: writer,
-      mainContent: mainContent,
-      filename: filename,
-      extension: extension,
-      fileDate: fileDate
-    }
-  })
-}
+    return await prisma.testimonies.create({
+      data: {
+        title: title,
+        content: content,
+        writer: writer,
+        mainContent: mainContent,
+        filename: filename,
+        extension: extension,
+        fileDate: fileDate
+      }
+    })
+  }
 }
 
 export async function logicalDeleteTestimony(id) {
@@ -94,7 +94,7 @@ export async function logicalDeleteTestimony(id) {
   })
 }
 
-  export async function editTestimonyContent({
+export async function editTestimonyContent({
   id,
   title,
   content,
@@ -103,14 +103,14 @@ export async function logicalDeleteTestimony(id) {
   fileDate,
   filename
 }) {
-  let result = {};
+  let result = {}
 
   if (mainContent) {
     result = await prisma.$transaction(async (prisma) => {
-      let updateResult;
+      let updateResult
 
       if (extension !== '' && fileDate !== '' && filename !== '') {
-        console.log("1");
+        console.log('1')
         updateResult = await prisma.testimonies.update({
           where: { id },
           data: {
@@ -122,9 +122,9 @@ export async function logicalDeleteTestimony(id) {
             fileDate,
             filename
           }
-        });
+        })
       } else {
-        console.log("2");
+        console.log('2')
         updateResult = await prisma.testimonies.update({
           where: { id },
           data: {
@@ -133,19 +133,19 @@ export async function logicalDeleteTestimony(id) {
             mainContent,
             update_at: new Date()
           }
-        });
+        })
       }
 
       const updateManyResult = await prisma.testimonies.updateMany({
         data: { mainContent: false },
         where: { id: { not: updateResult.id } }
-      });
+      })
 
-      return { updateResult, updateManyResult };
-    });
+      return { updateResult, updateManyResult }
+    })
   } else {
     if (extension !== '' && fileDate !== '' && filename !== '') {
-      console.log("3");
+      console.log('3')
       result = await prisma.testimonies.update({
         where: { id },
         data: {
@@ -157,9 +157,9 @@ export async function logicalDeleteTestimony(id) {
           fileDate,
           filename
         }
-      });
+      })
     } else {
-      console.log("4");
+      console.log('4')
       result = await prisma.testimonies.update({
         where: { id },
         data: {
@@ -168,11 +168,11 @@ export async function logicalDeleteTestimony(id) {
           mainContent,
           update_at: new Date()
         }
-      });
+      })
     }
   }
 
-  return result;
+  return result
 }
 
 export async function getMainTestimony() {

@@ -23,6 +23,7 @@ import noticeRouter from './routes/noticeRouter.js'
 import withDiaryRouter from './routes/withDiaryRouter.js'
 import photoRouter from './routes/photoRouter.js'
 import schoolPhotoRouter from './routes/schoolPhotoRouter.js'
+import commentRouter from './routes/commentRouter.js'
 
 const app = express()
 
@@ -50,6 +51,7 @@ app.use('/notice', noticeRouter)
 app.use('/withDiary', withDiaryRouter)
 app.use('/photo', photoRouter)
 app.use('/school_photo', schoolPhotoRouter)
+app.use('/comment', commentRouter)
 
 app.use('/uploads', express.static(path.join('', 'uploads')))
 
@@ -85,6 +87,7 @@ app.post('/signIn', async (req, res) => {
     const logedUser = {
       id: parseInt(user.id),
       username: user.username,
+      name: user.name,
       create_at: user.create_at,
       update_at: user.update_at,
       role: user.role,

@@ -103,11 +103,11 @@ export async function editSermonContent({
   fileDate,
   filename
 }) {
-  let result = {};
+  let result = {}
 
   if (mainContent) {
     result = await prisma.$transaction(async (prisma) => {
-      let updateResult;
+      let updateResult
 
       if (extension !== '' && fileDate !== '' && filename !== '') {
         updateResult = await prisma.sermons.update({
@@ -121,7 +121,7 @@ export async function editSermonContent({
             fileDate,
             filename
           }
-        });
+        })
       } else {
         updateResult = await prisma.sermons.update({
           where: { id },
@@ -131,18 +131,18 @@ export async function editSermonContent({
             mainContent,
             update_at: new Date()
           }
-        });
+        })
       }
 
-      console.log("updateResult: ", updateResult);
+      console.log('updateResult: ', updateResult)
 
       const updateManyResult = await prisma.sermons.updateMany({
         data: { mainContent: false },
         where: { id: { not: updateResult.id } }
-      });
+      })
 
-      return { updateResult, updateManyResult };
-    });
+      return { updateResult, updateManyResult }
+    })
   } else {
     if (extension !== '' && fileDate !== '' && filename !== '') {
       result = await prisma.sermons.update({
@@ -156,7 +156,7 @@ export async function editSermonContent({
           fileDate,
           filename
         }
-      });
+      })
     } else {
       result = await prisma.sermons.update({
         where: { id },
@@ -166,13 +166,12 @@ export async function editSermonContent({
           mainContent,
           update_at: new Date()
         }
-      });
+      })
     }
   }
 
-  return result;
+  return result
 }
-
 
 export async function getMainSermon() {
   const data = await prisma.sermons.findFirstOrThrow({
@@ -182,7 +181,7 @@ export async function getMainSermon() {
     }
   })
 
-  console.log("data: ", data);
+  console.log('data: ', data)
 
   return {
     ...data,

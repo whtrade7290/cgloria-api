@@ -69,18 +69,18 @@ export async function writeColumnContent({
       })
     })
   } else {
-  return await prisma.columns.create({
-    data: {
-      title: title,
-      content: content,
-      writer: writer,
-      mainContent: mainContent,
-      filename: filename,
-      extension: extension,
-      fileDate: fileDate
-    }
-  })
-}
+    return await prisma.columns.create({
+      data: {
+        title: title,
+        content: content,
+        writer: writer,
+        mainContent: mainContent,
+        filename: filename,
+        extension: extension,
+        fileDate: fileDate
+      }
+    })
+  }
 }
 
 export async function logicalDeleteColumn(id) {
@@ -94,7 +94,6 @@ export async function logicalDeleteColumn(id) {
   })
 }
 
-
 export async function editColumnContent({
   id,
   title,
@@ -104,14 +103,14 @@ export async function editColumnContent({
   fileDate,
   filename
 }) {
-  let result = {};
+  let result = {}
 
   if (mainContent) {
     result = await prisma.$transaction(async (prisma) => {
-      let updateResult;
+      let updateResult
 
       if (extension !== '' && fileDate !== '' && filename !== '') {
-        console.log("1");
+        console.log('1')
         updateResult = await prisma.columns.update({
           where: { id },
           data: {
@@ -123,9 +122,9 @@ export async function editColumnContent({
             fileDate,
             filename
           }
-        });
+        })
       } else {
-        console.log("2");
+        console.log('2')
         updateResult = await prisma.columns.update({
           where: { id },
           data: {
@@ -134,19 +133,19 @@ export async function editColumnContent({
             mainContent,
             update_at: new Date()
           }
-        });
+        })
       }
 
       const updateManyResult = await prisma.columns.updateMany({
         data: { mainContent: false },
         where: { id: { not: updateResult.id } }
-      });
+      })
 
-      return { updateResult, updateManyResult };
-    });
+      return { updateResult, updateManyResult }
+    })
   } else {
     if (extension !== '' && fileDate !== '' && filename !== '') {
-      console.log("3");
+      console.log('3')
       result = await prisma.columns.update({
         where: { id },
         data: {
@@ -158,9 +157,9 @@ export async function editColumnContent({
           fileDate,
           filename
         }
-      });
+      })
     } else {
-      console.log("4");
+      console.log('4')
       result = await prisma.columns.update({
         where: { id },
         data: {
@@ -169,11 +168,11 @@ export async function editColumnContent({
           mainContent,
           update_at: new Date()
         }
-      });
+      })
     }
   }
 
-  return result;
+  return result
 }
 
 export async function getMainColumn() {
