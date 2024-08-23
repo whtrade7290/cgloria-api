@@ -107,7 +107,6 @@ router.post('/testimony_edit', upload.single('fileField'), async (req, res) => {
 
 router.get('/main_testimony', async (req, res) => {
   const data = await getMainTestimony()
-  console.log('data: ', data)
   res.send(data)
 })
 

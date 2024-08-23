@@ -107,7 +107,6 @@ router.post('/sermon_edit', upload.single('fileField'), async (req, res) => {
 
 router.get('/main_sermon', async (req, res) => {
   const data = await getMainSermon()
-  console.log('data: ', data)
   res.send(data)
 })
 

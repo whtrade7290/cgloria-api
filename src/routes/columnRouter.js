@@ -108,7 +108,6 @@ router.post('/column_edit', upload.single('fileField'), async (req, res) => {
 
 router.get('/main_column', async (req, res) => {
   const data = await getMainColumn()
-  console.log('data: ', data)
   res.send(data)
 })
 

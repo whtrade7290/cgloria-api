@@ -7,6 +7,7 @@ import morgan from 'morgan'
 import bcrypt from 'bcrypt'
 import path from 'path'
 import { signIn, signUp } from '../src/services/userService.js'
+import { auth, makeToken, makeRefreshToken } from './auth.js'
 
 // 테스트 데이터 생성
 // import makeTestData from '../src/utils/makeTestData.js';
@@ -48,7 +49,7 @@ app.use('/library', libraryRouter)
 app.use('/generalForum', generalForumRouter)
 app.use('/testimony', testimonyRouter)
 app.use('/notice', noticeRouter)
-app.use('/withDiary', withDiaryRouter)
+app.use('/withDiary', auth, withDiaryRouter)
 app.use('/photo', photoRouter)
 app.use('/school_photo', schoolPhotoRouter)
 app.use('/comment', commentRouter)
@@ -73,11 +74,16 @@ app.post('/signUp', async (req, res) => {
 
 app.post('/signIn', async (req, res) => {
   const { username, password } = req.body
-  /**
-   * Todo: 세션이나 쿠키 처리 하기 user,token
-   */
+  const payload = {
+    username: username,
+    password: password
+  }
+
+  const token = makeToken(payload)
+  const refreshToken = makeRefreshToken()
+
   try {
-    const user = await signIn(username, password)
+    const user = await signIn(username)
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       res.status(401).json({ error: 'Invalid credentials' })
@@ -98,7 +104,9 @@ app.post('/signIn', async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Login Success',
-      user: logedUser
+      user: logedUser,
+      token: token,
+      refreshToken: refreshToken
     })
   } catch (error) {
     console.error('Error fetching users:', error)

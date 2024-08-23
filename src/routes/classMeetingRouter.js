@@ -108,7 +108,6 @@ router.post('/classMeeting_edit', upload.single('fileField'), async (req, res) =
 
 router.get('/main_classMeeting', async (req, res) => {
   const data = await getMainClassMeeting()
-  console.log('data: ', data)
   res.send(data)
 })
 

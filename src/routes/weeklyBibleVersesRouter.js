@@ -107,7 +107,6 @@ router.post('/weekly_edit', upload.single('fileField'), async (req, res) => {
 
 router.get('/main_weekly', async (req, res) => {
   const data = await getMainWeekly()
-  console.log('data: ', data)
   res.send(data)
 })
 
