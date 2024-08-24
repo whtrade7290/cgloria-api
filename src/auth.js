@@ -13,7 +13,7 @@ const makeAccessToken = (payload) => {
 const makeRefreshToken = (payload) => {
   return jwt.sign(payload, REFRESH_SECRET_KEY, {
     algorithm: 'HS256',
-    expiresIn: '7d'
+    expiresIn: '24h'
   })
 }
 
