@@ -7,7 +7,7 @@ import morgan from 'morgan'
 import bcrypt from 'bcrypt'
 import path from 'path'
 import { signIn, signUp } from '../src/services/userService.js'
-import { auth, makeToken, makeRefreshToken } from './auth.js'
+import { auth, makeAccessToken, makeRefreshToken, checkingAccessToken, checkingRefreshToken } from './auth.js'
 
 // 테스트 데이터 생성
 // import makeTestData from '../src/utils/makeTestData.js';
@@ -26,6 +26,7 @@ import photoRouter from './routes/photoRouter.js'
 import schoolPhotoRouter from './routes/schoolPhotoRouter.js'
 import commentRouter from './routes/commentRouter.js'
 
+
 const app = express()
 
 // server setup
@@ -33,7 +34,7 @@ let port
 async function configServer() {
   port = 3000 || (await detectPort(3000))
 }
-
+// auth()
 configServer()
 
 app.use(cors())
@@ -79,8 +80,8 @@ app.post('/signIn', async (req, res) => {
     password: password
   }
 
-  const token = makeToken(payload)
-  const refreshToken = makeRefreshToken()
+  const accessToken = makeAccessToken(payload)
+  const refreshToken = makeRefreshToken(payload)
 
   try {
     const user = await signIn(username)
@@ -105,7 +106,7 @@ app.post('/signIn', async (req, res) => {
       success: true,
       message: 'Login Success',
       user: logedUser,
-      token: token,
+      token: accessToken,
       refreshToken: refreshToken
     })
   } catch (error) {
@@ -114,7 +115,49 @@ app.post('/signIn', async (req, res) => {
   }
 })
 
-app.get('/')
+app.post('/check_Token', async (req, res) => {
+  const { accessToken, refreshToken } = req.body
+
+  const accessResult = await checkingAccessToken(accessToken)
+  const refreshResult = await checkingRefreshToken(refreshToken)
+
+  let payload = {
+    username: '',
+    password: ''
+  }
+
+  if (refreshResult.decoded?.username && refreshResult.decoded?.password) {
+    payload.username = refreshResult.decoded.username
+    payload.password = refreshResult.decoded.password
+  }
+
+
+ if (!accessResult.valid || accessResult.expired) {
+    if (refreshResult.valid && !refreshResult.expired) {
+      // Refresh Token이 유효하고 만료되지 않은 경우, 새 Access Token 발급
+      const newAccessToken = makeAccessToken(payload); // 새 Access Token 발급 함수 호출
+      res.status(200).json({
+        success: 0,
+        message: 'Access Token refreshed',
+        accessToken: newAccessToken
+      });
+    } else {
+      // Refresh Token이 유효하지 않거나 만료된 경우, 로그아웃 처리
+      res.status(200).json({
+        success: 1,
+        message: 'Refresh Token is invalid or expired. Please log in again.'
+      });
+    }
+  } else {
+    // Access Token과 Refresh Token 모두 유효한 경우
+    res.status(200).json({
+      success: 2,
+      message: 'Access Token is valid',
+      accessToken: accessToken
+    });
+  }
+});
+
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)

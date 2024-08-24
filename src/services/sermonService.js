@@ -134,8 +134,6 @@ export async function editSermonContent({
         })
       }
 
-      console.log('updateResult: ', updateResult)
-
       const updateManyResult = await prisma.sermons.updateMany({
         data: { mainContent: false },
         where: { id: { not: updateResult.id } }
@@ -180,8 +178,6 @@ export async function getMainSermon() {
       mainContent: true
     }
   })
-
-  console.log('data: ', data)
 
   return {
     ...data,

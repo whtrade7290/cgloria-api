@@ -110,7 +110,6 @@ export async function editClassMeetingContent({
       let updateResult
 
       if (extension !== '' && fileDate !== '' && filename !== '') {
-        console.log('1')
         updateResult = await prisma.class_meeting.update({
           where: { id },
           data: {
@@ -124,7 +123,6 @@ export async function editClassMeetingContent({
           }
         })
       } else {
-        console.log('2')
         updateResult = await prisma.class_meeting.update({
           where: { id },
           data: {
@@ -145,7 +143,6 @@ export async function editClassMeetingContent({
     })
   } else {
     if (extension !== '' && fileDate !== '' && filename !== '') {
-      console.log('3')
       result = await prisma.class_meeting.update({
         where: { id },
         data: {
@@ -159,7 +156,6 @@ export async function editClassMeetingContent({
         }
       })
     } else {
-      console.log('4')
       result = await prisma.class_meeting.update({
         where: { id },
         data: {

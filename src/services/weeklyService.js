@@ -110,7 +110,6 @@ export async function editWeeklyContent({
       let updateResult
 
       if (extension !== '' && fileDate !== '' && filename !== '') {
-        console.log('1')
         updateResult = await prisma.weekly_bible_verses.update({
           where: { id },
           data: {
@@ -124,7 +123,6 @@ export async function editWeeklyContent({
           }
         })
       } else {
-        console.log('2')
         updateResult = await prisma.weekly_bible_verses.update({
           where: { id },
           data: {
@@ -145,7 +143,6 @@ export async function editWeeklyContent({
     })
   } else {
     if (extension !== '' && fileDate !== '' && filename !== '') {
-      console.log('3')
       result = await prisma.weekly_bible_verses.update({
         where: { id },
         data: {
@@ -159,7 +156,6 @@ export async function editWeeklyContent({
         }
       })
     } else {
-      console.log('4')
       result = await prisma.weekly_bible_verses.update({
         where: { id },
         data: {
