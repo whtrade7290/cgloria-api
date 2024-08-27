@@ -40,7 +40,9 @@ router.post('/sermon_detail', async (req, res) => {
 
 router.post('/sermon_write', upload.single('fileField'), async (req, res) => {
   const { title, content, writer, mainContent } = req.body
-  const fileData = req.fileData || {}
+  const fileData = req.file || {}
+
+  console.log("fileData: ", fileData);
 
   try {
     await writeSermonContent({

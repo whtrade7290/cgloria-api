@@ -1,29 +1,34 @@
 import multer from 'multer'
+import AWS from 'aws-sdk';
+import multerS3 from 'multer-s3';
+import fs from 'fs'
 
-let filename = ''
-let extension = ''
-let date = ''
+const ACCESS_KEY_ID = fs.readFileSync('key/accessKeyId.key', 'utf8')
+const SECRET_ACCESS_KEY = fs.readFileSync('key/secretAccessKey.key', 'utf8')
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/')
-  },
-  filename: function (req, file, cb) {
-    const match = file.originalname.match(/^([\w\d_-]*)\.?([\w\d]*)$/)
-    filename = match[1]
-    extension = '.' + match[2]
-    date = Date.now().toString()
+ // AWS S3 클라이언트 설정
+AWS.config.update({
+  accessKeyId: ACCESS_KEY_ID,
+  secretAccessKey: SECRET_ACCESS_KEY,
+  region: 'ap-northeast-1'
+});
 
-    req.fileData = {
-      filename: filename,
-      extension: extension,
-      date: date
+const s3 = new AWS.S3();
+
+// multer-s3를 사용한 파일 업로드 설정
+const upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: 'cgloria-bucket',
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    acl: 'public-read',
+    metadata: function (req, file, cb) {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key: function (req, file, cb) {
+      cb(null, "cgloria-photo/" + Date.now().toString() + '-' + file.originalname);
     }
-
-    cb(null, filename + '_' + date + extension)
-  }
-})
-
-const upload = multer({ storage: storage })
+  })
+});
 
 export default upload
