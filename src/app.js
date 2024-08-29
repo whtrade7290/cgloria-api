@@ -7,7 +7,13 @@ import morgan from 'morgan'
 import bcrypt from 'bcrypt'
 import path from 'path'
 import { signIn, signUp } from '../src/services/userService.js'
-import { auth, makeAccessToken, makeRefreshToken, checkingAccessToken, checkingRefreshToken } from './auth.js'
+import {
+  auth,
+  makeAccessToken,
+  makeRefreshToken,
+  checkingAccessToken,
+  checkingRefreshToken
+} from './auth.js'
 
 // 테스트 데이터 생성
 // import makeTestData from '../src/utils/makeTestData.js';
@@ -25,7 +31,6 @@ import withDiaryRouter from './routes/withDiaryRouter.js'
 import photoRouter from './routes/photoRouter.js'
 import schoolPhotoRouter from './routes/schoolPhotoRouter.js'
 import commentRouter from './routes/commentRouter.js'
-
 
 const app = express()
 
@@ -131,22 +136,21 @@ app.post('/check_Token', async (req, res) => {
     payload.password = refreshResult.decoded.password
   }
 
-
- if (!accessResult.valid || accessResult.expired) {
+  if (!accessResult.valid || accessResult.expired) {
     if (refreshResult.valid && !refreshResult.expired) {
       // Refresh Token이 유효하고 만료되지 않은 경우, 새 Access Token 발급
-      const newAccessToken = makeAccessToken(payload); // 새 Access Token 발급 함수 호출
+      const newAccessToken = makeAccessToken(payload) // 새 Access Token 발급 함수 호출
       res.status(200).json({
         success: 0,
         message: 'Access Token refreshed',
         accessToken: newAccessToken
-      });
+      })
     } else {
       // Refresh Token이 유효하지 않거나 만료된 경우, 로그아웃 처리
       res.status(200).json({
         success: 1,
         message: 'Refresh Token is invalid or expired. Please log in again.'
-      });
+      })
     }
   } else {
     // Access Token과 Refresh Token 모두 유효한 경우
@@ -154,10 +158,9 @@ app.post('/check_Token', async (req, res) => {
       success: 2,
       message: 'Access Token is valid',
       accessToken: accessToken
-    });
+    })
   }
-});
-
+})
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)

@@ -18,7 +18,6 @@ const makeRefreshToken = (payload) => {
 }
 
 const checkingAccessToken = async (accessToken) => {
-
   try {
     // Verify the token using the secret key
     const decoded = jwt.verify(accessToken, SECRET_KEY)

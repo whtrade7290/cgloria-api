@@ -7,7 +7,7 @@ import {
   logicalDeleteWithDiary,
   editWithDiaryContent
 } from '../services/withDiaryService.js'
-import upload from '../utils/multer.js'
+import { upload } from '../utils/multer.js'
 
 const router = express.Router()
 

@@ -8,7 +8,7 @@ import {
   editWeeklyContent,
   getMainWeekly
 } from '../services/weeklyService.js'
-import upload from '../utils/multer.js'
+import { upload, uploadToS3 } from '../utils/multer.js'
 
 const router = express.Router()
 
@@ -40,21 +40,36 @@ router.post('/weekly_detail', async (req, res) => {
 
 router.post('/weekly_write', upload.single('fileField'), async (req, res) => {
   const { title, content, writer, mainContent } = req.body
-  const fileData = req.fileData || {}
+  const file = req.file
+  let s3Response = {}
+
+  if (file) {
+    // 파일을 S3에 업로드
+    s3Response = await uploadToS3(file)
+  }
 
   try {
-    await writeWeeklyContent({
+    const result = await writeWeeklyContent({
       title,
       content,
       writer,
       mainContent: mainContent === 'true',
-      extension: fileData.extension ?? '',
-      fileDate: fileData.date ?? '',
-      filename: fileData.filename ?? ''
+      extension: s3Response.extension ?? '',
+      fileDate: s3Response.data ?? '',
+      filename: s3Response.filename ?? ''
     })
+
+    if (result) {
+      // result가 truthy일 때 성공 응답
+      res.status(200).json({ success: true, message: 'Upload Success' })
+    } else {
+      // result가 null 또는 falsy일 때 실패 응답
+      res.status(400).json({ success: false, message: 'Upload Failed' })
+    }
+    return
   } catch (error) {
     console.error('Error fetching:', error)
-    res.status(500).json({ error: 'Error fetching weekly' })
+    res.status(500).json({ error: 'Error fetching sermon' })
   }
 })
 

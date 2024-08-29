@@ -7,7 +7,7 @@ import {
   logicalDeletePhoto,
   editPhotoContent
 } from '../services/photoService.js'
-import upload from '../utils/multer.js'
+import { upload } from '../utils/multer.js'
 
 const router = express.Router()
 
