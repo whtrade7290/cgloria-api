@@ -15,35 +15,34 @@ const s3 = new S3Client({
 const storage = multer.memoryStorage()
 export const upload = multer({ storage })
 
-const data = Date.now().toString() + '-'
-let extension = ''
-let filename = ''
+
+
 
 // 파일 업로드 함수
 export const uploadToS3 = async (file) => {
-  filename = path.parse(file.originalname)?.name ?? ''
-  extension = path.parse(file.originalname)?.ext ?? ''
+  const date = Date.now().toString() + '-'
+  const filename = path.parse(file.originalname)?.name ?? '';
+  const extension = path.parse(file.originalname)?.ext ?? '';
   const params = {
     Bucket: 'cgloria-bucket',
-    Key: `cgloria-photo/${data}${file.originalname}`, // S3에 저장될 파일 이름
+    Key: `cgloria-photo/${date}${file.originalname}`, // S3에 저장될 파일 이름
     Body: file.buffer, // 파일의 버퍼 데이터
     ContentType: file.mimetype,
     ACL: 'public-read' // 공개 액세스 권한 설정
-  }
+  };
 
   try {
-    const command = new PutObjectCommand(params)
-    const response = await s3.send(command)
-    console.log('file: ', file)
-    console.log('파일 업로드 성공:', response)
+    const command = new PutObjectCommand(params);
+    const response = await s3.send(command);
     return {
       status: response['$metadata']?.httpStatusCode ?? '',
       key: params?.Key,
       filename,
       extension,
-      data
-    }
+      date
+    };
   } catch (error) {
-    console.error('파일 업로드 실패:', error)
+    console.error('파일 업로드 실패:', error);
+    throw error; // 오류를 다시 throw하여 상위 catch에서 처리할 수 있도록 합니다.
   }
-}
+};
