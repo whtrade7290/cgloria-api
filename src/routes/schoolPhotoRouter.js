@@ -84,17 +84,38 @@ router.post('/school_photo_write', upload.array('fileField', 6), async (req, res
 })
 
 router.post('/school_photo_delete', async (req, res) => {
-  const { id } = req.body
-  try {
-    const result = await logicalDeleteSchoolPhoto(id)
+  const { id, deleteKeyList = '' } = req.body;
+  console.log('deleteKeyList: ', deleteKeyList);
 
-    if (!result) {
-      return res.status(404).json({ error: 'SchoolPhoto not found' })
+  if (deleteKeyList !== '') {
+    const deleteKeyArr = deleteKeyList.map(file => {
+      return `cgloria-photo/${file?.date}${file?.filename}${file?.extension}`;
+    });
+
+    const response = (await deleteToS3(deleteKeyArr)).every((result) => {
+      console.log('deleted file: ', result);
+      return result.$metadata.httpStatusCode === 204;
+    });
+
+    if (response) {
+      try {
+        const result = await logicalDeleteSchoolPhoto(id);
+
+        if (!result) {
+          return res.status(404).json({ error: 'Photo not found' });
+        }
+        res.json(!!result);
+      } catch (error) {
+        console.error('Error fetching Photo:', error);
+        res.status(500).json({ error: 'Error fetching Photo' });
+      }
+    } else {
+      // S3에서 파일 삭제 실패 시 처리
+      console.error('Error deleting files from S3');
+      res.status(500).json({ error: 'Failed to delete files from S3' });
     }
-    res.json(!!result)
-  } catch (error) {
-    console.error('Error fetching SchoolPhoto:', error)
-    res.status(500).json({ error: 'Error fetching SchoolPhoto' })
+  } else {
+    res.status(400).json({ error: 'No files to delete' }); // 필수 필드가 없는 경우 처리
   }
 })
 
@@ -110,20 +131,20 @@ router.post('/school_photo_edit', uploadFields, async (req, res) => {
   const files = req?.files['fileField'] ?? []
 
   /**
-   * ※ 사양 확인 후 적용 ※ 
+   * ※ 사양 확인 후 적용 ※
    * 게시글 사진 수정시 파일 삭제 되도록 하는 로직
    */
-  // if (deleteKeyList !== '' && files.length > 0) {
-    // const deleteKeyArr = deleteKeyList.split(',')
+  if (deleteKeyList !== '' && files.length > 0) {
+    const deleteKeyArr = deleteKeyList.split(',')
 
-    // console.log("deleteKeyArr: ", deleteKeyArr);
+    console.log('deleteKeyArr: ', deleteKeyArr)
 
-    // const response = (await deleteToS3(deleteKeyArr)).every((result) => {
-    //   console.log("deleted file: ", result);
-    //   return result.$metadata.httpStatusCode === 204
-    // })
+    const response = (await deleteToS3(deleteKeyArr)).every((result) => {
+      console.log('deleted file: ', result)
+      return result.$metadata.httpStatusCode === 204
+    })
 
-    // if (response) {
+    if (response) {
       // 새로운 파일 업로드
       const pathListPromises = files.map(async (file) => {
         try {
@@ -144,8 +165,8 @@ router.post('/school_photo_edit', uploadFields, async (req, res) => {
       } catch (error) {
         console.error('파일 업로드 중 오류 발생: ', error)
       }
-    // }
-  // }
+    }
+  }
 
   const data = {
     id,
@@ -154,17 +175,16 @@ router.post('/school_photo_edit', uploadFields, async (req, res) => {
   }
 
   if (pathList) {
-    console.log("pathList: ", pathList);
-   const files =  pathList.map((path) => {
+    console.log('pathList: ', pathList)
+    const files = pathList.map((path) => {
       return {
         filename: path.filename,
         date: path.date,
         extension: path.extension
       }
     })
-    console.log("files: ", files);
+    console.log('files: ', files)
     Object.assign(data, { files: files })
-    
   }
 
   try {

@@ -17,10 +17,10 @@ export const upload = multer({ storage })
 
 export const deleteToS3 = async (deleteKeyArr) => {
   const bucketName = 'cgloria-bucket'
-  // console.log("deleteKeyArr: ", deleteKeyArr);
+  console.log("deleteKeyArr: ", deleteKeyArr);
 
   // 모든 비동기 작업이 완료될 때까지 기다림
-  const testArr = await Promise.all(
+  const resultArr = await Promise.all(
     deleteKeyArr.map(async (key) => {
       const command = new DeleteObjectCommand({ Bucket: bucketName, Key: key })
       // console.log("command: ", command);
@@ -38,7 +38,7 @@ export const deleteToS3 = async (deleteKeyArr) => {
 
   // console.log("testArr: ", testArr);
 
-  return testArr
+  return resultArr
 }
 
 // 파일 업로드 함수
