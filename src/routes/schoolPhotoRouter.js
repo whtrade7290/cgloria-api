@@ -7,7 +7,7 @@ import {
   logicalDeleteSchoolPhoto,
   editSchoolPhotoContent
 } from '../services/schoolPhotoService.js'
-import { upload, uploadToS3 } from '../utils/multer.js'
+import { upload, uploadToS3, deleteToS3 } from '../utils/multer.js'
 
 const router = express.Router()
 
@@ -43,27 +43,27 @@ router.post('/school_photo_write', upload.array('fileField', 6), async (req, res
   let pathList = {}
 
   const pathListPromises = req.files.map(async (file) => {
+    try {
+      // 파일을 S3에 업로드
+      return await uploadToS3(file)
+    } catch (error) {
+      console.error('S3 업로드 중 오류 발생: ', error)
+      return null // 실패한 경우 null을 반환하거나 적절한 처리를 합니다.
+    }
+  })
+
   try {
-    // 파일을 S3에 업로드
-    return await uploadToS3(file);
+    // 모든 업로드가 완료될 때까지 기다림
+    pathList = await Promise.all(pathListPromises)
+    // results 배열에 업로드 결과가 담겨 있음
+    console.log('업로드 결과:', pathList)
+    // 업로드 결과를 처리하는 로직을 추가합니다.
   } catch (error) {
-    console.error("S3 업로드 중 오류 발생: ", error);
-    return null; // 실패한 경우 null을 반환하거나 적절한 처리를 합니다.
+    console.error('파일 업로드 중 오류 발생: ', error)
   }
-});
-
-try {
-  // 모든 업로드가 완료될 때까지 기다림
-     pathList = await Promise.all(pathListPromises);
-  // results 배열에 업로드 결과가 담겨 있음
-  console.log('업로드 결과:', pathList);
-  // 업로드 결과를 처리하는 로직을 추가합니다.
-} catch (error) {
-  console.error("파일 업로드 중 오류 발생: ", error);
-}
 
   try {
-   const result = await writeSchoolPhotoContent({
+    const result = await writeSchoolPhotoContent({
       title,
       content,
       writer,
@@ -98,22 +98,50 @@ router.post('/school_photo_delete', async (req, res) => {
   }
 })
 
-router.post('/school_photo_edit', upload.array('fileField', 6), async (req, res) => {
-  const { title, content, id } = req.body
+const uploadFields = upload.fields([
+  { name: 'deleteFile', maxCount: 6 }, // 'deleteFile' 필드에서 최대 6개의 파일 허용
+  { name: 'fileField', maxCount: 6 } // 'fileField' 필드에서 최대 6개의 파일 허용
+])
 
-  const pathList = req.files.map(({ filename }) => {
-    // '_'로 먼저 분리
-    const temporary = filename.split('_')
+router.post('/school_photo_edit', uploadFields, async (req, res) => {
+  const { title, content, id, deleteKeyList = '' } = req.body
+  let pathList = {}
 
-    // 두 번째 부분을 다시 '.'로 분리
-    const dateAndExtension = temporary[1].split('.')
+  const files = req?.files['fileField'] ?? []
 
-    return {
-      filename: temporary[0],
-      extension: dateAndExtension[1],
-      date: dateAndExtension[0]
+  if (deleteKeyList !== '' && files.length > 0) {
+    const deleteKeyArr = deleteKeyList.split(',')
+
+    console.log("deleteKeyArr: ", deleteKeyArr);
+
+    const response = (await deleteToS3(deleteKeyArr)).every((result) => {
+      console.log("deleted file: ", result);
+      return result.$metadata.httpStatusCode === 204
+    })
+
+    if (response) {
+      // 새로운 파일 업로드
+      const pathListPromises = files.map(async (file) => {
+        try {
+          // 파일을 S3에 업로드
+          return await uploadToS3(file)
+        } catch (error) {
+          console.error('S3 업로드 중 오류 발생: ', error)
+          return null // 실패한 경우 null을 반환하거나 적절한 처리를 합니다.
+        }
+      })
+
+      try {
+        // 모든 업로드가 완료될 때까지 기다림
+        pathList = await Promise.all(pathListPromises)
+        // results 배열에 업로드 결과가 담겨 있음
+        console.log('업로드 결과:', pathList)
+        // 업로드 결과를 처리하는 로직을 추가합니다.
+      } catch (error) {
+        console.error('파일 업로드 중 오류 발생: ', error)
+      }
     }
-  })
+  }
 
   const data = {
     id,
@@ -122,7 +150,17 @@ router.post('/school_photo_edit', upload.array('fileField', 6), async (req, res)
   }
 
   if (pathList) {
-    Object.assign(data, { files: pathList })
+    console.log("pathList: ", pathList);
+   const files =  pathList.map((path) => {
+      return {
+        filename: path.filename,
+        date: path.date,
+        extension: path.extension
+      }
+    })
+    console.log("files: ", files);
+    Object.assign(data, { files: files })
+    
   }
 
   try {

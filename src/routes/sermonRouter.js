@@ -56,7 +56,7 @@ router.post('/sermon_write', upload.single('fileField'), async (req, res) => {
       writer,
       mainContent: mainContent === 'true',
       extension: s3Response.extension ?? '',
-      fileDate: s3Response.data ?? '',
+      fileDate: s3Response.date ?? '',
       filename: s3Response.filename ?? ''
     })
 
