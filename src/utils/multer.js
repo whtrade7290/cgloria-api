@@ -15,9 +15,9 @@ const s3 = new S3Client({
 const storage = multer.memoryStorage()
 export const upload = multer({ storage })
 
-export const deleteToS3 = async (deleteKeyArr) => {
+export const deleteS3Files = async (deleteKeyArr) => {
   const bucketName = 'cgloria-bucket'
-  console.log("deleteKeyArr: ", deleteKeyArr);
+  console.log('deleteKeyArr: ', deleteKeyArr)
 
   // 모든 비동기 작업이 완료될 때까지 기다림
   const resultArr = await Promise.all(
@@ -67,5 +67,22 @@ export const uploadToS3 = async (file) => {
   } catch (error) {
     console.error('파일 업로드 실패:', error)
     throw error // 오류를 다시 throw하여 상위 catch에서 처리할 수 있도록 합니다.
+  }
+}
+
+export const deleteS3File = async (deleteKey) => {
+  const bucketName = 'cgloria-bucket'
+  console.log('deleteKey: ', deleteKey)
+
+  const command = new DeleteObjectCommand({ Bucket: bucketName, Key: deleteKey })
+  console.log('command: ', command)
+
+  try {
+    const response = await s3.send(command)
+    console.log(`삭제된 파일: ${deleteKey}`, response) // 응답 출력
+    return response
+  } catch (error) {
+    console.error(`파일 삭제 실패: ${deleteKey}`, error)
+    return error
   }
 }

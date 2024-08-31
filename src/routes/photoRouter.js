@@ -7,7 +7,7 @@ import {
   logicalDeletePhoto,
   editPhotoContent
 } from '../services/photoService.js'
-import { upload, uploadToS3, deleteToS3 } from '../utils/multer.js'
+import { upload, uploadToS3, deleteS3Files } from '../utils/multer.js'
 
 const router = express.Router()
 
@@ -84,41 +84,40 @@ router.post('/photo_write', upload.array('fileField', 6), async (req, res) => {
 })
 
 router.post('/photo_delete', async (req, res) => {
-  const { id, deleteKeyList = '' } = req.body;
-  console.log('deleteKeyList: ', deleteKeyList);
+  const { id, deleteKeyList = '' } = req.body
+  console.log('deleteKeyList: ', deleteKeyList)
 
   if (deleteKeyList !== '') {
-    const deleteKeyArr = deleteKeyList.map(file => {
-      return `cgloria-photo/${file?.date}${file?.filename}${file?.extension}`;
-    });
+    const deleteKeyArr = deleteKeyList.map((file) => {
+      return `cgloria-photo/${file?.date}${file?.filename}${file?.extension}`
+    })
 
-    const response = (await deleteToS3(deleteKeyArr)).every((result) => {
-      console.log('deleted file: ', result);
-      return result.$metadata.httpStatusCode === 204;
-    });
+    const response = (await deleteS3Files(deleteKeyArr)).every((result) => {
+      console.log('deleted file: ', result)
+      return result.$metadata.httpStatusCode === 204
+    })
 
     if (response) {
       try {
-        const result = await logicalDeletePhoto(id);
+        const result = await logicalDeletePhoto(id)
 
         if (!result) {
-          return res.status(404).json({ error: 'Photo not found' });
+          return res.status(404).json({ error: 'Photo not found' })
         }
-        res.json(!!result);
+        res.json(!!result)
       } catch (error) {
-        console.error('Error fetching Photo:', error);
-        res.status(500).json({ error: 'Error fetching Photo' });
+        console.error('Error fetching Photo:', error)
+        res.status(500).json({ error: 'Error fetching Photo' })
       }
     } else {
       // S3에서 파일 삭제 실패 시 처리
-      console.error('Error deleting files from S3');
-      res.status(500).json({ error: 'Failed to delete files from S3' });
+      console.error('Error deleting files from S3')
+      res.status(500).json({ error: 'Failed to delete files from S3' })
     }
   } else {
-    res.status(400).json({ error: 'No files to delete' }); // 필수 필드가 없는 경우 처리
+    res.status(400).json({ error: 'No files to delete' }) // 필수 필드가 없는 경우 처리
   }
-});
-
+})
 
 const uploadFields = upload.fields([
   { name: 'deleteFile', maxCount: 6 }, // 'deleteFile' 필드에서 최대 6개의 파일 허용
@@ -141,7 +140,7 @@ router.post('/photo_edit', uploadFields, async (req, res) => {
 
     console.log('deleteKeyArr: ', deleteKeyArr)
 
-    const response = (await deleteToS3(deleteKeyArr)).every((result) => {
+    const response = (await deleteS3Files(deleteKeyArr)).every((result) => {
       console.log('deleted file: ', result)
       return result.$metadata.httpStatusCode === 204
     })

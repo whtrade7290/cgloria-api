@@ -8,7 +8,7 @@ import {
   editSermonContent,
   getMainSermon
 } from '../services/sermonService.js'
-import { upload, uploadToS3 } from '../utils/multer.js'
+import { upload, uploadToS3, deleteS3File } from '../utils/multer.js'
 
 const router = express.Router()
 
@@ -75,23 +75,35 @@ router.post('/sermon_write', upload.single('fileField'), async (req, res) => {
 })
 
 router.post('/sermon_delete', async (req, res) => {
-  const { id } = req.body
-  try {
-    const result = await logicalDeleteSermon(id)
+  const { id, deleteKey } = req.body
+  console.log('deleteKey: ', deleteKey)
 
-    if (!result) {
-      return res.status(404).json({ error: 'Sermon not found' })
+  if (deleteKey !== '') {
+    const result = await deleteS3File(deleteKey)
+
+    if (result.$metadata.httpStatusCode === 204) {
+      console.log("S3 delete file success status code: ", result.$metadata.httpStatusCode);
+    } else {
+       console.log("S3 delete file fail status code: ", result.$metadata.httpStatusCode);
     }
-    res.json(!!result)
-  } catch (error) {
-    console.error('Error fetching sermon:', error)
-    res.status(500).json({ error: 'Error fetching sermon' })
   }
+        try {
+        const result = await logicalDeleteSermon(id)
+
+        if (!result) {
+          return res.status(404).json({ error: 'Sermon not found' })
+        }
+        res.json(!!result)
+      } catch (error) {
+        console.error('Error fetching sermon:', error)
+        res.status(500).json({ error: 'Error fetching sermon' })
+      }
 })
 
 router.post('/sermon_edit', upload.single('fileField'), async (req, res) => {
-  const { title, content, id, mainContent } = req.body
-  const fileData = req.fileData || {}
+  const { title, content, id, mainContent, deleteFile } = req.body
+  const file = req.file
+  let s3Response = {}
 
   const data = {
     id,
@@ -100,12 +112,18 @@ router.post('/sermon_edit', upload.single('fileField'), async (req, res) => {
     mainContent: mainContent === 'true'
   }
 
-  if (fileData) {
-    Object.assign(data, {
-      extension: fileData.extension ?? '',
-      fileDate: fileData.date ?? '',
-      filename: fileData.filename ?? ''
-    })
+  if (deleteFile !== '' && file) {
+    const result = await deleteS3File(deleteFile)
+
+    if (result.$metadata.httpStatusCode === 204) {
+      s3Response = await uploadToS3(file)
+
+      Object.assign(data, {
+        extension: s3Response.extension ?? '',
+        fileDate: s3Response.date ?? '',
+        filename: s3Response.filename ?? ''
+      })
+    }
   }
 
   try {
