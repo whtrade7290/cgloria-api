@@ -109,17 +109,21 @@ router.post('/school_photo_edit', uploadFields, async (req, res) => {
 
   const files = req?.files['fileField'] ?? []
 
-  if (deleteKeyList !== '' && files.length > 0) {
-    const deleteKeyArr = deleteKeyList.split(',')
+  /**
+   * ※ 사양 확인 후 적용 ※ 
+   * 게시글 사진 수정시 파일 삭제 되도록 하는 로직
+   */
+  // if (deleteKeyList !== '' && files.length > 0) {
+    // const deleteKeyArr = deleteKeyList.split(',')
 
-    console.log("deleteKeyArr: ", deleteKeyArr);
+    // console.log("deleteKeyArr: ", deleteKeyArr);
 
-    const response = (await deleteToS3(deleteKeyArr)).every((result) => {
-      console.log("deleted file: ", result);
-      return result.$metadata.httpStatusCode === 204
-    })
+    // const response = (await deleteToS3(deleteKeyArr)).every((result) => {
+    //   console.log("deleted file: ", result);
+    //   return result.$metadata.httpStatusCode === 204
+    // })
 
-    if (response) {
+    // if (response) {
       // 새로운 파일 업로드
       const pathListPromises = files.map(async (file) => {
         try {
@@ -140,8 +144,8 @@ router.post('/school_photo_edit', uploadFields, async (req, res) => {
       } catch (error) {
         console.error('파일 업로드 중 오류 발생: ', error)
       }
-    }
-  }
+    // }
+  // }
 
   const data = {
     id,
