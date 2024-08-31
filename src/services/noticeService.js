@@ -67,3 +67,32 @@ export async function logicalDeleteNotice(id) {
     }
   })
 }
+
+export function editNoticeContent({ id, title, content, extension, fileDate, filename }) {
+  if (extension !== '' && fileDate !== '' && filename !== '') {
+    return prisma.notice.update({
+      where: {
+        id: id
+      },
+      data: {
+        title: title,
+        content: content,
+        update_at: new Date(),
+        extension: extension,
+        fileDate: fileDate,
+        filename: filename
+      }
+    })
+  } else {
+    return prisma.notice.update({
+      where: {
+        id: id
+      },
+      data: {
+        title: title,
+        content: content,
+        update_at: new Date()
+      }
+    })
+  }
+}

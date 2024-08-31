@@ -78,3 +78,14 @@ export function editLibraryContent({ id, title, content, extension, fileDate, fi
     })
   }
 }
+
+export async function logicalDeleteLibrary(id) {
+  return prisma.notice.update({
+    where: {
+      id: id
+    },
+    data: {
+      deleted: true
+    }
+  })
+}

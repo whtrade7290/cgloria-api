@@ -8,7 +8,7 @@ import {
   editWeeklyContent,
   getMainWeekly
 } from '../services/weeklyService.js'
-import { upload, uploadToS3 } from '../utils/multer.js'
+import { upload, uploadToS3, deleteS3File } from '../utils/multer.js'
 
 const router = express.Router()
 
@@ -55,7 +55,7 @@ router.post('/weekly_write', upload.single('fileField'), async (req, res) => {
       writer,
       mainContent: mainContent === 'true',
       extension: s3Response.extension ?? '',
-      fileDate: s3Response.data ?? '',
+      fileDate: s3Response.date ?? '',
       filename: s3Response.filename ?? ''
     })
 
@@ -74,7 +74,18 @@ router.post('/weekly_write', upload.single('fileField'), async (req, res) => {
 })
 
 router.post('/weekly_delete', async (req, res) => {
-  const { id } = req.body
+  const { id, deleteKey } = req.body
+
+  if (deleteKey !== '') {
+    const result = await deleteS3File(deleteKey)
+
+    if (result.$metadata.httpStatusCode === 204) {
+      console.log("S3 delete file success status code: ", result.$metadata.httpStatusCode);
+    } else {
+       console.log("S3 delete file fail status code: ", result.$metadata.httpStatusCode);
+    }
+  }
+
   try {
     const result = await logicalDeleteWeekly(id)
 
@@ -89,8 +100,9 @@ router.post('/weekly_delete', async (req, res) => {
 })
 
 router.post('/weekly_edit', upload.single('fileField'), async (req, res) => {
-  const { title, content, id, mainContent } = req.body
-  const fileData = req.fileData || {}
+  const { title, content, id, mainContent,deleteFile } = req.body
+  const file = req.file || {}
+  let s3Response = {}
 
   const data = {
     id,
@@ -99,12 +111,18 @@ router.post('/weekly_edit', upload.single('fileField'), async (req, res) => {
     mainContent: mainContent === 'true'
   }
 
-  if (fileData) {
-    Object.assign(data, {
-      extension: fileData.extension ?? '',
-      fileDate: fileData.date ?? '',
-      filename: fileData.filename ?? ''
-    })
+  if (deleteFile !== '' && file) {
+    const result = await deleteS3File(deleteFile)
+
+    if (result.$metadata.httpStatusCode === 204) {
+      s3Response = await uploadToS3(file)
+
+      Object.assign(data, {
+        extension: s3Response.extension ?? '',
+        fileDate: s3Response.date ?? '',
+        filename: s3Response.filename ?? ''
+      })
+    }
   }
 
   try {

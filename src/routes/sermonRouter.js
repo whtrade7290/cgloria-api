@@ -76,7 +76,6 @@ router.post('/sermon_write', upload.single('fileField'), async (req, res) => {
 
 router.post('/sermon_delete', async (req, res) => {
   const { id, deleteKey } = req.body
-  console.log('deleteKey: ', deleteKey)
 
   if (deleteKey !== '') {
     const result = await deleteS3File(deleteKey)
@@ -102,7 +101,7 @@ router.post('/sermon_delete', async (req, res) => {
 
 router.post('/sermon_edit', upload.single('fileField'), async (req, res) => {
   const { title, content, id, mainContent, deleteFile } = req.body
-  const file = req.file
+  const file = req.file || {}
   let s3Response = {}
 
   const data = {

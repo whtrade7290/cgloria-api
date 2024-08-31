@@ -4,9 +4,10 @@ import {
   totalNoticeCount,
   getNoticeContent,
   writeNoticeContent,
-  logicalDeleteNotice
+  logicalDeleteNotice,
+  editNoticeContent
 } from '../services/noticeService.js'
-import { upload, uploadToS3 } from '../utils/multer.js'
+import { upload, uploadToS3, deleteS3File } from '../utils/multer.js'
 
 const router = express.Router()
 
@@ -52,7 +53,7 @@ router.post('/notice_write', upload.single('fileField'), async (req, res) => {
       content,
       writer,
       extension: s3Response.extension ?? '',
-      fileDate: s3Response.data ?? '',
+      fileDate: s3Response.date ?? '',
       filename: s3Response.filename ?? ''
     })
 
@@ -71,7 +72,18 @@ router.post('/notice_write', upload.single('fileField'), async (req, res) => {
 })
 
 router.post('/notice_delete', async (req, res) => {
-  const { id } = req.body
+  const { id, deleteKey } = req.body
+
+  if (deleteKey !== '') {
+    const result = await deleteS3File(deleteKey)
+
+    if (result.$metadata.httpStatusCode === 204) {
+      console.log("S3 delete file success status code: ", result.$metadata.httpStatusCode);
+    } else {
+       console.log("S3 delete file fail status code: ", result.$metadata.httpStatusCode);
+    }
+  }
+
   try {
     const result = await logicalDeleteNotice(id)
 
@@ -82,6 +94,45 @@ router.post('/notice_delete', async (req, res) => {
   } catch (error) {
     console.error('Error fetching Notice:', error)
     res.status(500).json({ error: 'Error fetching Notice' })
+  }
+})
+
+router.post('/notice_edit', upload.single('fileField'), async (req, res) => {
+  const { title, content, id, mainContent,deleteFile } = req.body
+  const file = req.file || {}
+  let s3Response = {}
+
+  const data = {
+    id,
+    title,
+    content,
+    mainContent: mainContent === 'true'
+  }
+
+  if (deleteFile !== '' && file) {
+    const result = await deleteS3File(deleteFile)
+
+    if (result.$metadata.httpStatusCode === 204) {
+      s3Response = await uploadToS3(file)
+
+      Object.assign(data, {
+        extension: s3Response.extension ?? '',
+        fileDate: s3Response.date ?? '',
+        filename: s3Response.filename ?? ''
+      })
+    }
+  }
+
+  try {
+    const result = await editNoticeContent(data)
+
+    if (!result) {
+      return res.status(404).json({ error: 'column not found' })
+    }
+    res.json(!!result)
+  } catch (error) {
+    console.error('Error fetching:', error)
+    res.status(500).json({ error: 'Error fetching column' })
   }
 })
 
