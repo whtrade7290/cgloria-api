@@ -6,7 +6,7 @@ import cors from 'cors'
 import morgan from 'morgan'
 import bcrypt from 'bcrypt'
 import path from 'path'
-import { signIn, signUp } from '../src/services/userService.js'
+import { signIn, signUp, findUser } from '../src/services/userService.js'
 import {
   auth,
   makeAccessToken,
@@ -96,6 +96,8 @@ app.post('/signIn', async (req, res) => {
       return
     }
 
+    console.log('user: ', user)
+
     const logedUser = {
       id: parseInt(user.id),
       username: user.username,
@@ -158,6 +160,32 @@ app.post('/check_Token', async (req, res) => {
       success: 2,
       message: 'Access Token is valid',
       accessToken: accessToken
+    })
+  }
+})
+
+app.post('/find_user', async (req, res) => {
+  const { username } = req.body
+
+  console.log('username: ', username)
+
+  if (!username) {
+    res.status(500).json({ error: 'Error fetching users' })
+  }
+
+  const user = await findUser(username)
+
+  console.log('user:', user)
+
+  if (user) {
+    res.status(200).json({
+      id: Number(user.id),
+      username: user.username,
+      name: user.name
+    })
+  } else {
+    res.status(404).json({
+      message: 'User not found'
     })
   }
 })

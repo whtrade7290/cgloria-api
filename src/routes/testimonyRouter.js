@@ -81,9 +81,9 @@ router.post('/testimony_delete', async (req, res) => {
     const result = await deleteS3File(deleteKey)
 
     if (result.$metadata.httpStatusCode === 204) {
-      console.log("S3 delete file success status code: ", result.$metadata.httpStatusCode);
+      console.log('S3 delete file success status code: ', result.$metadata.httpStatusCode)
     } else {
-       console.log("S3 delete file fail status code: ", result.$metadata.httpStatusCode);
+      console.log('S3 delete file fail status code: ', result.$metadata.httpStatusCode)
     }
   }
 

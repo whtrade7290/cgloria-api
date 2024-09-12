@@ -1,21 +1,26 @@
 import { prisma } from '../utils/prismaClient.js'
 
 export async function getPhotoList(startRow, pageSize) {
-  const data = await prisma.photo.findMany({
-    where: {
-      deleted: false
-    },
-    orderBy: {
-      id: 'desc'
-    },
-    take: pageSize,
-    skip: startRow
-  })
+  try {
+    const data = await prisma.photo.findMany({
+      where: {
+        deleted: false
+      },
+      orderBy: {
+        id: 'desc'
+      },
+      take: pageSize,
+      skip: startRow
+    })
 
-  return data.map((item) => ({
-    ...item,
-    id: Number(item.id)
-  }))
+    return data.map((item) => ({
+      ...item,
+      id: Number(item.id)
+    }))
+  } catch (error) {
+    console.error('Error fetching photo list from the database:', error)
+    throw new Error('사진 목록을 가져오는 중 오류가 발생했습니다.')
+  }
 }
 
 export async function totalPhotoCount() {

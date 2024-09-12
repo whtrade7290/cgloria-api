@@ -5,7 +5,8 @@ import {
   writeWithDiaryContent,
   getWithDiaryContent,
   logicalDeleteWithDiary,
-  editWithDiaryContent
+  editWithDiaryContent,
+  createDiaryRoomWithUsers
 } from '../services/withDiaryService.js'
 import { upload } from '../utils/multer.js'
 
@@ -18,8 +19,10 @@ router.post('/withDiary', async (req, res) => {
 })
 
 router.post('/withDiary_count', async (req, res) => {
-  const { withDiary } = req.body
-  const count = await totalWithDiaryCount(withDiary)
+  const { id } = req.body
+  console.log('id: ', id)
+  const count = await totalWithDiaryCount(id)
+  console.log('count: ', count)
   res.json(count)
 })
 
@@ -101,6 +104,28 @@ router.post('/withDiary_edit', upload.single('fileField'), async (req, res) => {
   } catch (error) {
     console.error('Error fetching:', error)
     res.status(500).json({ error: 'Error fetching WithDiary' })
+  }
+})
+
+router.post('/make_withDiary', async (req, res) => {
+  const { teamName, userIdList } = req.body
+
+  console.log('teamName: ', teamName)
+  console.log('userIdList: ', userIdList)
+
+  if (!teamName || userIdList.length === 0) {
+    res.status(500).json({ error: 'Error fetching teamName' })
+  }
+
+  try {
+    const result = await createDiaryRoomWithUsers(teamName, userIdList)
+
+    if (result) {
+      res.status(200).json(!!result)
+    }
+  } catch (error) {
+    console.error('Error fetching:', error)
+    res.status(500).json({ error: 'Error fetching WithDiaryRoom' })
   }
 })
 

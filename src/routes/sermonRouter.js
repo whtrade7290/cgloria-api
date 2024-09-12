@@ -81,22 +81,22 @@ router.post('/sermon_delete', async (req, res) => {
     const result = await deleteS3File(deleteKey)
 
     if (result.$metadata.httpStatusCode === 204) {
-      console.log("S3 delete file success status code: ", result.$metadata.httpStatusCode);
+      console.log('S3 delete file success status code: ', result.$metadata.httpStatusCode)
     } else {
-       console.log("S3 delete file fail status code: ", result.$metadata.httpStatusCode);
+      console.log('S3 delete file fail status code: ', result.$metadata.httpStatusCode)
     }
   }
-        try {
-        const result = await logicalDeleteSermon(id)
+  try {
+    const result = await logicalDeleteSermon(id)
 
-        if (!result) {
-          return res.status(404).json({ error: 'Sermon not found' })
-        }
-        res.json(!!result)
-      } catch (error) {
-        console.error('Error fetching sermon:', error)
-        res.status(500).json({ error: 'Error fetching sermon' })
-      }
+    if (!result) {
+      return res.status(404).json({ error: 'Sermon not found' })
+    }
+    res.json(!!result)
+  } catch (error) {
+    console.error('Error fetching sermon:', error)
+    res.status(500).json({ error: 'Error fetching sermon' })
+  }
 })
 
 router.post('/sermon_edit', upload.single('fileField'), async (req, res) => {
@@ -139,8 +139,16 @@ router.post('/sermon_edit', upload.single('fileField'), async (req, res) => {
 })
 
 router.get('/main_sermon', async (req, res) => {
-  const data = await getMainSermon()
-  res.send(data)
+  try {
+    const data = await getMainSermon()
+    if (!data || data.length === 0) {
+      return res.status(404).send({ message: 'No sermons found' })
+    }
+    res.send(data)
+  } catch (error) {
+    console.error('Error fetching main sermon:', error)
+    res.status(500).send({ message: 'Internal Server Error' })
+  }
 })
 
 export default router

@@ -1,9 +1,10 @@
 import { prisma } from '../utils/prismaClient.js'
 
 export async function getWithDiaryList(startRow, pageSize, withDiary) {
+  console.log('withDiary: ', withDiary)
   const data = await prisma.withDiary.findMany({
     where: {
-      withDiaryNum: withDiary,
+      // withDiaryNum: { in: withDiary },
       deleted: false
     },
     orderBy: {
@@ -19,11 +20,10 @@ export async function getWithDiaryList(startRow, pageSize, withDiary) {
   }))
 }
 
-export async function totalWithDiaryCount(withDiary) {
-  return await prisma.withDiary.count({
+export async function totalWithDiaryCount(id) {
+  return await prisma.withDiaryRoom.count({
     where: {
-      withDiaryNum: withDiary,
-      deleted: false
+      id: id
     }
   })
 }
@@ -98,5 +98,41 @@ export function editWithDiaryContent({ id, title, content, extension, fileDate, 
         update_at: new Date()
       }
     })
+  }
+}
+
+export async function createDiaryRoomWithUsers(teamName, userIdList) {
+  console.log('teamName: ', teamName)
+  console.log('userIdList: ', userIdList)
+
+  try {
+    const diaryRoom = await prisma.$transaction(async (tx) => {
+      // Step 1: Create the diary room
+      const createdDiaryRoom = await tx.withDiaryRoom.create({
+        data: {
+          cohort: teamName,
+          creator: 'test1'
+        }
+      })
+
+      // Step 2: Create UserDiaryRoom entries for each user
+      const userDiaryRooms = userIdList.map((userId) => ({
+        userId,
+        diaryRoomId: createdDiaryRoom.id
+      }))
+
+      await tx.userDiaryRoom.createMany({
+        data: userDiaryRooms
+      })
+
+      return createdDiaryRoom
+    })
+
+    return diaryRoom
+  } catch (error) {
+    console.error('Error creating diary room and users:', error)
+    throw error
+  } finally {
+    await prisma.$disconnect()
   }
 }

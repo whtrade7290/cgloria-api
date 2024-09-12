@@ -26,3 +26,9 @@ export async function signUp(username, hashedPassword) {
 
   return obj
 }
+
+export async function findUser(username) {
+  return await prisma.user.findUnique({
+    where: { username }
+  })
+}

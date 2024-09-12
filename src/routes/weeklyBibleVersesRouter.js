@@ -80,9 +80,9 @@ router.post('/weekly_delete', async (req, res) => {
     const result = await deleteS3File(deleteKey)
 
     if (result.$metadata.httpStatusCode === 204) {
-      console.log("S3 delete file success status code: ", result.$metadata.httpStatusCode);
+      console.log('S3 delete file success status code: ', result.$metadata.httpStatusCode)
     } else {
-       console.log("S3 delete file fail status code: ", result.$metadata.httpStatusCode);
+      console.log('S3 delete file fail status code: ', result.$metadata.httpStatusCode)
     }
   }
 
@@ -100,7 +100,7 @@ router.post('/weekly_delete', async (req, res) => {
 })
 
 router.post('/weekly_edit', upload.single('fileField'), async (req, res) => {
-  const { title, content, id, mainContent,deleteFile } = req.body
+  const { title, content, id, mainContent, deleteFile } = req.body
   const file = req.file || {}
   let s3Response = {}
 

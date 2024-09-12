@@ -78,24 +78,23 @@ router.post('/library_delete', async (req, res) => {
     const result = await deleteS3File(deleteKey)
 
     if (result.$metadata.httpStatusCode === 204) {
-      console.log("S3 delete file success status code: ", result.$metadata.httpStatusCode);
+      console.log('S3 delete file success status code: ', result.$metadata.httpStatusCode)
     } else {
-       console.log("S3 delete file fail status code: ", result.$metadata.httpStatusCode);
+      console.log('S3 delete file fail status code: ', result.$metadata.httpStatusCode)
     }
   }
-        try {
-        const result = await logicalDeleteLibrary(id)
+  try {
+    const result = await logicalDeleteLibrary(id)
 
-        if (!result) {
-          return res.status(404).json({ error: 'Sermon not found' })
-        }
-        res.json(!!result)
-      } catch (error) {
-        console.error('Error fetching sermon:', error)
-        res.status(500).json({ error: 'Error fetching sermon' })
-      }
+    if (!result) {
+      return res.status(404).json({ error: 'Sermon not found' })
+    }
+    res.json(!!result)
+  } catch (error) {
+    console.error('Error fetching sermon:', error)
+    res.status(500).json({ error: 'Error fetching sermon' })
+  }
 })
-
 
 router.post('/library_edit', upload.single('fileField'), async (req, res) => {
   const { title, content, id, mainContent, deleteFile } = req.body

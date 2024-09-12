@@ -14,8 +14,13 @@ const router = express.Router()
 router.post('/photo', async (req, res) => {
   const { startRow, pageSize } = req.body
 
-  const data = await getPhotoList(startRow, pageSize)
-  res.send(data)
+  try {
+    const data = await getPhotoList(startRow, pageSize)
+    res.send(data)
+  } catch (error) {
+    console.error('Error fetching photo list:', error)
+    res.status(500).send({ error: '사진 목록을 가져오는 중 오류가 발생했습니다.' })
+  }
 })
 
 router.get('/photo_count', async (req, res) => {
