@@ -1,10 +1,10 @@
 import { prisma } from '../utils/prismaClient.js'
 
-export async function getWithDiaryList(startRow, pageSize, withDiary) {
-  console.log('withDiary: ', withDiary)
+export async function getWithDiaryList(startRow, pageSize, roomId) {
+  console.log('roomId: ', roomId)
   const data = await prisma.withDiary.findMany({
     where: {
-      // withDiaryNum: { in: withDiary },
+      diaryRoomId: Number(roomId),
       deleted: false
     },
     orderBy: {
@@ -21,9 +21,10 @@ export async function getWithDiaryList(startRow, pageSize, withDiary) {
 }
 
 export async function totalWithDiaryCount(id) {
-  return await prisma.withDiaryRoom.count({
+  console.log("id: ", id);
+  return await prisma.withDiary.count({
     where: {
-      id: id
+      diaryRoomId: id
     }
   })
 }
@@ -136,3 +137,28 @@ export async function createDiaryRoomWithUsers(teamName, userIdList) {
     await prisma.$disconnect()
   }
 }
+
+export function fetchWithDiaryRoomList(userId) {
+  const result = prisma.userDiaryRoom.findMany({
+    where: {
+      userId: userId
+    },
+    include: {
+      diaryRoom: true // withDiaryRoom 데이터를 함께 가져옴
+    }
+  })
+
+  return result
+}
+
+export function getWithDiaryRoom(roomId) {
+  return prisma.withDiaryRoom.findUnique({
+    where: {
+      id: Number(roomId)
+    }
+  })
+}
+
+
+
+
