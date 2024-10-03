@@ -107,7 +107,7 @@ router.post('/library_edit', upload.single('fileField'), async (req, res) => {
     content
   }
 
-  if (deleteFile !== '' && file) {
+  if (deleteFile && file) {
     const result = await deleteS3File(deleteFile)
 
     if (result.$metadata.httpStatusCode === 204) {

@@ -15,7 +15,7 @@ async function createTestData() {
 
   // 나머지 모델에 대한 테스트 데이터 생성
   // const models = ['columns', 'weekly_bible_verses', 'class_meeting', 'sunday_school_photo_gallery', 'sunday_school_resources', 'general_forum', 'photo_gallery', 'testimonies'];
-  // const models = ['testimonies']
+  const models = ['testimonies']
 
   for (const model of models) {
     for (let i = 0; i < 20; i++) {

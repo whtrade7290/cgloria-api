@@ -44,20 +44,22 @@ export async function writeWithDiaryContent({
   title,
   content,
   writer,
+  writer_name,
   filename,
   extension,
   fileDate,
-  withDiaryNum
+  diaryRoomId
 }) {
   return await prisma.withDiary.create({
     data: {
       title: title,
       content: content,
       writer: writer,
+      writer_name: writer_name,
       filename: filename,
       extension: extension,
       fileDate: fileDate,
-      withDiaryNum: withDiaryNum
+      diaryRoomId: diaryRoomId
     }
   })
 }
@@ -102,7 +104,7 @@ export function editWithDiaryContent({ id, title, content, extension, fileDate, 
   }
 }
 
-export async function createDiaryRoomWithUsers(teamName, userIdList) {
+export async function createDiaryRoomWithUsers(teamName, userIdList, creator, creator_name) {
   console.log('teamName: ', teamName)
   console.log('userIdList: ', userIdList)
 
@@ -111,8 +113,9 @@ export async function createDiaryRoomWithUsers(teamName, userIdList) {
       // Step 1: Create the diary room
       const createdDiaryRoom = await tx.withDiaryRoom.create({
         data: {
-          cohort: teamName,
-          creator: 'test1'
+          roomName: teamName,
+          creator: creator,
+          creator_name: creator_name
         }
       })
 

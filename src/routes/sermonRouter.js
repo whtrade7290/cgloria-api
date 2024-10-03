@@ -111,7 +111,8 @@ router.post('/sermon_edit', upload.single('fileField'), async (req, res) => {
     mainContent: mainContent === 'true'
   }
 
-  if (deleteFile !== '' && file) {
+  if (deleteFile && file) {
+    
     const result = await deleteS3File(deleteFile)
 
     if (result.$metadata.httpStatusCode === 204) {

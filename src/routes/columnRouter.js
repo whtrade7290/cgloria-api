@@ -104,6 +104,9 @@ router.post('/column_edit', upload.single('fileField'), async (req, res) => {
   const file = req.file || {}
   let s3Response = {}
 
+  console.log("deleteFile: ", deleteFile);
+  console.log("file: ", file);
+
   const data = {
     id,
     title,
@@ -111,7 +114,8 @@ router.post('/column_edit', upload.single('fileField'), async (req, res) => {
     mainContent: mainContent === 'true'
   }
 
-  if (deleteFile !== '' && file) {
+  if (deleteFile && file) {
+    console.log("excute");
     const result = await deleteS3File(deleteFile)
 
     if (result.$metadata.httpStatusCode === 204) {

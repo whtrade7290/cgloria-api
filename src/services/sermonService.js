@@ -47,18 +47,20 @@ export async function writeSermonContent({
   fileDate
 }) {
   if (mainContent) {
-    prisma.$transaction(async (prisma) => {
+    // Return the transaction result
+    return await prisma.$transaction(async (prisma) => {
       const createResult = await prisma.sermons.create({
         data: {
-          title: title,
-          content: content,
-          writer: writer,
-          mainContent: mainContent,
-          filename: filename,
-          extension: extension,
-          fileDate: fileDate
+          title,
+          content,
+          writer,
+          mainContent,
+          filename,
+          extension,
+          fileDate
         }
-      })
+      });
+      
       return await prisma.sermons.updateMany({
         data: {
           mainContent: !mainContent
@@ -66,22 +68,24 @@ export async function writeSermonContent({
         where: {
           id: { not: createResult.id }
         }
-      })
-    })
+      });
+      
+    });
   } else {
     return await prisma.sermons.create({
       data: {
-        title: title,
-        content: content,
-        writer: writer,
-        mainContent: mainContent,
-        filename: filename,
-        extension: extension,
-        fileDate: fileDate
+        title,
+        content,
+        writer,
+        mainContent,
+        filename,
+        extension,
+        fileDate
       }
-    })
+    });
   }
 }
+
 
 export async function logicalDeleteSermon(id) {
   return prisma.sermons.update({

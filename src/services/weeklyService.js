@@ -178,6 +178,7 @@ export async function getMainWeekly() {
       mainContent: true
     }
   })
+  console.log("data: ", data);
 
   return {
     ...data,

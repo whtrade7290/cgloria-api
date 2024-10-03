@@ -10,7 +10,7 @@ import {
   fetchWithDiaryRoomList,
   getWithDiaryRoom
 } from '../services/withDiaryService.js'
-import { upload } from '../utils/multer.js'
+import { upload, uploadToS3, deleteS3File } from '../utils/multer.js'
 
 const router = express.Router()
 
@@ -46,19 +46,35 @@ router.post('/withDiary_detail', async (req, res) => {
 })
 
 router.post('/withDiary_write', upload.single('fileField'), async (req, res) => {
-  const { title, content, writer, withDiaryNum } = req.body
-  const fileData = req.fileData || {}
+  const { title, content, writer, writer_name, diaryRoomId } = req.body
+  const file = req.file
+  let s3Response = {}
+
+  if (file) {
+    // 파일을 S3에 업로드
+    s3Response = await uploadToS3(file)
+  }
 
   try {
-    await writeWithDiaryContent({
+   const result = await writeWithDiaryContent({
       title,
       content,
       writer,
-      extension: fileData.extension ?? '',
-      fileDate: fileData.date ?? '',
-      filename: fileData.filename ?? '',
-      withDiaryNum: Number(withDiaryNum)
+      writer_name,
+      extension: s3Response.extension ?? '',
+      fileDate: s3Response.date ?? '',
+      filename: s3Response.filename ?? '',
+      diaryRoomId: Number(diaryRoomId)
     })
+
+    if (result) {
+      // result가 truthy일 때 성공 응답
+      res.status(200).json({ success: true, message: 'Upload Success' })
+    } else {
+      // result가 null 또는 falsy일 때 실패 응답
+      res.status(400).json({ success: false, message: 'Upload Failed' })
+    }
+    return
   } catch (error) {
     console.error('Error fetching:', error)
     res.status(500).json({ error: 'Error fetching WithDiary' })
@@ -81,8 +97,9 @@ router.post('/withDiary_delete', async (req, res) => {
 })
 
 router.post('/withDiary_edit', upload.single('fileField'), async (req, res) => {
-  const { title, content, id } = req.body
-  const fileData = req.fileData || {}
+  const { title, content, id, deleteFile } = req.body
+  const file = req.file || {}
+  let s3Response = {}
 
   const data = {
     id,
@@ -90,12 +107,19 @@ router.post('/withDiary_edit', upload.single('fileField'), async (req, res) => {
     content
   }
 
-  if (fileData) {
-    Object.assign(data, {
-      extension: fileData.extension ?? '',
-      fileDate: fileData.date ?? '',
-      filename: fileData.filename ?? ''
-    })
+  if (deleteFile && file) {
+    
+    const result = await deleteS3File(deleteFile)
+
+    if (result.$metadata.httpStatusCode === 204) {
+      s3Response = await uploadToS3(file)
+
+      Object.assign(data, {
+        extension: s3Response.extension ?? '',
+        fileDate: s3Response.date ?? '',
+        filename: s3Response.filename ?? ''
+      })
+    }
   }
 
   try {
@@ -112,17 +136,19 @@ router.post('/withDiary_edit', upload.single('fileField'), async (req, res) => {
 })
 
 router.post('/make_withDiary', async (req, res) => {
-  const { teamName, userIdList } = req.body
+  const { teamName, userIdList, creator, creator_name } = req.body
 
   console.log('teamName: ', teamName)
   console.log('userIdList: ', userIdList)
+  console.log('creator: ', creator)
+  console.log('creator_name: ', creator_name)
 
   if (!teamName || userIdList.length === 0) {
     res.status(500).json({ error: 'Error fetching teamName' })
   }
 
   try {
-    const result = await createDiaryRoomWithUsers(teamName, userIdList)
+    const result = await createDiaryRoomWithUsers(teamName, userIdList, creator, creator_name)
 
     if (result) {
       res.status(200).json(!!result)
