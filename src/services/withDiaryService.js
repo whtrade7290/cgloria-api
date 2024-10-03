@@ -1,6 +1,6 @@
 import { prisma } from '../utils/prismaClient.js'
 
-export async function getWithDiaryList(startRow, pageSize, roomId) {
+export async function getWithDiaryList(startRow = 0, pageSize = 0, roomId = 0) {
   console.log('roomId: ', roomId)
   const data = await prisma.withDiary.findMany({
     where: {
@@ -139,7 +139,8 @@ export async function createDiaryRoomWithUsers(teamName, userIdList) {
 }
 
 export function fetchWithDiaryRoomList(userId) {
-  const result = prisma.userDiaryRoom.findMany({
+  try {
+    const result = prisma.userDiaryRoom.findMany({
     where: {
       userId: userId
     },
@@ -149,6 +150,12 @@ export function fetchWithDiaryRoomList(userId) {
   })
 
   return result
+    
+  } catch (error) {
+    console.error('Error fetching:', error)
+    res.status(500).json({ error: 'Error fetching WithDiary RoomList' })
+  }
+  
 }
 
 export function getWithDiaryRoom(roomId) {

@@ -96,8 +96,6 @@ app.post('/signIn', async (req, res) => {
       return
     }
 
-    console.log('user: ', user)
-
     const logedUser = {
       id: parseInt(user.id),
       username: user.username,
@@ -167,15 +165,11 @@ app.post('/check_Token', async (req, res) => {
 app.post('/find_user', async (req, res) => {
   const { username } = req.body
 
-  console.log('username: ', username)
-
   if (!username) {
     res.status(500).json({ error: 'Error fetching users' })
   }
 
   const user = await findUser(username)
-
-  console.log('user:', user)
 
   if (user) {
     res.status(200).json({
