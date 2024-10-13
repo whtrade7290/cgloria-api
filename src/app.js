@@ -6,7 +6,7 @@ import cors from 'cors'
 import morgan from 'morgan'
 import bcrypt from 'bcrypt'
 import path from 'path'
-import { signIn, signUp, findUser } from '../src/services/userService.js'
+import { signIn, signUp, findUser, findDisApproveUsers, updateApproveStatus } from '../src/services/userService.js'
 import {
   auth,
   makeAccessToken,
@@ -63,13 +63,17 @@ app.use('/comment', commentRouter)
 app.use('/uploads', express.static(path.join('', 'uploads')))
 
 app.post('/signUp', async (req, res) => {
-  const { username, password } = req.body
+  const { username, password, name } = req.body
+
+  console.log("username: ", username);
+  console.log("password: ", password);
+  console.log("name: ", name);
 
   // 비밀번호 암호화
   const hashedPassword = await bcrypt.hash(password, 10)
 
   try {
-    const obj = signUp(username, hashedPassword)
+    const obj = signUp(username, hashedPassword, name)
 
     res.json(obj)
   } catch (error) {
@@ -183,6 +187,48 @@ app.post('/find_user', async (req, res) => {
     })
   }
 })
+
+app.get('/disapproveUsers', async (req, res) => {
+  try {
+    const users = await findDisApproveUsers();
+    console.log("users: ", users);
+
+    const responseUsers = users.map(user => {
+      return {
+        ...user,
+        id: Number(user.id)
+      }
+    })
+
+    // users가 없거나 빈 배열일 경우 빈 목록을 반환
+    res.status(200).json(responseUsers || []);
+  } catch (error) {
+    // 예외 발생 시 처리
+    console.error("Error fetching disapproved users: ", error);
+    res.status(500).json({ message: 'An error occurred while fetching disapproved users' });
+  }
+});
+
+app.post('/updateApproveStatus', async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ message: 'ID is required' });
+
+    const result = await updateApproveStatus(id);
+    if (!result) return res.status(404).json({ message: 'Update failed or user not found' });
+
+    res.status(200).json({
+      ...result,
+      id: Number(result.id)
+    });
+  } catch (error) {
+    console.error('Error updating approval status:', error);
+    res.status(500).json({ message: 'An error occurred while updating approval status' });
+  }
+});
+
+
+
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)

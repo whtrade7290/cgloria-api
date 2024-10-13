@@ -2,16 +2,17 @@ import { prisma } from '../utils/prismaClient.js'
 
 export async function signIn(username) {
   return await prisma.user.findUnique({
-    where: { username }
+    where: { username: username, isApproved: true }
   })
 }
 
-export async function signUp(username, hashedPassword) {
+export async function signUp(username, hashedPassword, name) {
   // 사용자 생성
   const user = await prisma.user.create({
     data: {
       username,
-      password: hashedPassword
+      password: hashedPassword,
+      name
     }
   })
   const obj = {
@@ -21,7 +22,8 @@ export async function signUp(username, hashedPassword) {
     create_at: user.create_at,
     update_at: user.update_at,
     role: user.role,
-    deleted: user.deleted
+    deleted: user.deleted,
+    name: user.name
   }
 
   return obj
@@ -30,5 +32,20 @@ export async function signUp(username, hashedPassword) {
 export async function findUser(username) {
   return await prisma.user.findUnique({
     where: { username }
+  })
+}
+
+export async function findDisApproveUsers(){
+  return await prisma.user.findMany({
+    where: { isApproved: false }
+  })
+}
+
+export async function updateApproveStatus(id){
+  return await prisma.user.update({
+    where: { id: id },
+    data: {
+      isApproved: true
+    }
   })
 }
