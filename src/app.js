@@ -176,12 +176,15 @@ app.post('/find_user', async (req, res) => {
   }
   console.log("username: ", username);
   const user = await findUser(username)
+  console.log("user: ", user);
 
   if (user) {
     res.status(200).json({
       id: Number(user.id),
       username: user.username,
-      name: user.name
+      name: user.name,
+      role: user.role,
+      create_at: user.create_at
     })
   } else {
     res.status(200).json(user)
