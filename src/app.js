@@ -73,7 +73,9 @@ app.post('/signUp', async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, 10)
 
   try {
-    const obj = signUp(username, hashedPassword, name)
+    const obj = await signUp(username, hashedPassword, name)
+
+    console.log("obj: ", obj);
 
     res.json(obj)
   } catch (error) {
@@ -172,7 +174,7 @@ app.post('/find_user', async (req, res) => {
   if (!username) {
     res.status(500).json({ error: 'Error fetching users' })
   }
-
+  console.log("username: ", username);
   const user = await findUser(username)
 
   if (user) {
@@ -182,9 +184,7 @@ app.post('/find_user', async (req, res) => {
       name: user.name
     })
   } else {
-    res.status(404).json({
-      message: 'User not found'
-    })
+    res.status(200).json(user)
   }
 })
 
