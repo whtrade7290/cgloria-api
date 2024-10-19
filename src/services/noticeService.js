@@ -41,18 +41,22 @@ export async function writeNoticeContent({
   title,
   content,
   writer,
+  writer_name,
+  uuid,
   filename,
   extension,
-  fileDate
+  fileType
 }) {
   return await prisma.notice.create({
     data: {
-      title: title,
-      content: content,
-      writer: writer,
-      filename: filename,
-      extension: extension,
-      fileDate: fileDate
+      title,
+      content,
+      writer,
+      writer_name,
+      uuid,
+      filename,
+      extension,
+      fileType
     }
   })
 }
@@ -68,19 +72,20 @@ export async function logicalDeleteNotice(id) {
   })
 }
 
-export function editNoticeContent({ id, title, content, extension, fileDate, filename }) {
-  if (extension !== '' && fileDate !== '' && filename !== '') {
+export function editNoticeContent({ id, title, content, uuid, filename, extension, fileType }) {
+  if (uuid && filename && extension && fileType) {
     return prisma.notice.update({
       where: {
         id: id
       },
       data: {
-        title: title,
-        content: content,
+        title,
+        content,
         update_at: new Date(),
-        extension: extension,
-        fileDate: fileDate,
-        filename: filename
+        uuid,
+        filename,
+        extension,
+        fileType
       }
     })
   } else {

@@ -41,22 +41,26 @@ export async function writeWeeklyContent({
   title,
   content,
   writer,
+  writer_name,
   mainContent,
+  uuid,
   filename,
   extension,
-  fileDate
+  fileType
 }) {
   if (mainContent) {
     prisma.$transaction(async (prisma) => {
       const createResult = await prisma.weekly_bible_verses.create({
         data: {
-          title: title,
-          content: content,
-          writer: writer,
-          mainContent: mainContent,
-          filename: filename,
-          extension: extension,
-          fileDate: fileDate
+          title,
+          content,
+          writer,
+          writer_name,
+          mainContent,
+          uuid,
+          filename,
+          extension,
+          fileType
         }
       })
       return await prisma.weekly_bible_verses.updateMany({
@@ -71,13 +75,15 @@ export async function writeWeeklyContent({
   } else {
     return await prisma.weekly_bible_verses.create({
       data: {
-        title: title,
-        content: content,
-        writer: writer,
-        mainContent: mainContent,
-        filename: filename,
-        extension: extension,
-        fileDate: fileDate
+        title,
+        content,
+        writer,
+        writer_name,
+        mainContent,
+        uuid,
+        filename,
+        extension,
+        fileType
       }
     })
   }
@@ -99,9 +105,10 @@ export async function editWeeklyContent({
   title,
   content,
   mainContent,
+  uuid,
+  filename,
   extension,
-  fileDate,
-  filename
+  fileType
 }) {
   let result = {}
 
@@ -109,7 +116,7 @@ export async function editWeeklyContent({
     result = await prisma.$transaction(async (prisma) => {
       let updateResult
 
-      if (extension !== '' && fileDate !== '' && filename !== '') {
+      if (uuid && filename && extension && fileType) {
         updateResult = await prisma.weekly_bible_verses.update({
           where: { id },
           data: {
@@ -117,9 +124,10 @@ export async function editWeeklyContent({
             content,
             mainContent,
             update_at: new Date(),
+            uuid,
+            filename,
             extension,
-            fileDate,
-            filename
+            fileType
           }
         })
       } else {
@@ -142,7 +150,7 @@ export async function editWeeklyContent({
       return { updateResult, updateManyResult }
     })
   } else {
-    if (extension !== '' && fileDate !== '' && filename !== '') {
+    if (uuid && filename && extension && fileType) {
       result = await prisma.weekly_bible_verses.update({
         where: { id },
         data: {
@@ -150,9 +158,10 @@ export async function editWeeklyContent({
           content,
           mainContent,
           update_at: new Date(),
+          uuid,
+          filename,
           extension,
-          fileDate,
-          filename
+          fileType
         }
       })
     } else {
@@ -178,7 +187,7 @@ export async function getMainWeekly() {
       mainContent: true
     }
   })
-  console.log("data: ", data);
+  console.log('data: ', data)
 
   return {
     ...data,

@@ -35,13 +35,13 @@ export async function findUser(username) {
   })
 }
 
-export async function findDisApproveUsers(){
+export async function findDisApproveUsers() {
   return await prisma.user.findMany({
     where: { isApproved: false }
   })
 }
 
-export async function updateApproveStatus(id){
+export async function updateApproveStatus(id) {
   return await prisma.user.update({
     where: { id: id },
     data: {

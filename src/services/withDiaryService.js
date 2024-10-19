@@ -21,7 +21,7 @@ export async function getWithDiaryList(startRow = 0, pageSize = 0, roomId = 0) {
 }
 
 export async function totalWithDiaryCount(id) {
-  console.log("id: ", id);
+  console.log('id: ', id)
   return await prisma.withDiary.count({
     where: {
       diaryRoomId: id
@@ -75,19 +75,21 @@ export async function logicalDeleteWithDiary(id) {
   })
 }
 
-export function editWithDiaryContent({ id, title, content, extension, fileDate, filename }) {
-  if (extension !== '' && fileDate !== '' && filename !== '') {
+export function editWithDiaryContent({ id, title, content, uuid, filename, extension, fileType }) {
+  if (uuid && filename && extension && fileType) {
     return prisma.withDiary.update({
       where: {
         id: id
       },
       data: {
-        title: title,
-        content: content,
+        title,
+        content,
+        mainContent,
         update_at: new Date(),
-        extension: extension,
-        fileDate: fileDate,
-        filename: filename
+        uuid,
+        filename,
+        extension,
+        fileType
       }
     })
   } else {
@@ -144,21 +146,19 @@ export async function createDiaryRoomWithUsers(teamName, userIdList, creator, cr
 export function fetchWithDiaryRoomList(userId) {
   try {
     const result = prisma.userDiaryRoom.findMany({
-    where: {
-      userId: userId
-    },
-    include: {
-      diaryRoom: true // withDiaryRoom 데이터를 함께 가져옴
-    }
-  })
+      where: {
+        userId: userId
+      },
+      include: {
+        diaryRoom: true // withDiaryRoom 데이터를 함께 가져옴
+      }
+    })
 
-  return result
-    
+    return result
   } catch (error) {
     console.error('Error fetching:', error)
     res.status(500).json({ error: 'Error fetching WithDiary RoomList' })
   }
-  
 }
 
 export function getWithDiaryRoom(roomId) {
@@ -168,7 +168,3 @@ export function getWithDiaryRoom(roomId) {
     }
   })
 }
-
-
-
-

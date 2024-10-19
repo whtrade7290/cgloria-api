@@ -41,10 +41,12 @@ export async function writeSermonContent({
   title,
   content,
   writer,
+  writer_name,
   mainContent,
+  uuid,
   filename,
   extension,
-  fileDate
+  fileType
 }) {
   if (mainContent) {
     // Return the transaction result
@@ -54,13 +56,15 @@ export async function writeSermonContent({
           title,
           content,
           writer,
+          writer_name,
           mainContent,
+          uuid,
           filename,
           extension,
-          fileDate
+          fileType
         }
-      });
-      
+      })
+
       return await prisma.sermons.updateMany({
         data: {
           mainContent: !mainContent
@@ -68,24 +72,24 @@ export async function writeSermonContent({
         where: {
           id: { not: createResult.id }
         }
-      });
-      
-    });
+      })
+    })
   } else {
     return await prisma.sermons.create({
       data: {
         title,
         content,
         writer,
+        writer_name,
         mainContent,
+        uuid,
         filename,
         extension,
-        fileDate
+        fileType
       }
-    });
+    })
   }
 }
-
 
 export async function logicalDeleteSermon(id) {
   return prisma.sermons.update({
@@ -103,17 +107,17 @@ export async function editSermonContent({
   title,
   content,
   mainContent,
+  uuid,
+  filename,
   extension,
-  fileDate,
-  filename
+  fileType
 }) {
   let result = {}
 
   if (mainContent) {
     result = await prisma.$transaction(async (prisma) => {
       let updateResult
-
-      if (extension !== '' && fileDate !== '' && filename !== '') {
+      if (uuid && filename && extension && fileType) {
         updateResult = await prisma.sermons.update({
           where: { id },
           data: {
@@ -121,9 +125,10 @@ export async function editSermonContent({
             content,
             mainContent,
             update_at: new Date(),
+            uuid,
+            filename,
             extension,
-            fileDate,
-            filename
+            fileType
           }
         })
       } else {
@@ -146,7 +151,7 @@ export async function editSermonContent({
       return { updateResult, updateManyResult }
     })
   } else {
-    if (extension !== '' && fileDate !== '' && filename !== '') {
+    if (uuid && filename && extension && fileType) {
       result = await prisma.sermons.update({
         where: { id },
         data: {
@@ -154,9 +159,10 @@ export async function editSermonContent({
           content,
           mainContent,
           update_at: new Date(),
+          uuid,
+          filename,
           extension,
-          fileDate,
-          filename
+          fileType
         }
       })
     } else {

@@ -41,18 +41,22 @@ export async function writeGeneralForumContent({
   title,
   content,
   writer,
+  writer_name,
+  uuid,
   filename,
   extension,
-  fileDate
+  fileType
 }) {
   return await prisma.general_forum.create({
     data: {
-      title: title,
-      content: content,
-      writer: writer,
-      filename: filename,
-      extension: extension,
-      fileDate: fileDate
+      title,
+      content,
+      writer,
+      writer_name,
+      uuid,
+      filename,
+      extension,
+      fileType
     }
   })
 }
@@ -68,19 +72,22 @@ export async function logicalDeleteGeneralForum(id) {
   })
 }
 
-export function editGeneralForumContent({ id, title, content, extension, fileDate, filename }) {
-  if (extension !== '' && fileDate !== '' && filename !== '') {
+export function editGeneralForumContent({
+id, title, content, uuid, filename, extension, fileType
+}) {
+  if (uuid && filename && extension && fileType) {
     return prisma.general_forum.update({
       where: {
         id: id
       },
       data: {
-        title: title,
-        content: content,
+        title,
+        content,
         update_at: new Date(),
-        extension: extension,
-        fileDate: fileDate,
-        filename: filename
+        uuid,
+        filename,
+        extension,
+        fileType
       }
     })
   } else {

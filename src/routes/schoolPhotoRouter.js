@@ -7,7 +7,7 @@ import {
   logicalDeleteSchoolPhoto,
   editSchoolPhotoContent
 } from '../services/schoolPhotoService.js'
-import { upload, uploadToS3, deleteS3Files } from '../utils/multer.js'
+import { multiUpload, uploadFields } from '../utils/multer.js'
 
 const router = express.Router()
 
@@ -38,8 +38,8 @@ router.post('/school_photo_detail', async (req, res) => {
   }
 })
 
-router.post('/school_photo_write', upload.array('fileField', 6), async (req, res) => {
-  const { title, content, writer } = req.body
+router.post('/school_photo_write', multiUpload, async (req, res) => {
+  const { title, content, writer, writer_name } = req.body
   let pathList = {}
 
   const pathListPromises = req.files.map(async (file) => {
@@ -118,11 +118,6 @@ router.post('/school_photo_delete', async (req, res) => {
     res.status(400).json({ error: 'No files to delete' }) // 필수 필드가 없는 경우 처리
   }
 })
-
-const uploadFields = upload.fields([
-  { name: 'deleteFile', maxCount: 6 }, // 'deleteFile' 필드에서 최대 6개의 파일 허용
-  { name: 'fileField', maxCount: 6 } // 'fileField' 필드에서 최대 6개의 파일 허용
-])
 
 router.post('/school_photo_edit', uploadFields, async (req, res) => {
   const { title, content, id, deleteKeyList = '' } = req.body

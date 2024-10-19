@@ -41,22 +41,26 @@ export async function writeClassMeetingContent({
   title,
   content,
   writer,
+  writer_name,
   mainContent,
+  uuid,
   filename,
   extension,
-  fileDate
+  fileType
 }) {
   if (mainContent) {
     prisma.$transaction(async (prisma) => {
       const createResult = await prisma.class_meeting.create({
         data: {
-          title: title,
-          content: content,
-          writer: writer,
-          mainContent: mainContent,
-          filename: filename,
-          extension: extension,
-          fileDate: fileDate
+          title,
+          content,
+          writer,
+          writer_name,
+          mainContent,
+          uuid,
+          filename,
+          extension,
+          fileType
         }
       })
       return await prisma.class_meeting.updateMany({
@@ -71,13 +75,15 @@ export async function writeClassMeetingContent({
   } else {
     return await prisma.class_meeting.create({
       data: {
-        title: title,
-        content: content,
-        writer: writer,
-        mainContent: mainContent,
-        filename: filename,
-        extension: extension,
-        fileDate: fileDate
+        title,
+        content,
+        writer,
+        writer_name,
+        mainContent,
+        uuid,
+        filename,
+        extension,
+        fileType
       }
     })
   }
@@ -99,9 +105,10 @@ export async function editClassMeetingContent({
   title,
   content,
   mainContent,
+  uuid,
+  filename,
   extension,
-  fileDate,
-  filename
+  fileType
 }) {
   let result = {}
 
@@ -109,7 +116,7 @@ export async function editClassMeetingContent({
     result = await prisma.$transaction(async (prisma) => {
       let updateResult
 
-      if (extension !== '' && fileDate !== '' && filename !== '') {
+      if (uuid && filename && extension && fileType) {
         updateResult = await prisma.class_meeting.update({
           where: { id },
           data: {
@@ -117,9 +124,10 @@ export async function editClassMeetingContent({
             content,
             mainContent,
             update_at: new Date(),
+            uuid,
+            filename,
             extension,
-            fileDate,
-            filename
+            fileType
           }
         })
       } else {
@@ -142,7 +150,7 @@ export async function editClassMeetingContent({
       return { updateResult, updateManyResult }
     })
   } else {
-    if (extension !== '' && fileDate !== '' && filename !== '') {
+    if (uuid && filename && extension && fileType) {
       result = await prisma.class_meeting.update({
         where: { id },
         data: {
@@ -150,9 +158,10 @@ export async function editClassMeetingContent({
           content,
           mainContent,
           update_at: new Date(),
+          uuid,
+          filename,
           extension,
-          fileDate,
-          filename
+          fileType
         }
       })
     } else {

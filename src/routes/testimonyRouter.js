@@ -8,7 +8,7 @@ import {
   editTestimonyContent,
   getMainTestimony
 } from '../services/testimonyService.js'
-import { upload, uploadToS3, deleteS3File } from '../utils/multer.js'
+import { singleUpload, deleteFile } from '../utils/multer.js'
 
 const router = express.Router()
 
@@ -38,15 +38,26 @@ router.post('/testimony_detail', async (req, res) => {
   }
 })
 
-router.post('/testimony_write', upload.single('fileField'), async (req, res) => {
-  const { title, content, writer, mainContent } = req.body
+router.post('/testimony_write', singleUpload, async (req, res) => {
+  const { title, content, writer, writer_name, mainContent } = req.body
 
   const file = req.file
-  let s3Response = {}
 
+  // 파일 정보 초기화
+  let uuid = ''
+  let filename = ''
+  let extension = ''
+  let fileType = ''
+
+  // 파일이 존재할 경우 정보 추출
   if (file) {
-    // 파일을 S3에 업로드
-    s3Response = await uploadToS3(file)
+    uuid = file.filename?.split('_')[0] ?? ''
+    filename = file?.originalname ?? ''
+    if (filename) {
+      filename = Buffer.from(filename, 'latin1').toString('utf8')
+    }
+    extension = filename ? '.' + filename.split('.').pop() : ''
+    fileType = file?.mimetype ?? ''
   }
 
   try {
@@ -54,10 +65,12 @@ router.post('/testimony_write', upload.single('fileField'), async (req, res) => 
       title,
       content,
       writer,
+      writer_name,
       mainContent: mainContent === 'true',
-      extension: s3Response.extension ?? '',
-      fileDate: s3Response.date ?? '',
-      filename: s3Response.filename ?? ''
+      uuid,
+      filename,
+      extension,
+      fileType
     })
 
     if (result) {
@@ -70,20 +83,19 @@ router.post('/testimony_write', upload.single('fileField'), async (req, res) => 
     return
   } catch (error) {
     console.error('Error fetching:', error)
-    res.status(500).json({ error: 'Error fetching sermon' })
+    res.status(500).json({ error: 'Error fetching testimony' })
   }
 })
 
 router.post('/testimony_delete', async (req, res) => {
   const { id, deleteKey } = req.body
 
-  if (deleteKey !== '') {
-    const result = await deleteS3File(deleteKey)
-
-    if (result.$metadata.httpStatusCode === 204) {
-      console.log('S3 delete file success status code: ', result.$metadata.httpStatusCode)
+  if (deleteKey) {
+    const fileDeleted = deleteFile(deleteKey)
+    if (fileDeleted) {
+      console.log('file 삭제 완료')
     } else {
-      console.log('S3 delete file fail status code: ', result.$metadata.httpStatusCode)
+      console.log('file 삭제 실패')
     }
   }
 
@@ -100,10 +112,9 @@ router.post('/testimony_delete', async (req, res) => {
   }
 })
 
-router.post('/testimony_edit', upload.single('fileField'), async (req, res) => {
-  const { title, content, id, mainContent, deleteFile } = req.body
+router.post('/testimony_edit', singleUpload, async (req, res) => {
+  const { title, content, id, mainContent, deleteKey } = req.body
   const file = req.file || {}
-  let s3Response = {}
 
   const data = {
     id,
@@ -112,17 +123,24 @@ router.post('/testimony_edit', upload.single('fileField'), async (req, res) => {
     mainContent: mainContent === 'true'
   }
 
-  if (deleteFile && file) {
-    const result = await deleteS3File(deleteFile)
+  if (deleteKey && file) {
+    const fileDeleted = deleteFile(deleteKey)
+    if (fileDeleted) {
+      console.log('file 삭제 완료')
 
-    if (result.$metadata.httpStatusCode === 204) {
-      s3Response = await uploadToS3(file)
+      let filename = file?.originalname ?? ''
+      if (filename) {
+        filename = Buffer.from(filename, 'latin1').toString('utf8')
+      }
 
       Object.assign(data, {
-        extension: s3Response.extension ?? '',
-        fileDate: s3Response.date ?? '',
-        filename: s3Response.filename ?? ''
+        uuid: file.filename?.split('_')[0] ?? '',
+        filename: filename,
+        extension: filename ? '.' + filename.split('.').pop() : '',
+        fileType: file?.mimetype ?? ''
       })
+    } else {
+      console.log('file 삭제 실패')
     }
   }
 

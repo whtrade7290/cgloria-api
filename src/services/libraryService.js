@@ -34,35 +34,40 @@ export async function writeLibraryContent({
   title,
   content,
   writer,
+  writer_name,
+  uuid,
   filename,
   extension,
-  fileDate
+  fileType
 }) {
   return await prisma.sunday_school_resources.create({
     data: {
-      title: title,
-      content: content,
-      writer: writer,
-      filename: filename,
-      extension: extension,
-      fileDate: fileDate
+      title,
+      content,
+      writer,
+      writer_name,
+      uuid,
+      filename,
+      extension,
+      fileType
     }
   })
 }
 
-export function editLibraryContent({ id, title, content, extension, fileDate, filename }) {
-  if (extension !== '' && fileDate !== '' && filename !== '') {
+export function editLibraryContent({ id, title, content, uuid, filename, extension, fileType }) {
+  if (uuid && filename && extension && fileType) {
     return prisma.sunday_school_resources.update({
       where: {
         id: id
       },
       data: {
-        title: title,
-        content: content,
+        title,
+        content,
         update_at: new Date(),
-        extension: extension,
-        fileDate: fileDate,
-        filename: filename
+        uuid,
+        filename,
+        extension,
+        fileType
       }
     })
   } else {

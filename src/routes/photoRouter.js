@@ -7,7 +7,7 @@ import {
   logicalDeletePhoto,
   editPhotoContent
 } from '../services/photoService.js'
-import { upload, uploadToS3, deleteS3Files } from '../utils/multer.js'
+import { multiUpload, uploadFields } from '../utils/multer.js'
 
 const router = express.Router()
 
@@ -43,29 +43,8 @@ router.post('/photo_detail', async (req, res) => {
   }
 })
 
-router.post('/photo_write', upload.array('fileField', 6), async (req, res) => {
-  const { title, content, writer } = req.body
-  let pathList = {}
-
-  const pathListPromises = req.files.map(async (file) => {
-    try {
-      // 파일을 S3에 업로드
-      return await uploadToS3(file)
-    } catch (error) {
-      console.error('S3 업로드 중 오류 발생: ', error)
-      return null // 실패한 경우 null을 반환하거나 적절한 처리를 합니다.
-    }
-  })
-
-  try {
-    // 모든 업로드가 완료될 때까지 기다림
-    pathList = await Promise.all(pathListPromises)
-    // results 배열에 업로드 결과가 담겨 있음
-    console.log('업로드 결과:', pathList)
-    // 업로드 결과를 처리하는 로직을 추가합니다.
-  } catch (error) {
-    console.error('파일 업로드 중 오류 발생: ', error)
-  }
+router.post('/photo_write', multiUpload, async (req, res) => {
+  const { title, content, writer, writer_name } = req.body
 
   try {
     const result = await writePhotoContent({
@@ -123,11 +102,6 @@ router.post('/photo_delete', async (req, res) => {
     res.status(400).json({ error: 'No files to delete' }) // 필수 필드가 없는 경우 처리
   }
 })
-
-const uploadFields = upload.fields([
-  { name: 'deleteFile', maxCount: 6 }, // 'deleteFile' 필드에서 최대 6개의 파일 허용
-  { name: 'fileField', maxCount: 6 } // 'fileField' 필드에서 최대 6개의 파일 허용
-])
 
 router.post('/photo_edit', uploadFields, async (req, res) => {
   const { title, content, id, deleteKeyList = '' } = req.body
