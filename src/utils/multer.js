@@ -21,6 +21,7 @@ const upload = multer({
 })
 
 export const deleteFile = (deleteKey) => {
+  console.log('deleteKey: ', deleteKey)
   if (deleteKey) {
     fs.unlink(deleteKey, (err) => {
       if (err) {

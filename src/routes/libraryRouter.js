@@ -41,7 +41,7 @@ router.post('/library_write', singleUpload, async (req, res) => {
   const { title, content, writer, writer_name } = req.body
   const file = req.file
 
-  console.log("file: ", file);
+  console.log('file: ', file)
 
   // 파일 정보 초기화
   let uuid = ''

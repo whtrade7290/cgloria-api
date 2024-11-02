@@ -127,11 +127,11 @@ router.post('/column_edit', singleUpload, async (req, res) => {
     if (fileDeleted) {
       console.log('file 삭제 완료')
 
-    let filename = file?.originalname ?? ''
-    if (filename) {
-      filename = Buffer.from(filename, 'latin1').toString('utf8')
-    }
-    
+      let filename = file?.originalname ?? ''
+      if (filename) {
+        filename = Buffer.from(filename, 'latin1').toString('utf8')
+      }
+
       Object.assign(data, {
         uuid: file.filename?.split('_')[0] ?? '',
         filename: filename,

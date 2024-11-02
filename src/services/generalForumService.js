@@ -73,7 +73,13 @@ export async function logicalDeleteGeneralForum(id) {
 }
 
 export function editGeneralForumContent({
-id, title, content, uuid, filename, extension, fileType
+  id,
+  title,
+  content,
+  uuid,
+  filename,
+  extension,
+  fileType
 }) {
   if (uuid && filename && extension && fileType) {
     return prisma.general_forum.update({

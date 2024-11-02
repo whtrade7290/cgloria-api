@@ -42,12 +42,13 @@ export async function getPhotoContent(id) {
   }
 }
 
-export async function writePhotoContent({ title, content, writer, files }) {
+export async function writePhotoContent({ title, content, writer, writer_name, files }) {
   return await prisma.photo.create({
     data: {
       title: title,
       content: content,
       writer: writer,
+      writer_name: writer_name,
       files: files
     }
   })
@@ -64,7 +65,7 @@ export async function logicalDeletePhoto(id) {
   })
 }
 
-export function editPhotoContent({ id, title, content, files }) {
+export function editPhotoContent({ id, title, content, files = [] }) {
   if (files.length === 0) {
     return prisma.photo.update({
       where: {

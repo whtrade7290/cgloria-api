@@ -7,7 +7,7 @@ import {
   logicalDeleteSchoolPhoto,
   editSchoolPhotoContent
 } from '../services/schoolPhotoService.js'
-import { multiUpload, uploadFields } from '../utils/multer.js'
+import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
 
 const router = express.Router()
 
@@ -40,33 +40,22 @@ router.post('/school_photo_detail', async (req, res) => {
 
 router.post('/school_photo_write', multiUpload, async (req, res) => {
   const { title, content, writer, writer_name } = req.body
-  let pathList = {}
+  const files = req.files
 
-  const pathListPromises = req.files.map(async (file) => {
-    try {
-      // 파일을 S3에 업로드
-      return await uploadToS3(file)
-    } catch (error) {
-      console.error('S3 업로드 중 오류 발생: ', error)
-      return null // 실패한 경우 null을 반환하거나 적절한 처리를 합니다.
+    const pathList = files.map((file) => {
+    if (file.originalname) {
+      file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
     }
-  })
 
-  try {
-    // 모든 업로드가 완료될 때까지 기다림
-    pathList = await Promise.all(pathListPromises)
-    // results 배열에 업로드 결과가 담겨 있음
-    console.log('업로드 결과:', pathList)
-    // 업로드 결과를 처리하는 로직을 추가합니다.
-  } catch (error) {
-    console.error('파일 업로드 중 오류 발생: ', error)
-  }
+    return file
+  })
 
   try {
     const result = await writeSchoolPhotoContent({
       title,
       content,
       writer,
+      writer_name,
       files: JSON.stringify(pathList)
     })
 
@@ -84,83 +73,49 @@ router.post('/school_photo_write', multiUpload, async (req, res) => {
 })
 
 router.post('/school_photo_delete', async (req, res) => {
-  const { id, deleteKeyList = '' } = req.body
+  const { id, deleteKeyList = [] } = req.body
   console.log('deleteKeyList: ', deleteKeyList)
 
-  if (deleteKeyList !== '') {
-    const deleteKeyArr = deleteKeyList.map((file) => {
-      return `cgloria-photo/${file?.date}${file?.filename}${file?.extension}`
-    })
+  if (deleteKeyList) {
+    let fileDeleted = true // 초기값을 true로 설정
 
-    const response = (await deleteS3Files(deleteKeyArr)).every((result) => {
-      console.log('deleted file: ', result)
-      return result.$metadata.httpStatusCode === 204
-    })
-
-    if (response) {
-      try {
-        const result = await logicalDeleteSchoolPhoto(id)
-
-        if (!result) {
-          return res.status(404).json({ error: 'Photo not found' })
-        }
-        res.json(!!result)
-      } catch (error) {
-        console.error('Error fetching Photo:', error)
-        res.status(500).json({ error: 'Error fetching Photo' })
+    deleteKeyList.forEach((file) => {
+      console.log('file: ', file)
+      const filename = `uploads/${file.filename}`
+      const result = deleteFile(filename)
+      if (!result) {
+        fileDeleted = false // 파일 삭제 실패 시 false로 설정
       }
+    })
+
+    if (fileDeleted) {
+      console.log('file 삭제 완료')
     } else {
-      // S3에서 파일 삭제 실패 시 처리
-      console.error('Error deleting files from S3')
-      res.status(500).json({ error: 'Failed to delete files from S3' })
+      console.log('file 삭제 실패')
     }
-  } else {
-    res.status(400).json({ error: 'No files to delete' }) // 필수 필드가 없는 경우 처리
   }
+
+  try {
+      const result = await logicalDeleteSchoolPhoto(id)
+
+      if (!result) {
+      return res.status(404).json({ error: 'Photo not found' })
+      }
+      res.json(true)
+    } catch (error) {
+      console.error('Error fetching Photo:', error)
+      res.status(500).json({ error: 'Error fetching Photo' })
+    }
 })
 
 router.post('/school_photo_edit', uploadFields, async (req, res) => {
-  const { title, content, id, deleteKeyList = '' } = req.body
-  let pathList = {}
+  const { title, content, id, jsonDeleteKeys = '' } = req.body
+  let deleteKeyList = []
 
   const files = req?.files['fileField'] ?? []
 
-  /**
-   * ※ 사양 확인 후 적용 ※
-   * 게시글 사진 수정시 파일 삭제 되도록 하는 로직
-   */
-  if (deleteKeyList !== '' && files.length > 0) {
-    const deleteKeyArr = deleteKeyList.split(',')
-
-    console.log('deleteKeyArr: ', deleteKeyArr)
-
-    const response = (await deleteS3Files(deleteKeyArr)).every((result) => {
-      console.log('deleted file: ', result)
-      return result.$metadata.httpStatusCode === 204
-    })
-
-    if (response) {
-      // 새로운 파일 업로드
-      const pathListPromises = files.map(async (file) => {
-        try {
-          // 파일을 S3에 업로드
-          return await uploadToS3(file)
-        } catch (error) {
-          console.error('S3 업로드 중 오류 발생: ', error)
-          return null // 실패한 경우 null을 반환하거나 적절한 처리를 합니다.
-        }
-      })
-
-      try {
-        // 모든 업로드가 완료될 때까지 기다림
-        pathList = await Promise.all(pathListPromises)
-        // results 배열에 업로드 결과가 담겨 있음
-        console.log('업로드 결과:', pathList)
-        // 업로드 결과를 처리하는 로직을 추가합니다.
-      } catch (error) {
-        console.error('파일 업로드 중 오류 발생: ', error)
-      }
-    }
+  if (jsonDeleteKeys) {
+    deleteKeyList = JSON.parse(jsonDeleteKeys)
   }
 
   const data = {
@@ -169,17 +124,24 @@ router.post('/school_photo_edit', uploadFields, async (req, res) => {
     content
   }
 
-  if (pathList) {
-    console.log('pathList: ', pathList)
-    const files = pathList.map((path) => {
-      return {
-        filename: path.filename,
-        date: path.date,
-        extension: path.extension
+  if (deleteKeyList.length > 0 && files.length > 0) {
+    let fileDeleted = true // 초기값을 true로 설정
+
+    deleteKeyList.forEach((file) => {
+      console.log('file: ', file)
+      const filename = `uploads/${file}`
+      const result = deleteFile(filename)
+      if (!result) {
+        fileDeleted = false // 파일 삭제 실패 시 false로 설정
       }
     })
-    console.log('files: ', files)
-    Object.assign(data, { files: files })
+
+    if (fileDeleted) {
+      console.log('file 삭제 완료')
+      Object.assign(data, { files: files })
+    } else {
+      console.log('file 삭제 실패')
+    }
   }
 
   try {

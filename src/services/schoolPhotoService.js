@@ -37,12 +37,13 @@ export async function getschoolPhotoContent(id) {
   }
 }
 
-export async function writeSchoolPhotoContent({ title, content, writer, files }) {
+export async function writeSchoolPhotoContent({ title, content, writer, writer_name, files }) {
   return await prisma.school_photo.create({
     data: {
       title: title,
       content: content,
       writer: writer,
+      writer_name: writer_name,
       files: files
     }
   })
