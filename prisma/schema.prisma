@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = env(DATABASE_PROVIDER)
+  url      = env(DATABASE_URL)
+}
+
+model User {
+  id         BigInt          @id @default(autoincrement())
+  username   String          @unique
+  password   String
+  create_at  DateTime        @default(now())
+  update_at  DateTime        @default(now())
+  role       Role            @default(USER)
+  isApproved    Boolean      @default(false)
+  name       String?
+  diaryRooms UserDiaryRoom[]
+}
+
+model sermons {
+  id          BigInt   @id @default(autoincrement())
+  title       String
+  writer      String
+  create_at   DateTime @default(now())
+  update_at   DateTime @default(now())
+  deleted     Boolean  @default(false)
+  content     String   @db.LongText
+  extension   String?
+  uuid        String?
+  filename    String?
+  fileType    String?
+  mainContent Boolean  @default(false)
+  writer_name String?
+}
+
+model columns {
+  id          BigInt   @id @default(autoincrement())
+  title       String
+  writer      String
+  create_at   DateTime @default(now())
+  update_at   DateTime @default(now())
+  deleted     Boolean  @default(false)
+  extension   String?
+  uuid        String?
+  filename    String?
+  fileType    String?
+  content     String   @db.LongText
+  mainContent Boolean  @default(false)
+  writer_name String?
+}
+
+model weekly_bible_verses {
+  id          BigInt   @id @default(autoincrement())
+  title       String
+  writer      String
+  create_at   DateTime @default(now())
+  update_at   DateTime @default(now())
+  deleted     Boolean  @default(false)
+  extension   String?
+  uuid        String?
+  filename    String?
+  fileType    String?
+  content     String   @db.LongText
+  mainContent Boolean  @default(false)
+  writer_name String?
+}
+
+model class_meeting {
+  id          BigInt   @id @default(autoincrement())
+  title       String
+  writer      String
+  create_at   DateTime @default(now())
+  update_at   DateTime @default(now())
+  deleted     Boolean  @default(false)
+  content     String   @db.LongText
+  extension   String?
+  uuid        String?
+  filename    String?
+  fileType    String?
+  mainContent Boolean  @default(false)
+  writer_name String?
+}
+
+model sunday_school_resources {
+  id          BigInt   @id @default(autoincrement())
+  title       String
+  writer      String
+  create_at   DateTime @default(now())
+  update_at   DateTime @default(now())
+  deleted     Boolean  @default(false)
+  content     String   @db.LongText
+  extension   String?
+  uuid        String?
+  filename    String?
+  fileType    String?
+  writer_name String?
+}
+
+model general_forum {
+  id          BigInt   @id @default(autoincrement())
+  title       String
+  writer      String
+  create_at   DateTime @default(now())
+  update_at   DateTime @default(now())
+  deleted     Boolean  @default(false)
+  content     String   @db.LongText
+  extension   String?
+  uuid        String?
+  filename    String?
+  fileType    String?
+  writer_name String?
+}
+
+model testimonies {
+  id          BigInt   @id @default(autoincrement())
+  title       String
+  writer      String
+  create_at   DateTime @default(now())
+  update_at   DateTime @default(now())
+  deleted     Boolean  @default(false)
+  content     String   @db.LongText
+  extension   String?
+  uuid        String?
+  filename    String?
+  fileType    String?
+  mainContent Boolean  @default(false)
+  writer_name String?
+}
+
+model notice {
+  id          BigInt   @id @default(autoincrement())
+  title       String
+  writer      String
+  create_at   DateTime @default(now())
+  update_at   DateTime @default(now())
+  deleted     Boolean  @default(false)
+  content     String   @db.LongText
+  extension   String?
+  uuid        String?
+  filename    String?
+  fileType    String?
+  writer_name String?
+}
+
+model withDiary {
+  id          BigInt         @id @default(autoincrement())
+  title       String
+  content     String         @db.LongText
+  writer      String
+  extension   String?
+  uuid        String?
+  filename    String?
+  fileType    String?
+  create_at   DateTime       @default(now())
+  update_at   DateTime       @default(now())
+  deleted     Boolean        @default(false)
+  writer_name String?
+  diaryRoomId Int?
+  diaryRoom   withDiaryRoom? @relation(fields: [diaryRoomId], references: [id])
+
+  @@index([diaryRoomId], map: "withDiary_diaryRoomId_fkey")
+}
+
+model withDiaryRoom {
+  id              Int             @id @default(autoincrement())
+  roomName        String          @default("")
+  creator         Int
+  creator_name    String
+  create_at       DateTime        @default(now())
+  update_at       DateTime        @default(now())
+  users           UserDiaryRoom[]
+  diaries         withDiary[]
+}
+
+model UserDiaryRoom {
+  id          Int           @id @default(autoincrement())
+  userId      BigInt
+  diaryRoomId Int
+  createdAt   DateTime      @default(now())
+  diaryRoom   withDiaryRoom @relation(fields: [diaryRoomId], references: [id])
+  user        User          @relation(fields: [userId], references: [id])
+
+  @@unique([userId, diaryRoomId], name: "unique_user_diary_room")
+  @@index([diaryRoomId], map: "UserDiaryRoom_diaryRoomId_fkey")
+}
+
+model photo {
+  id          BigInt   @id @default(autoincrement())
+  title       String
+  writer      String
+  create_at   DateTime @default(now())
+  update_at   DateTime @default(now())
+  deleted     Boolean  @default(false)
+  files       String?  @db.LongText
+  content     String?  @db.LongText
+  writer_name String?
+}
+
+model school_photo {
+  id          BigInt   @id @default(autoincrement())
+  title       String
+  writer      String
+  create_at   DateTime @default(now())
+  update_at   DateTime @default(now())
+  deleted     Boolean  @default(false)
+  files       String?  @db.LongText
+  content     String?  @db.LongText
+  writer_name String?
+}
+
+model comments {
+  id          BigInt   @id @default(autoincrement())
+  board_id    Int
+  board_name  String
+  content     String   @db.LongText
+  writer_name String?
+  writer      String
+  create_at   DateTime @default(now())
+  update_at   DateTime @default(now())
+  deleted     Boolean  @default(false)
+}
+
+enum Role {
+  ADMIN
+  DIARY
+  USER
+  GUEST
+}
