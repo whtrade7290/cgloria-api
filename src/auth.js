@@ -1,8 +1,11 @@
 import jwt from 'jsonwebtoken'
 import fs from 'fs'
+import path from 'path'
 
-const SECRET_KEY = fs.readFileSync('key/jwt-secret.key', 'utf8')
-const REFRESH_SECRET_KEY = fs.readFileSync('key/jwt-refresh-secret.key', 'utf8')
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
+
+const SECRET_KEY = fs.readFileSync(path.join(__dirname, 'key/jwt-secret.key'), 'utf8');
+const REFRESH_SECRET_KEY = fs.readFileSync(path.join(__dirname, 'key/jwt-refresh-secret.key'), 'utf8');
 
 const makeAccessToken = (payload) => {
   return jwt.sign(payload, SECRET_KEY, {
