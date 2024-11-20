@@ -181,7 +181,7 @@ export async function editWeeklyContent({
 }
 
 export async function getMainWeekly() {
-  const data = await prisma.weekly_bible_verses.findFirstOrThrow({
+  const data = await prisma.weekly_bible_verses.findFirst({
     where: {
       deleted: false,
       mainContent: true
@@ -189,8 +189,26 @@ export async function getMainWeekly() {
   })
   console.log('data: ', data)
 
-  return {
+  if (data) {
+    return {
     ...data,
     id: Number(data.id)
+  }
+  }else {
+    return {
+      id: 999999,
+      title: '',
+      writer: '',
+      create_at: new Date(),
+      update_at: new Date(),
+      deleted: false,
+      extension: null,
+      uuid: null,
+      filename: null,
+      fileType: null,
+      content: '',
+      mainContent: true,
+      writer_name: null
+    }
   }
 }

@@ -182,15 +182,35 @@ export async function editSermonContent({
 }
 
 export async function getMainSermon() {
-  const data = await prisma.sermons.findFirstOrThrow({
+  const data = await prisma.sermons.findFirst({
     where: {
       deleted: false,
       mainContent: true
     }
   })
 
-  return {
+  if (data) {
+    return {
     ...data,
     id: Number(data.id)
   }
+  }else {
+    return {
+      id: 999999,
+      title: '',
+      writer: '',
+      create_at: new Date(),
+      update_at: new Date(),
+      deleted: false,
+      extension: null,
+      uuid: null,
+      filename: null,
+      fileType: null,
+      content: '',
+      mainContent: true,
+      writer_name: null
+    }
+  }
+
+  
 }

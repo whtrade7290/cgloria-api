@@ -181,15 +181,33 @@ export async function editTestimonyContent({
 }
 
 export async function getMainTestimony() {
-  const data = await prisma.testimonies.findFirstOrThrow({
+  const data = await prisma.testimonies.findFirst({
     where: {
       deleted: false,
       mainContent: true
     }
   })
 
-  return {
+  if (data) {
+    return {
     ...data,
     id: Number(data.id)
+  }
+  }else {
+    return {
+      id: 999999,
+      title: '',
+      writer: '',
+      create_at: new Date(),
+      update_at: new Date(),
+      deleted: false,
+      extension: null,
+      uuid: null,
+      filename: null,
+      fileType: null,
+      content: '',
+      mainContent: true,
+      writer_name: null
+    }
   }
 }
