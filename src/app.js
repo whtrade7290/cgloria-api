@@ -94,7 +94,7 @@ app.use('/uploads', express.static(path.join('', 'uploads')))
 
 app.post('/signUp', async (req, res) => {
   const { username, password, name } = req.body
-
+  // test
   // 비밀번호 암호화
   const hashedPassword = await bcrypt.hash(password, 10)
 
