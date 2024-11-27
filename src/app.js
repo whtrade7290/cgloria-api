@@ -6,6 +6,8 @@ import cors from 'cors'
 import morgan from 'morgan'
 import bcrypt from 'bcrypt'
 import path from 'path'
+import https from 'https'
+import fs from 'fs'
 import {
   signIn,
   signUp,
@@ -39,6 +41,12 @@ import schoolPhotoRouter from './routes/schoolPhotoRouter.js'
 import commentRouter from './routes/commentRouter.js'
 
 const app = express()
+
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8');
+const certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8');
+const ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8');
+
+
 
 // server setup
 let port
@@ -144,6 +152,12 @@ app.post('/signIn', async (req, res) => {
   }
 })
 
+app.get('/test', (req, res) => {
+   console.log('test!')
+   res.send('test!');
+});
+
+
 app.post('/check_Token', async (req, res) => {
   const { accessToken, refreshToken } = req.body
 
@@ -248,6 +262,9 @@ app.post('/updateApproveStatus', async (req, res) => {
   }
 })
 
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
-})
+// 서버 실행
+https.createServer({ key: privateKey, cert: certificate, ca: ca }, app).listen(port, () => {
+  console.log(`Server is running on https://localhost:${port}`);
+});
+
+
