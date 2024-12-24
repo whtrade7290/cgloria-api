@@ -13,13 +13,16 @@ import { singleUpload, deleteFile } from '../utils/multer.js'
 const router = express.Router()
 
 router.post('/column', async (req, res) => {
-  const { startRow, pageSize } = req.body
-  const data = await getColumnList(startRow, pageSize)
+  const { startRow, pageSize, searchWord } = req.body
+  const data = await getColumnList(startRow, pageSize, searchWord)
   res.send(data)
 })
 
 router.get('/column_count', async (req, res) => {
-  const count = await totalColumnCount()
+  const { searchWord } = req.query
+
+  const count = await totalColumnCount(searchWord)
+  
   res.json(count)
 })
 

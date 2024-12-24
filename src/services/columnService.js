@@ -1,9 +1,15 @@
 import { prisma } from '../utils/prismaClient.js'
 
-export async function getColumnList(startRow, pageSize) {
+export async function getColumnList(startRow, pageSize, searchWord) {
+
+  if (searchWord === undefined) {
+    searchWord = ''
+  }
+
   const data = await prisma.columns.findMany({
     where: {
-      deleted: false
+      deleted: false,
+      title: {contains: searchWord}
     },
     orderBy: {
       id: 'desc'
@@ -18,10 +24,16 @@ export async function getColumnList(startRow, pageSize) {
   }))
 }
 
-export async function totalColumnCount() {
+export async function totalColumnCount(searchWord) {
+
+  if (searchWord === undefined) {
+    searchWord = ''
+  }
+
   return await prisma.columns.count({
     where: {
-      deleted: false
+      deleted: false,
+      title: {contains: searchWord}
     }
   })
 }

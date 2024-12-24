@@ -1,9 +1,15 @@
 import { prisma } from '../utils/prismaClient.js'
 
-export async function getClassMeetingList(startRow, pageSize) {
+export async function getClassMeetingList(startRow, pageSize, searchWord) {
+
+  if (searchWord === undefined) {
+    searchWord = ''
+  }  
+
   const data = await prisma.class_meeting.findMany({
     where: {
-      deleted: false
+      deleted: false,
+      title: {contains: searchWord}
     },
     orderBy: {
       id: 'desc'
@@ -18,10 +24,16 @@ export async function getClassMeetingList(startRow, pageSize) {
   }))
 }
 
-export async function totalClassMeetingCount() {
+export async function totalClassMeetingCount(searchWord) {
+
+  if (searchWord === undefined) {
+    searchWord = ''
+  }
+  
   return await prisma.class_meeting.count({
     where: {
-      deleted: false
+      deleted: false,
+      title: {contains: searchWord}
     }
   })
 }

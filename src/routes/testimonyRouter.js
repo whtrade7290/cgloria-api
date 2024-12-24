@@ -13,13 +13,14 @@ import { singleUpload, deleteFile } from '../utils/multer.js'
 const router = express.Router()
 
 router.post('/testimony', async (req, res) => {
-  const { startRow, pageSize } = req.body
-  const data = await getTestimonyList(startRow, pageSize)
+  const { startRow, pageSize, searchWord } = req.body
+  const data = await getTestimonyList(startRow, pageSize, searchWord)
   res.send(data)
 })
 
 router.get('/testimony_count', async (req, res) => {
-  const count = await totalTestimonyCount()
+  const { searchWord } = req.query
+  const count = await totalTestimonyCount(searchWord)
   res.json(count)
 })
 

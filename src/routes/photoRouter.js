@@ -12,10 +12,10 @@ import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
 const router = express.Router()
 
 router.post('/photo', async (req, res) => {
-  const { startRow, pageSize } = req.body
+  const { startRow, pageSize, searchWord } = req.body
 
   try {
-    const data = await getPhotoList(startRow, pageSize)
+    const data = await getPhotoList(startRow, pageSize, searchWord)
     res.send(data)
   } catch (error) {
     console.error('Error fetching photo list:', error)
@@ -24,7 +24,8 @@ router.post('/photo', async (req, res) => {
 })
 
 router.get('/photo_count', async (req, res) => {
-  const count = await totalPhotoCount()
+  const { searchWord } = req.query
+  const count = await totalPhotoCount(searchWord)
   res.json(count)
 })
 

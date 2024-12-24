@@ -1,7 +1,16 @@
 import { prisma } from '../utils/prismaClient.js'
 
-export async function getLibraryList(startRow, pageSize) {
+export async function getLibraryList(startRow, pageSize, searchWord) {
+
+  if (searchWord === undefined) {
+    searchWord = ''
+  }  
+
   const data = await prisma.sunday_school_resources.findMany({
+    where: {
+      deleted: false,
+      title: {contains: searchWord}
+    },
     orderBy: {
       id: 'desc'
     },
@@ -15,8 +24,18 @@ export async function getLibraryList(startRow, pageSize) {
   }))
 }
 
-export async function totalLibraryCount() {
-  return await prisma.sunday_school_resources.count()
+export async function totalLibraryCount(searchWord) {
+
+  if (searchWord === undefined) {
+    searchWord = ''
+  }    
+  
+  return await prisma.sunday_school_resources.count({
+    where: {
+      deleted: false,
+      title: {contains: searchWord}
+    }
+  })
 }
 
 export async function getLibraryContent(id) {

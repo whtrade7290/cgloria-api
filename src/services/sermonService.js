@@ -1,9 +1,15 @@
 import { prisma } from '../utils/prismaClient.js'
 
-export async function getSermonList(startRow, pageSize) {
+export async function getSermonList(startRow, pageSize, searchWord) {
+
+  if (searchWord === undefined) {
+    searchWord = ''
+  }
+    
   const data = await prisma.sermons.findMany({
     where: {
-      deleted: false
+      deleted: false,
+      title: {contains: searchWord}
     },
     orderBy: {
       id: 'desc'
@@ -11,6 +17,7 @@ export async function getSermonList(startRow, pageSize) {
     take: pageSize,
     skip: startRow
   })
+  
 
   return data.map((item) => ({
     ...item,
@@ -18,10 +25,16 @@ export async function getSermonList(startRow, pageSize) {
   }))
 }
 
-export async function totalSermonCount() {
+export async function totalSermonCount(searchWord) {
+
+  if (searchWord === undefined) {
+    searchWord = ''
+  }
+
   return await prisma.sermons.count({
     where: {
-      deleted: false
+      deleted: false,
+      title: {contains: searchWord}
     }
   })
 }

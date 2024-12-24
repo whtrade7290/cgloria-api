@@ -12,13 +12,14 @@ import { singleUpload, deleteFile } from '../utils/multer.js'
 const router = express.Router()
 
 router.post('/generalForum', async (req, res) => {
-  const { startRow, pageSize } = req.body
-  const data = await getGeneralForumList(startRow, pageSize)
+  const { startRow, pageSize, searchWord } = req.body
+  const data = await getGeneralForumList(startRow, pageSize, searchWord)
   res.send(data)
 })
 
 router.get('/generalForum_count', async (req, res) => {
-  const count = await totalGeneralForumCount()
+  const { searchWord } = req.query  
+  const count = await totalGeneralForumCount(searchWord)
   res.json(count)
 })
 

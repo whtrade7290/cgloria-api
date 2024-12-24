@@ -1,9 +1,15 @@
 import { prisma } from '../utils/prismaClient.js'
 
-export async function getGeneralForumList(startRow, pageSize) {
+export async function getGeneralForumList(startRow, pageSize, searchWord) {
+
+  if (searchWord === undefined) {
+    searchWord = ''
+  }
+
   const data = await prisma.general_forum.findMany({
     where: {
-      deleted: false
+      deleted: false,
+      title: {contains: searchWord}
     },
     orderBy: {
       id: 'desc'
@@ -18,11 +24,17 @@ export async function getGeneralForumList(startRow, pageSize) {
   }))
 }
 
-export async function totalGeneralForumCount() {
+export async function totalGeneralForumCount(searchWord) {
+
+  if (searchWord === undefined) {
+    searchWord = ''
+  }
+
   return await prisma.general_forum.count({
     where: {
-      deleted: false
-    }
+      deleted: false,
+      title: {contains: searchWord}
+    },
   })
 }
 

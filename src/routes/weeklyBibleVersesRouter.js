@@ -13,13 +13,17 @@ import { singleUpload, deleteFile } from '../utils/multer.js'
 const router = express.Router()
 
 router.post('/weekly', async (req, res) => {
-  const { startRow, pageSize } = req.body
-  const data = await getWeeklyList(startRow, pageSize)
+  const { startRow, pageSize, searchWord } = req.body
+
+  const data = await getWeeklyList(startRow, pageSize, searchWord)
   res.send(data)
 })
 
 router.get('/weekly_count', async (req, res) => {
-  const count = await totalWeeklyCount()
+  const { searchWord } = req.query
+
+  const count = await totalWeeklyCount(searchWord)
+  
   res.json(count)
 })
 

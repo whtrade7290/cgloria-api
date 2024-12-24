@@ -1,9 +1,15 @@
 import { prisma } from '../utils/prismaClient.js'
 
-export async function getschoolPhotoList(startRow, pageSize) {
+export async function getschoolPhotoList(startRow, pageSize, searchWord) {
+
+  if (searchWord === undefined) {
+    searchWord = ''
+  } 
+
   const data = await prisma.school_photo.findMany({
     where: {
-      deleted: false
+      deleted: false,
+      title: {contains: searchWord}
     },
     orderBy: {
       id: 'desc'
@@ -18,10 +24,16 @@ export async function getschoolPhotoList(startRow, pageSize) {
   }))
 }
 
-export async function totalschoolPhotoCount() {
+export async function totalschoolPhotoCount(searchWord) {
+
+  if (searchWord === undefined) {
+    searchWord = ''
+  }   
+
   return await prisma.school_photo.count({
     where: {
-      deleted: false
+      deleted: false,
+      title: {contains: searchWord}
     }
   })
 }
