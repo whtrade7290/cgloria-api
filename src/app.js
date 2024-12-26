@@ -2,6 +2,7 @@
 import express from 'express'
 import detectPort from 'detect-port'
 import bodyParser from 'body-parser'
+import cors from 'cors'
 import morgan from 'morgan'
 import bcrypt from 'bcrypt'
 import path from 'path'
@@ -41,19 +42,35 @@ import commentRouter from './routes/commentRouter.js'
 
 const app = express()
 
-const privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8');
-const certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8');
-const ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8');
-
-
-
+const isProduction = process.env.NODE_ENV === 'prod';
 // server setup
 let port
+
 async function configServer() {
   port = 3000 || (await detectPort(3000))
 }
+
+if (isProduction) {
+  const privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8');
+  const certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8');
+  const ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8');
+
+  // 서버 실행
+  https.createServer({ key: privateKey, cert: certificate, ca: ca }, app).listen(port, () => {
+    console.log(`Server is running on https://localhost:${port}`);
+  });
+
+} else{
+  app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+  });
+} 
+
+
 // auth()
 configServer()
+
+if (isProduction) {
 
 const allowedOrigins = ['https://www.cgloria.work', 'https://cgloria.work'];
 
@@ -71,6 +88,10 @@ app.use((req, res, next) => {
     }
     next();
 });
+
+} else {
+  app.use(cors());
+}
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
@@ -261,9 +282,12 @@ app.post('/updateApproveStatus', async (req, res) => {
   }
 })
 
-// 서버 실행
-https.createServer({ key: privateKey, cert: certificate, ca: ca }, app).listen(port, () => {
-  console.log(`Server is running on https://localhost:${port}`);
-});
+
+if (isProduction) {
+
+} else {
+
+}
+
 
 

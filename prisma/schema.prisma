@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = "mysql://woohyeon:Genesis28:15@public.dbaas-bzst-1731158574.db.cnode.jp:43306/cgloria_db"
+  url      = env("DATABASE_URL")
 }
 
 model User {

@@ -28,7 +28,8 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "@types/multer-s3": "^3.0.3"
+    "@types/multer-s3": "^3.0.3",
+    "nodemon": "^3.1.9"
   },
   "jsconfig": {
     "compilerOptions": {
