@@ -2,7 +2,6 @@
 import express from 'express'
 import detectPort from 'detect-port'
 import bodyParser from 'body-parser'
-import cors from 'cors'
 import morgan from 'morgan'
 import bcrypt from 'bcrypt'
 import path from 'path'
@@ -42,9 +41,9 @@ import commentRouter from './routes/commentRouter.js'
 
 const app = express()
 
-// const privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8');
-// const certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8');
-// const ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8');
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8');
+const certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8');
+const ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8');
 
 
 
@@ -56,23 +55,23 @@ async function configServer() {
 // auth()
 configServer()
 
-// const allowedOrigins = ['https://www.cgloria.work', 'https://cgloria.work'];
+const allowedOrigins = ['https://www.cgloria.work', 'https://cgloria.work'];
 
-// app.use((req, res, next) => {
-//     const origin = req.headers.origin;
-//     if (allowedOrigins.includes(origin)) {
-//         res.header('Access-Control-Allow-Origin', origin);
-//     }
-//     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-//     res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Refresh-Token');
-//     res.header('Access-Control-Allow-Credentials', 'true');
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+    }
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Refresh-Token');
+    res.header('Access-Control-Allow-Credentials', 'true');
 
-//     if (req.method === 'OPTIONS') {
-//         return res.status(204).end();
-//     }
-//     next();
-// });
-app.use(cors());
+    if (req.method === 'OPTIONS') {
+        return res.status(204).end();
+    }
+    next();
+});
+
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 app.use(morgan('dev'))
@@ -263,11 +262,8 @@ app.post('/updateApproveStatus', async (req, res) => {
 })
 
 // 서버 실행
-// https.createServer({ key: privateKey, cert: certificate, ca: ca }, app).listen(port, () => {
-//   console.log(`Server is running on https://localhost:${port}`);
-// });
-
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+https.createServer({ key: privateKey, cert: certificate, ca: ca }, app).listen(port, () => {
+  console.log(`Server is running on https://localhost:${port}`);
 });
+
+
