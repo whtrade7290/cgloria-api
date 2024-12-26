@@ -43,30 +43,23 @@ import commentRouter from './routes/commentRouter.js'
 const app = express()
 
 const isProduction = process.env.NODE_ENV === 'prod';
+let privateKey = '';
+let certificate = '';
+let ca = '';
+
+if (isProduction) {
+
+ privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8');
+ certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8');
+ ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8');
+
+} 
+
 // server setup
 let port
-
 async function configServer() {
   port = 3000 || (await detectPort(3000))
 }
-
-if (isProduction) {
-  const privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8');
-  const certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8');
-  const ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8');
-
-  // 서버 실행
-  https.createServer({ key: privateKey, cert: certificate, ca: ca }, app).listen(port, () => {
-    console.log(`Server is running on https://localhost:${port}`);
-  });
-
-} else{
-  app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-  });
-} 
-
-
 // auth()
 configServer()
 
@@ -284,9 +277,14 @@ app.post('/updateApproveStatus', async (req, res) => {
 
 
 if (isProduction) {
-
+  // 서버 실행
+  https.createServer({ key: privateKey, cert: certificate, ca: ca }, app).listen(port, () => {
+    console.log(`production server :${port}`);
+  });
 } else {
-
+  app.listen(port, () => {
+  console.log(`development server :${port}`);
+});
 }
 
 
