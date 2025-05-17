@@ -18,7 +18,7 @@ router.post('/library', async (req, res) => {
 })
 
 router.get('/library_count', async (req, res) => {
-  const { searchWord } = req.query  
+  const { searchWord } = req.query
   const count = await totalLibraryCount(searchWord)
   res.json(count)
 })

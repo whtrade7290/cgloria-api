@@ -8,7 +8,8 @@ import {
   editWithDiaryContent,
   createDiaryRoomWithUsers,
   fetchWithDiaryRoomList,
-  getWithDiaryRoom
+  getWithDiaryRoom,
+  getWithDiaryAll
 } from '../services/withDiaryService.js'
 import { singleUpload, deleteFile } from '../utils/multer.js'
 
@@ -18,6 +19,12 @@ router.post('/withDiary', async (req, res) => {
   const { startRow, pageSize, roomId } = req.body
   console.log('roomId: ', roomId)
   const data = await getWithDiaryList(startRow, pageSize, roomId)
+  console.log('data: ', data)
+  res.send(data)
+})
+
+router.get('/withDiary_all', async (req, res) => {
+  const data = await getWithDiaryAll()
   console.log('data: ', data)
   res.send(data)
 })
@@ -184,7 +191,7 @@ router.post('/fetch_withDiaryList', async (req, res) => {
   try {
     const results = await fetchWithDiaryRoomList(userId)
 
-    console.log('results: ', results)
+    console.log('results: ', results.length)
 
     const newResult = results.map((item) => {
       return {

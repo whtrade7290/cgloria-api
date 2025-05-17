@@ -1,7 +1,6 @@
 import { prisma } from '../utils/prismaClient.js'
 
 export async function getColumnList(startRow, pageSize, searchWord) {
-
   if (searchWord === undefined) {
     searchWord = ''
   }
@@ -9,7 +8,7 @@ export async function getColumnList(startRow, pageSize, searchWord) {
   const data = await prisma.columns.findMany({
     where: {
       deleted: false,
-      title: {contains: searchWord}
+      title: { contains: searchWord }
     },
     orderBy: {
       id: 'desc'
@@ -25,7 +24,6 @@ export async function getColumnList(startRow, pageSize, searchWord) {
 }
 
 export async function totalColumnCount(searchWord) {
-
   if (searchWord === undefined) {
     searchWord = ''
   }
@@ -33,7 +31,7 @@ export async function totalColumnCount(searchWord) {
   return await prisma.columns.count({
     where: {
       deleted: false,
-      title: {contains: searchWord}
+      title: { contains: searchWord }
     }
   })
 }
@@ -202,10 +200,10 @@ export async function getMainColumn() {
 
   if (data) {
     return {
-    ...data,
-    id: Number(data.id)
-  }
-  }else {
+      ...data,
+      id: Number(data.id)
+    }
+  } else {
     return {
       id: 999999,
       title: '',

@@ -23,7 +23,7 @@ router.get('/weekly_count', async (req, res) => {
   const { searchWord } = req.query
 
   const count = await totalWeeklyCount(searchWord)
-  
+
   res.json(count)
 })
 

@@ -48,7 +48,6 @@ router.post('/photo_write', multiUpload, async (req, res) => {
   const { title, content, writer, writer_name } = req.body
   const files = req.files
 
-
   const pathList = files.map((file) => {
     if (file.originalname) {
       file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
@@ -102,26 +101,24 @@ router.post('/photo_delete', async (req, res) => {
     }
   }
 
+  try {
+    const result = await logicalDeletePhoto(id)
 
-    try {
-      const result = await logicalDeletePhoto(id)
-
-      if (!result) {
+    if (!result) {
       return res.status(404).json({ error: 'Photo not found' })
-      }
-      res.json(true)
-    } catch (error) {
-      console.error('Error fetching Photo:', error)
-      res.status(500).json({ error: 'Error fetching Photo' })
     }
-
+    res.json(true)
+  } catch (error) {
+    console.error('Error fetching Photo:', error)
+    res.status(500).json({ error: 'Error fetching Photo' })
+  }
 })
 
 router.post('/photo_edit', uploadFields, async (req, res) => {
   const { title, content, id, jsonDeleteKeys = '' } = req.body
   let deleteKeyList = []
 
-  console.log("req.body: ", req.body);
+  console.log('req.body: ', req.body)
 
   const files = req?.files['fileField'] ?? []
 
@@ -135,7 +132,7 @@ router.post('/photo_edit', uploadFields, async (req, res) => {
     content
   }
 
-if (deleteKeyList.length > 0 && files.length > 0) {
+  if (deleteKeyList.length > 0 && files.length > 0) {
     let fileDeleted = true // 초기값을 true로 설정
 
     deleteKeyList.forEach((file) => {

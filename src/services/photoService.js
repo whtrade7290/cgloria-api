@@ -1,16 +1,15 @@
 import { prisma } from '../utils/prismaClient.js'
 
 export async function getPhotoList(startRow, pageSize, searchWord) {
-
   if (searchWord === undefined) {
     searchWord = ''
-  } 
-  
+  }
+
   try {
     const data = await prisma.photo.findMany({
       where: {
         deleted: false,
-        title: {contains: searchWord}
+        title: { contains: searchWord }
       },
       orderBy: {
         id: 'desc'
@@ -30,15 +29,14 @@ export async function getPhotoList(startRow, pageSize, searchWord) {
 }
 
 export async function totalPhotoCount(searchWord) {
-
   if (searchWord === undefined) {
     searchWord = ''
-  } 
+  }
 
   return await prisma.photo.count({
     where: {
       deleted: false,
-      title: {contains: searchWord}
+      title: { contains: searchWord }
     }
   })
 }

@@ -22,7 +22,7 @@ router.get('/column_count', async (req, res) => {
   const { searchWord } = req.query
 
   const count = await totalColumnCount(searchWord)
-  
+
   res.json(count)
 })
 

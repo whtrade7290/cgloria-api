@@ -42,18 +42,16 @@ import commentRouter from './routes/commentRouter.js'
 
 const app = express()
 
-const isProduction = process.env.NODE_ENV === 'prod';
-let privateKey = '';
-let certificate = '';
-let ca = '';
+const isProduction = process.env.NODE_ENV === 'prod'
+let privateKey = ''
+let certificate = ''
+let ca = ''
 
 if (isProduction) {
-
- privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8');
- certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8');
- ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8');
-
-} 
+  privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8')
+  certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8')
+  ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8')
+}
 
 // server setup
 let port
@@ -64,26 +62,24 @@ async function configServer() {
 configServer()
 
 if (isProduction) {
+  const allowedOrigins = ['https://www.cgloria.work', 'https://cgloria.work']
 
-const allowedOrigins = ['https://www.cgloria.work', 'https://cgloria.work'];
-
-app.use((req, res, next) => {
-    const origin = req.headers.origin;
+  app.use((req, res, next) => {
+    const origin = req.headers.origin
     if (allowedOrigins.includes(origin)) {
-        res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Origin', origin)
     }
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-    res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Refresh-Token');
-    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
+    res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Refresh-Token')
+    res.header('Access-Control-Allow-Credentials', 'true')
 
     if (req.method === 'OPTIONS') {
-        return res.status(204).end();
+      return res.status(204).end()
     }
-    next();
-});
-
+    next()
+  })
 } else {
-  app.use(cors());
+  app.use(cors())
 }
 
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -107,7 +103,7 @@ app.use('/uploads', express.static(path.join('', 'uploads')))
 
 app.post('/signUp', async (req, res) => {
   const { username, password, name } = req.body
-  
+
   // 비밀번호 암호화
   const hashedPassword = await bcrypt.hash(password, 10)
 
@@ -166,10 +162,9 @@ app.post('/signIn', async (req, res) => {
 })
 
 app.get('/test', (req, res) => {
-   console.log('test!')
-   res.send('test!');
-});
-
+  console.log('test!')
+  res.send('test!')
+})
 
 app.post('/check_Token', async (req, res) => {
   const { accessToken, refreshToken } = req.body
@@ -243,8 +238,10 @@ app.get('/disapproveUsers', async (req, res) => {
 
     const responseUsers = users.map((user) => {
       return {
-        ...user,
-        id: Number(user.id)
+        id: Number(user.id),
+        username: user.username,
+        name: user.name,
+        role: user.role
       }
     })
 
@@ -275,17 +272,13 @@ app.post('/updateApproveStatus', async (req, res) => {
   }
 })
 
-
 if (isProduction) {
   // 서버 실행
   https.createServer({ key: privateKey, cert: certificate, ca: ca }, app).listen(port, () => {
-    console.log(`production server :${port}`);
-  });
+    console.log(`production server :${port}`)
+  })
 } else {
   app.listen(port, () => {
-  console.log(`development server :${port}`);
-});
+    console.log(`development server :${port}`)
+  })
 }
-
-
-

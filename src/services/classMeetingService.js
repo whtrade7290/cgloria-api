@@ -1,15 +1,14 @@
 import { prisma } from '../utils/prismaClient.js'
 
 export async function getClassMeetingList(startRow, pageSize, searchWord) {
-
   if (searchWord === undefined) {
     searchWord = ''
-  }  
+  }
 
   const data = await prisma.class_meeting.findMany({
     where: {
       deleted: false,
-      title: {contains: searchWord}
+      title: { contains: searchWord }
     },
     orderBy: {
       id: 'desc'
@@ -25,15 +24,14 @@ export async function getClassMeetingList(startRow, pageSize, searchWord) {
 }
 
 export async function totalClassMeetingCount(searchWord) {
-
   if (searchWord === undefined) {
     searchWord = ''
   }
-  
+
   return await prisma.class_meeting.count({
     where: {
       deleted: false,
-      title: {contains: searchWord}
+      title: { contains: searchWord }
     }
   })
 }
@@ -201,10 +199,10 @@ export async function getMainClassMeeting() {
   })
   if (data) {
     return {
-    ...data,
-    id: Number(data.id)
-  }
-  }else {
+      ...data,
+      id: Number(data.id)
+    }
+  } else {
     return {
       id: 999999,
       title: '',

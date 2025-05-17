@@ -18,7 +18,7 @@ router.post('/generalForum', async (req, res) => {
 })
 
 router.get('/generalForum_count', async (req, res) => {
-  const { searchWord } = req.query  
+  const { searchWord } = req.query
   const count = await totalGeneralForumCount(searchWord)
   res.json(count)
 })

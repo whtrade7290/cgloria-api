@@ -45,7 +45,7 @@ router.post('/school_photo_write', multiUpload, async (req, res) => {
   const { title, content, writer, writer_name } = req.body
   const files = req.files
 
-    const pathList = files.map((file) => {
+  const pathList = files.map((file) => {
     if (file.originalname) {
       file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
     }
@@ -99,16 +99,16 @@ router.post('/school_photo_delete', async (req, res) => {
   }
 
   try {
-      const result = await logicalDeleteSchoolPhoto(id)
+    const result = await logicalDeleteSchoolPhoto(id)
 
-      if (!result) {
+    if (!result) {
       return res.status(404).json({ error: 'Photo not found' })
-      }
-      res.json(true)
-    } catch (error) {
-      console.error('Error fetching Photo:', error)
-      res.status(500).json({ error: 'Error fetching Photo' })
     }
+    res.json(true)
+  } catch (error) {
+    console.error('Error fetching Photo:', error)
+    res.status(500).json({ error: 'Error fetching Photo' })
+  }
 })
 
 router.post('/school_photo_edit', uploadFields, async (req, res) => {

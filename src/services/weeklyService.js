@@ -1,7 +1,6 @@
 import { prisma } from '../utils/prismaClient.js'
 
 export async function getWeeklyList(startRow, pageSize, searchWord) {
-
   if (searchWord === undefined) {
     searchWord = ''
   }
@@ -9,7 +8,7 @@ export async function getWeeklyList(startRow, pageSize, searchWord) {
   const data = await prisma.weekly_bible_verses.findMany({
     where: {
       deleted: false,
-      title: {contains: searchWord}
+      title: { contains: searchWord }
     },
     orderBy: {
       id: 'desc'
@@ -25,7 +24,6 @@ export async function getWeeklyList(startRow, pageSize, searchWord) {
 }
 
 export async function totalWeeklyCount(searchWord) {
-
   if (searchWord === undefined) {
     searchWord = ''
   }
@@ -33,7 +31,7 @@ export async function totalWeeklyCount(searchWord) {
   return await prisma.weekly_bible_verses.count({
     where: {
       deleted: false,
-      title: {contains: searchWord}
+      title: { contains: searchWord }
     }
   })
 }
@@ -203,10 +201,10 @@ export async function getMainWeekly() {
 
   if (data) {
     return {
-    ...data,
-    id: Number(data.id)
-  }
-  }else {
+      ...data,
+      id: Number(data.id)
+    }
+  } else {
     return {
       id: 999999,
       title: '',

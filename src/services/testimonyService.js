@@ -1,16 +1,14 @@
 import { prisma } from '../utils/prismaClient.js'
 
 export async function getTestimonyList(startRow, pageSize, searchWord) {
-
   if (searchWord === undefined) {
     searchWord = ''
   }
 
   const data = await prisma.testimonies.findMany({
-
     where: {
       deleted: false,
-      title: {contains: searchWord}
+      title: { contains: searchWord }
     },
     orderBy: {
       id: 'desc'
@@ -29,8 +27,8 @@ export async function totalTestimonyCount(searchWord) {
   return await prisma.testimonies.count({
     where: {
       deleted: false,
-      title: {contains: searchWord}
-    },
+      title: { contains: searchWord }
+    }
   })
 }
 
@@ -198,10 +196,10 @@ export async function getMainTestimony() {
 
   if (data) {
     return {
-    ...data,
-    id: Number(data.id)
-  }
-  }else {
+      ...data,
+      id: Number(data.id)
+    }
+  } else {
     return {
       id: 999999,
       title: '',

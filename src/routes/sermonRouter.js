@@ -14,7 +14,7 @@ const router = express.Router()
 
 router.post('/sermon', async (req, res) => {
   const { startRow, pageSize, searchWord } = req.body
-  
+
   const data = await getSermonList(startRow, pageSize, searchWord)
 
   res.send(data)

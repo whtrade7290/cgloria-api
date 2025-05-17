@@ -20,6 +20,21 @@ export async function getWithDiaryList(startRow = 0, pageSize = 0, roomId = 0) {
   }))
 }
 
+export async function getWithDiaryAll() {
+  const data = await prisma.withDiaryRoom.findMany({
+    orderBy: {
+      id: 'desc'
+    }
+  })
+
+  return data.map((item) => ({
+    id: Number(item.id),
+    roomName: item.roomName,
+    creator_name: item.creator_name,
+    update_at: item.update_at
+  }))
+}
+
 export async function totalWithDiaryCount(id) {
   console.log('id: ', id)
   return await prisma.withDiary.count({
@@ -145,20 +160,10 @@ export async function createDiaryRoomWithUsers(teamName, userIdList, creator, cr
 
 export async function fetchWithDiaryRoomList(userId) {
   try {
-    const user = await prisma.user.findUniqueOrThrow({
-      select: { role: true },
-      where: { id: userId }
-})
-
-const isAdmin = user.role === 'ADMIN' 
-
-// ✅ admin이면 모든 데이터를 가져오되, `include`를 포함
-// ✅ 일반 유저면 특정 `userId`만 조회
-return prisma.userDiaryRoom.findMany({
-  ...(isAdmin ? {} : { where: { userId } }), // ✅ admin이면 `where` 조건 제거
-  include: { diaryRoom: true } // ✅ admin이어도 `diaryRoom` 포함
-})
-
+    return prisma.userDiaryRoom.findMany({
+      where: { userId },
+      include: { diaryRoom: true } 
+    })
   } catch (error) {
     console.error('Error fetching:', error)
     res.status(500).json({ error: 'Error fetching WithDiary RoomList' })

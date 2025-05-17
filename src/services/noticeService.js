@@ -1,15 +1,14 @@
 import { prisma } from '../utils/prismaClient.js'
 
 export async function getNoticeList(startRow, pageSize, searchWord) {
-
   if (searchWord === undefined) {
     searchWord = ''
-  } 
+  }
 
   const data = await prisma.notice.findMany({
     where: {
       deleted: false,
-      title: {contains: searchWord}
+      title: { contains: searchWord }
     },
     orderBy: {
       id: 'desc'
@@ -25,15 +24,14 @@ export async function getNoticeList(startRow, pageSize, searchWord) {
 }
 
 export async function totalNoticeCount(searchWord) {
-
   if (searchWord === undefined) {
     searchWord = ''
-  } 
+  }
 
   return await prisma.notice.count({
     where: {
       deleted: false,
-      title: {contains: searchWord}
+      title: { contains: searchWord }
     }
   })
 }
