@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "NODE_ENV=dev nodemon --exec node src/app.js",
-    "stage": "NODE_ENV=stage nodemon --exec node src/app.js",
-    "prod": "NODE_ENV=prod nodemon --exec node src/app.js",
+    "stage": "NODE_ENV=stage pm2 start /var/www/cgloria-api/src/app.js --name cgloria-api",
+    "prod": "NODE_ENV=prod pm2 start /var/www/cgloria-api/src/app.js --name cgloria-api",
+    "stop": "pm2 stop cgloria-api",
     "start": "node src/app.js",
     "format": "prettier --write src/"
   },
