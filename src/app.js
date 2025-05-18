@@ -42,12 +42,18 @@ import commentRouter from './routes/commentRouter.js'
 
 const app = express()
 
-const isProduction = process.env.NODE_ENV === 'prod'
+const env =
+  process.env.NODE_ENV === 'prod'
+    ? 'prod'
+    : process.env.NODE_ENV === 'stage'
+    ? 'stage'
+    : 'local'
+
 let privateKey = ''
 let certificate = ''
 let ca = ''
 
-if (isProduction) {
+if (env === 'prod') {
   privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8')
   certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8')
   ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8')
@@ -61,7 +67,7 @@ async function configServer() {
 // auth()
 configServer()
 
-if (isProduction) {
+if (env === 'prod') {
   const allowedOrigins = ['https://www.cgloria.work', 'https://cgloria.work']
 
   app.use((req, res, next) => {
@@ -99,7 +105,7 @@ app.use('/photo', photoRouter)
 app.use('/school_photo', schoolPhotoRouter)
 app.use('/comment', commentRouter)
 
-app.use('/uploads', express.static(path.join('', isProduction ? 'src/uploads' : 'uploads')))
+app.use('/uploads', express.static(path.join('', env === 'local' ? 'uploads': 'src/uploads')))
 
 app.post('/signUp', async (req, res) => {
   const { username, password, name } = req.body
@@ -272,7 +278,7 @@ app.post('/updateApproveStatus', async (req, res) => {
   }
 })
 
-if (isProduction) {
+if (env === 'prod') {
   // 서버 실행
   https.createServer({ key: privateKey, cert: certificate, ca: ca }, app).listen(port, () => {
     console.log(`production server :${port}`)

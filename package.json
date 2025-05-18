@@ -5,7 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon --exec npm run restart",
+    "dev": "NODE_ENV=dev nodemon --exec node src/app.js",
+    "stage": "NODE_ENV=stage nodemon --exec node src/app.js",
+    "prod": "NODE_ENV=prod nodemon --exec node src/app.js",
     "start": "node src/app.js",
     "format": "prettier --write src/"
   },
