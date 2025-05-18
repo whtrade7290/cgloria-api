@@ -33,69 +33,89 @@ export async function totalPhotoCount(searchWord) {
     searchWord = ''
   }
 
-  return await prisma.photo.count({
-    where: {
-      deleted: false,
-      title: { contains: searchWord }
-    }
-  })
+  try {
+    return await prisma.photo.count({
+      where: {
+        deleted: false,
+        title: { contains: searchWord }
+      }
+    })
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 export async function getPhotoContent(id) {
-  const data = await prisma.photo.findUnique({
-    where: { id: parseInt(id) } // id는 integer 형식으로 파싱하여 사용
-  })
+  try {
+    const data = await prisma.photo.findUnique({
+      where: { id: parseInt(id) } // id는 integer 형식으로 파싱하여 사용
+    })
 
-  return {
-    ...data,
-    id: Number(data.id)
+    return {
+      ...data,
+      id: Number(data.id)
+    }
+  } catch (error) {
+    console.error(error)
   }
 }
 
 export async function writePhotoContent({ title, content, writer, writer_name, files }) {
-  return await prisma.photo.create({
-    data: {
-      title: title,
-      content: content,
-      writer: writer,
-      writer_name: writer_name,
-      files: files
-    }
-  })
-}
-
-export async function logicalDeletePhoto(id) {
-  return prisma.photo.update({
-    where: {
-      id: id
-    },
-    data: {
-      deleted: true
-    }
-  })
-}
-
-export function editPhotoContent({ id, title, content, files = [] }) {
-  if (files.length === 0) {
-    return prisma.photo.update({
-      where: {
-        id: id
-      },
-      data: {
-        title: title,
-        content: content
-      }
-    })
-  } else {
-    return prisma.photo.update({
-      where: {
-        id: id
-      },
+  try {
+    return await prisma.photo.create({
       data: {
         title: title,
         content: content,
-        files: JSON.stringify(files)
+        writer: writer,
+        writer_name: writer_name,
+        files: files
       }
     })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+export async function logicalDeletePhoto(id) {
+  try {
+    return prisma.photo.update({
+      where: {
+        id: id
+      },
+      data: {
+        deleted: true
+      }
+    })
+  } catch (error) {
+    console.error()
+  }
+}
+
+export function editPhotoContent({ id, title, content, files = [] }) {
+  try {
+    if (files.length === 0) {
+      return prisma.photo.update({
+        where: {
+          id: id
+        },
+        data: {
+          title: title,
+          content: content
+        }
+      })
+    } else {
+      return prisma.photo.update({
+        where: {
+          id: id
+        },
+        data: {
+          title: title,
+          content: content,
+          files: JSON.stringify(files)
+        }
+      })
+    }
+  } catch (error) {
+    console.error(error)
   }
 }

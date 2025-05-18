@@ -43,11 +43,7 @@ import commentRouter from './routes/commentRouter.js'
 const app = express()
 
 const env =
-  process.env.NODE_ENV === 'prod'
-    ? 'prod'
-    : process.env.NODE_ENV === 'stage'
-    ? 'stage'
-    : 'local'
+  process.env.NODE_ENV === 'prod' ? 'prod' : process.env.NODE_ENV === 'stage' ? 'stage' : 'local'
 
 let privateKey = ''
 let certificate = ''
@@ -105,7 +101,7 @@ app.use('/photo', photoRouter)
 app.use('/school_photo', schoolPhotoRouter)
 app.use('/comment', commentRouter)
 
-app.use('/uploads', express.static(path.join('', env === 'local' ? 'uploads': 'src/uploads')))
+app.use('/uploads', express.static(path.join('', env === 'local' ? 'uploads' : 'src/uploads')))
 
 app.post('/signUp', async (req, res) => {
   const { username, password, name } = req.body
