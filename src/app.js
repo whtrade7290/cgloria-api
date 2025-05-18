@@ -99,7 +99,7 @@ app.use('/photo', photoRouter)
 app.use('/school_photo', schoolPhotoRouter)
 app.use('/comment', commentRouter)
 
-app.use('/uploads', express.static(path.join('', 'uploads')))
+app.use('/uploads', express.static(path.join('', isProduction ? 'src/uploads' : 'uploads')))
 
 app.post('/signUp', async (req, res) => {
   const { username, password, name } = req.body
