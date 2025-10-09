@@ -45,15 +45,18 @@ const app = express()
 const env =
   process.env.NODE_ENV === 'prod' ? 'prod' : process.env.NODE_ENV === 'stage' ? 'stage' : 'local'
 
+  console.log('env: ', env);
+  
+
 let privateKey = ''
 let certificate = ''
 let ca = ''
 
-if (env === 'prod') {
-  privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8')
-  certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8')
-  ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8')
-}
+// if (env === 'prod') {
+//   privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8')
+//   certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8')
+//   ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8')
+// }
 
 // server setup
 let port
@@ -63,26 +66,27 @@ async function configServer() {
 // auth()
 configServer()
 
-if (env === 'prod') {
-  const allowedOrigins = ['https://www.cgloria.work', 'https://cgloria.work']
+// if (env === 'prod') {
+//   const allowedOrigins = ['https://www.cgloria.work', 'https://cgloria.work']
 
-  app.use((req, res, next) => {
-    const origin = req.headers.origin
-    if (allowedOrigins.includes(origin)) {
-      res.header('Access-Control-Allow-Origin', origin)
-    }
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
-    res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Refresh-Token')
-    res.header('Access-Control-Allow-Credentials', 'true')
+//   app.use((req, res, next) => {
+//     const origin = req.headers.origin
+//     if (allowedOrigins.includes(origin)) {
+//       res.header('Access-Control-Allow-Origin', origin)
+//     }
+//     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
+//     res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Refresh-Token')
+//     res.header('Access-Control-Allow-Credentials', 'true')
 
-    if (req.method === 'OPTIONS') {
-      return res.status(204).end()
-    }
-    next()
-  })
-} else {
-  app.use(cors())
-}
+//     if (req.method === 'OPTIONS') {
+//       return res.status(204).end()
+//     }
+//     next()
+//   })
+// } else {
+  
+// }
+app.use(cors())
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
@@ -163,10 +167,6 @@ app.post('/signIn', async (req, res) => {
   }
 })
 
-app.get('/test', (req, res) => {
-  console.log('test!')
-  res.send('test!')
-})
 
 app.post('/check_Token', async (req, res) => {
   const { accessToken, refreshToken } = req.body

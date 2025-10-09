@@ -14,8 +14,8 @@ model User {
   create_at  DateTime        @default(now())
   update_at  DateTime        @default(now())
   role       Role            @default(USER)
-  isApproved    Boolean      @default(false)
   name       String?
+  isApproved Boolean         @default(false)
   diaryRooms UserDiaryRoom[]
 }
 
@@ -28,11 +28,11 @@ model sermons {
   deleted     Boolean  @default(false)
   content     String   @db.LongText
   extension   String?
-  uuid        String?
   filename    String?
-  fileType    String?
   mainContent Boolean  @default(false)
   writer_name String?
+  fileType    String?
+  uuid        String?
 }
 
 model columns {
@@ -43,12 +43,12 @@ model columns {
   update_at   DateTime @default(now())
   deleted     Boolean  @default(false)
   extension   String?
-  uuid        String?
   filename    String?
-  fileType    String?
   content     String   @db.LongText
   mainContent Boolean  @default(false)
   writer_name String?
+  fileType    String?
+  uuid        String?
 }
 
 model weekly_bible_verses {
@@ -59,12 +59,12 @@ model weekly_bible_verses {
   update_at   DateTime @default(now())
   deleted     Boolean  @default(false)
   extension   String?
-  uuid        String?
   filename    String?
-  fileType    String?
   content     String   @db.LongText
   mainContent Boolean  @default(false)
   writer_name String?
+  fileType    String?
+  uuid        String?
 }
 
 model class_meeting {
@@ -76,11 +76,11 @@ model class_meeting {
   deleted     Boolean  @default(false)
   content     String   @db.LongText
   extension   String?
-  uuid        String?
   filename    String?
-  fileType    String?
   mainContent Boolean  @default(false)
   writer_name String?
+  fileType    String?
+  uuid        String?
 }
 
 model sunday_school_resources {
@@ -92,10 +92,10 @@ model sunday_school_resources {
   deleted     Boolean  @default(false)
   content     String   @db.LongText
   extension   String?
-  uuid        String?
   filename    String?
-  fileType    String?
   writer_name String?
+  fileType    String?
+  uuid        String?
 }
 
 model general_forum {
@@ -107,10 +107,10 @@ model general_forum {
   deleted     Boolean  @default(false)
   content     String   @db.LongText
   extension   String?
-  uuid        String?
   filename    String?
-  fileType    String?
   writer_name String?
+  fileType    String?
+  uuid        String?
 }
 
 model testimonies {
@@ -122,11 +122,11 @@ model testimonies {
   deleted     Boolean  @default(false)
   content     String   @db.LongText
   extension   String?
-  uuid        String?
   filename    String?
-  fileType    String?
   mainContent Boolean  @default(false)
   writer_name String?
+  fileType    String?
+  uuid        String?
 }
 
 model notice {
@@ -138,10 +138,10 @@ model notice {
   deleted     Boolean  @default(false)
   content     String   @db.LongText
   extension   String?
-  uuid        String?
   filename    String?
-  fileType    String?
   writer_name String?
+  fileType    String?
+  uuid        String?
 }
 
 model withDiary {
@@ -149,29 +149,29 @@ model withDiary {
   title       String
   content     String         @db.LongText
   writer      String
-  extension   String?
-  uuid        String?
   filename    String?
-  fileType    String?
+  extension   String?
   create_at   DateTime       @default(now())
   update_at   DateTime       @default(now())
   deleted     Boolean        @default(false)
   writer_name String?
   diaryRoomId Int?
+  fileType    String?
+  uuid        String?
   diaryRoom   withDiaryRoom? @relation(fields: [diaryRoomId], references: [id])
 
   @@index([diaryRoomId], map: "withDiary_diaryRoomId_fkey")
 }
 
 model withDiaryRoom {
-  id              Int             @id @default(autoincrement())
-  roomName        String          @default("")
-  creator         Int
-  creator_name    String
-  create_at       DateTime        @default(now())
-  update_at       DateTime        @default(now())
-  users           UserDiaryRoom[]
-  diaries         withDiary[]
+  id           Int             @id @default(autoincrement())
+  creator      Int
+  create_at    DateTime        @default(now())
+  update_at    DateTime        @default(now())
+  roomName     String          @default("")
+  creator_name String
+  users        UserDiaryRoom[]
+  diaries      withDiary[]
 }
 
 model UserDiaryRoom {
