@@ -39,8 +39,6 @@ import withDiaryRouter from './routes/withDiaryRouter.js'
 import photoRouter from './routes/photoRouter.js'
 import schoolPhotoRouter from './routes/schoolPhotoRouter.js'
 import commentRouter from './routes/commentRouter.js'
-import { fileURLToPath } from 'url'
-
 
 const app = express()
 
@@ -54,11 +52,11 @@ let privateKey = ''
 let certificate = ''
 let ca = ''
 
-// if (env === 'prod') {
-//   privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8')
-//   certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8')
-//   ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8')
-// }
+if (env === 'prod') {
+  privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8')
+  certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8')
+  ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8')
+}
 
 // server setup
 let port
@@ -68,31 +66,27 @@ async function configServer() {
 // auth()
 configServer()
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+if (env === 'prod') {
+  const allowedOrigins = ['https://www.cgloria.work', 'https://cgloria.work']
 
+  app.use((req, res, next) => {
+    const origin = req.headers.origin
+    if (allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin)
+    }
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
+    res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Refresh-Token')
+    res.header('Access-Control-Allow-Credentials', 'true')
 
-// if (env === 'prod') {
-//   const allowedOrigins = ['https://www.cgloria.work', 'https://cgloria.work']
+    if (req.method === 'OPTIONS') {
+      return res.status(204).end()
+    }
+    next()
+  })
+} else {
+  app.use(cors())
+}
 
-//   app.use((req, res, next) => {
-//     const origin = req.headers.origin
-//     if (allowedOrigins.includes(origin)) {
-//       res.header('Access-Control-Allow-Origin', origin)
-//     }
-//     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
-//     res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Refresh-Token')
-//     res.header('Access-Control-Allow-Credentials', 'true')
-
-//     if (req.method === 'OPTIONS') {
-//       return res.status(204).end()
-//     }
-//     next()
-//   })
-// } else {
-  
-// }
-app.use(cors())
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
@@ -111,7 +105,7 @@ app.use('/photo', photoRouter)
 app.use('/school_photo', schoolPhotoRouter)
 app.use('/comment', commentRouter)
 
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
+app.use('/uploads', express.static(path.join('', env === 'local' ? 'uploads' : 'src/uploads')))
 
 app.post('/signUp', async (req, res) => {
   const { username, password, name } = req.body
