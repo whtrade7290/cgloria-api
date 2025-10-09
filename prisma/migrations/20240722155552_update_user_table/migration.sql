@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `User` MODIFY `withDiary` INTEGER NOT NULL DEFAULT 0;
