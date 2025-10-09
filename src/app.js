@@ -52,12 +52,6 @@ let privateKey = ''
 let certificate = ''
 let ca = ''
 
-if (env === 'prod') {
-  privateKey = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/privkey.pem', 'utf8')
-  certificate = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/cert.pem', 'utf8')
-  ca = fs.readFileSync('/etc/letsencrypt/live/www.cgloria.work/chain.pem', 'utf8')
-}
-
 // server setup
 let port
 async function configServer() {
@@ -67,7 +61,7 @@ async function configServer() {
 configServer()
 
 if (env === 'prod') {
-  const allowedOrigins = ['https://www.cgloria.work', 'https://cgloria.work']
+  const allowedOrigins = ['https://cgloria.duckdns.org', 'https://www.cgloria.duckdns.org']
 
   app.use((req, res, next) => {
     const origin = req.headers.origin
