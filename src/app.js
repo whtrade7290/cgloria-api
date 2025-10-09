@@ -39,6 +39,8 @@ import withDiaryRouter from './routes/withDiaryRouter.js'
 import photoRouter from './routes/photoRouter.js'
 import schoolPhotoRouter from './routes/schoolPhotoRouter.js'
 import commentRouter from './routes/commentRouter.js'
+import { fileURLToPath } from 'url'
+
 
 const app = express()
 
@@ -65,6 +67,10 @@ async function configServer() {
 }
 // auth()
 configServer()
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 
 // if (env === 'prod') {
 //   const allowedOrigins = ['https://www.cgloria.work', 'https://cgloria.work']
@@ -105,7 +111,7 @@ app.use('/photo', photoRouter)
 app.use('/school_photo', schoolPhotoRouter)
 app.use('/comment', commentRouter)
 
-app.use('/uploads', express.static(path.join('', env === 'local' ? 'uploads' : 'src/uploads')))
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 
 app.post('/signUp', async (req, res) => {
   const { username, password, name } = req.body
