@@ -55,26 +55,26 @@ let ca = ''
 // server setup
 let port
 async function configServer() {
-  port = 3000 || (await detectPort(3000))
+  const port = 3000 || (await detectPort(3000))
+  app.listen(port, () => {
+    console.log(`production server :${port}`)
+  })
 }
+
 // auth()
 configServer()
 
 if (env === 'prod') {
   const allowedOrigins = ['https://cgloria.duckdns.org', 'https://www.cgloria.duckdns.org']
-
   app.use((req, res, next) => {
     const origin = req.headers.origin
     if (allowedOrigins.includes(origin)) {
       res.header('Access-Control-Allow-Origin', origin)
     }
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
     res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Refresh-Token')
     res.header('Access-Control-Allow-Credentials', 'true')
-
-    if (req.method === 'OPTIONS') {
-      return res.status(204).end()
-    }
+    if (req.method === 'OPTIONS') return res.sendStatus(204)
     next()
   })
 } else {
@@ -267,14 +267,3 @@ app.post('/updateApproveStatus', async (req, res) => {
     res.status(500).json({ message: 'An error occurred while updating approval status' })
   }
 })
-
-if (env === 'prod') {
-  // 서버 실행
-  // https.createServer({ key: privateKey, cert: certificate, ca: ca }, app).listen(port, () => {
-  //   console.log(`production server :${port}`)
-  // })
-} else {
-  app.listen(port, () => {
-    console.log(`development server :${port}`)
-  })
-}
