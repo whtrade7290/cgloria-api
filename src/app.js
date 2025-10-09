@@ -270,9 +270,9 @@ app.post('/updateApproveStatus', async (req, res) => {
 
 if (env === 'prod') {
   // 서버 실행
-  https.createServer({ key: privateKey, cert: certificate, ca: ca }, app).listen(port, () => {
-    console.log(`production server :${port}`)
-  })
+  // https.createServer({ key: privateKey, cert: certificate, ca: ca }, app).listen(port, () => {
+  //   console.log(`production server :${port}`)
+  // })
 } else {
   app.listen(port, () => {
     console.log(`development server :${port}`)
