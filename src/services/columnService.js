@@ -70,8 +70,8 @@ export async function writeColumnContent({
 }) {
   try {
     if (mainContent) {
-      prisma.$transaction(async (prisma) => {
-        const createResult = await prisma.columns.create({
+      prisma.$transaction(async (tx) => {
+        const createResult = await tx.columns.create({
           data: {
             title,
             content,
@@ -84,7 +84,7 @@ export async function writeColumnContent({
             fileType
           }
         })
-        return await prisma.columns.updateMany({
+        return await tx.columns.updateMany({
           data: {
             mainContent: !mainContent
           },

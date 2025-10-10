@@ -67,8 +67,8 @@ export async function writeTestimonyContent({
 }) {
   try {
     if (mainContent) {
-      prisma.$transaction(async (prisma) => {
-        const createResult = await prisma.testimonies.create({
+      prisma.$transaction(async (tx) => {
+        const createResult = await tx.testimonies.create({
           data: {
             title,
             content,
@@ -81,7 +81,7 @@ export async function writeTestimonyContent({
             fileType
           }
         })
-        return await prisma.testimonies.updateMany({
+        return await tx.testimonies.updateMany({
           data: {
             mainContent: !mainContent
           },
@@ -138,11 +138,11 @@ export async function editTestimonyContent({
   let result = {}
   try {
     if (mainContent) {
-      result = await prisma.$transaction(async (prisma) => {
+      result = await prisma.$transaction(async (tx) => {
         let updateResult
 
         if (uuid && filename && extension && fileType) {
-          updateResult = await prisma.testimonies.update({
+          updateResult = await tx.testimonies.update({
             where: { id },
             data: {
               title,
@@ -156,7 +156,7 @@ export async function editTestimonyContent({
             }
           })
         } else {
-          updateResult = await prisma.testimonies.update({
+          updateResult = await tx.testimonies.update({
             where: { id },
             data: {
               title,
@@ -167,7 +167,7 @@ export async function editTestimonyContent({
           })
         }
 
-        const updateManyResult = await prisma.testimonies.updateMany({
+        const updateManyResult = await tx.testimonies.updateMany({
           data: { mainContent: false },
           where: { id: { not: updateResult.id } }
         })

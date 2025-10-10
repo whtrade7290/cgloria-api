@@ -71,8 +71,8 @@ export async function writeSermonContent({
   try {
     if (mainContent) {
       // Return the transaction result
-      return await prisma.$transaction(async (prisma) => {
-        const createResult = await prisma.sermons.create({
+      return await prisma.$transaction(async (tx) => {
+        const createResult = await tx.sermons.create({
           data: {
             title,
             content,
@@ -86,7 +86,7 @@ export async function writeSermonContent({
           }
         })
 
-        return await prisma.sermons.updateMany({
+        return await tx.sermons.updateMany({
           data: {
             mainContent: !mainContent
           },
@@ -144,10 +144,10 @@ export async function editSermonContent({
 
   try {
     if (mainContent) {
-      result = await prisma.$transaction(async (prisma) => {
+      result = await prisma.$transaction(async (tx) => {
         let updateResult
         if (uuid && filename && extension && fileType) {
-          updateResult = await prisma.sermons.update({
+          updateResult = await tx.sermons.update({
             where: { id },
             data: {
               title,
@@ -161,7 +161,7 @@ export async function editSermonContent({
             }
           })
         } else {
-          updateResult = await prisma.sermons.update({
+          updateResult = await tx.sermons.update({
             where: { id },
             data: {
               title,
@@ -172,7 +172,7 @@ export async function editSermonContent({
           })
         }
 
-        const updateManyResult = await prisma.sermons.updateMany({
+        const updateManyResult = await tx.sermons.updateMany({
           data: { mainContent: false },
           where: { id: { not: updateResult.id } }
         })
