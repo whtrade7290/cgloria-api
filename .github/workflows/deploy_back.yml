@@ -1,0 +1,29 @@
+name: Back end depoly to vps
+on:
+  push:
+    branches:
+      - prod # 트리거 브랜치
+
+jobs: # ✅ 무조건 있어야 함
+  deploy: # job 이름
+    runs-on: ubuntu-latest
+
+    steps: # ✅ 단계 정의
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: SSH to VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.CONOHA_HOST }}
+          username: ${{ secrets.CONOHA_USER }}
+          key: ${{ secrets.CONOHA_SSH_KEY }}
+          port: 22
+          script: |
+            echo "Connected to $(hostname)"
+            cd /var/www/cgloria-api
+            git fetch origin prod
+            git reset --hard origin/prod
+            npm ci
+            pm2 reload cgloria || pm2 start ecosystem.config.js --name cgloria
+            echo "✅ $(hostname) 백엔드 자동 배포 완료 at $(date '+%Y-%m-%d %H:%M:%S')"

@@ -6,8 +6,6 @@ import cors from 'cors'
 import morgan from 'morgan'
 import bcrypt from 'bcrypt'
 import path from 'path'
-import https from 'https'
-import fs from 'fs'
 import {
   signIn,
   signUp,
@@ -46,6 +44,7 @@ const env =
   process.env.NODE_ENV === 'prod' ? 'prod' : process.env.NODE_ENV === 'stage' ? 'stage' : 'local'
 
   console.log('env: ', env);
+  console.log('배포 테스트 로그');
   
 
 let privateKey = ''
