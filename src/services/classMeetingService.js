@@ -71,7 +71,7 @@ export async function writeClassMeetingContent({
 }) {
   try {
     if (mainContent) {
-      prisma.$transaction(async (tx) => {
+     return prisma.$transaction(async (tx) => {
         const createResult = await tx.class_meeting.create({
           data: {
             title,
@@ -143,7 +143,7 @@ export async function editClassMeetingContent({
 
   try {
     if (mainContent) {
-      result = await prisma.$transaction(async (tx) => {
+      return await prisma.$transaction(async (tx) => {
         let updateResult
 
         if (uuid && filename && extension && fileType) {

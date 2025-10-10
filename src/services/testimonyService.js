@@ -67,7 +67,7 @@ export async function writeTestimonyContent({
 }) {
   try {
     if (mainContent) {
-      prisma.$transaction(async (tx) => {
+     return prisma.$transaction(async (tx) => {
         const createResult = await tx.testimonies.create({
           data: {
             title,
