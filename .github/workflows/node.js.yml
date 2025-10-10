@@ -1,0 +1,17 @@
+name: Test Action
+
+on:
+  push:
+    branches:
+     - '*'
+
+jobs:
+  test-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ✅ Step 1 - Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🧩 Step 2 - Run a test command
+        run: echo "🎉 GitHub Actions is working!"
