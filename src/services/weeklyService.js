@@ -70,7 +70,7 @@ export async function writeWeeklyContent({
 }) {
   try {
     if (mainContent) {
-      prisma.$transaction(async (tx) => {
+      return await prisma.$transaction(async (tx) => {
         const createResult = await tx.weekly_bible_verses.create({
           data: {
             title,
@@ -84,6 +84,7 @@ export async function writeWeeklyContent({
             fileType
           }
         })
+
         return await tx.weekly_bible_verses.updateMany({
           data: {
             mainContent: !mainContent
