@@ -42,14 +42,7 @@ const app = express()
 
 const env =
   process.env.NODE_ENV === 'prod' ? 'prod' : process.env.NODE_ENV === 'stage' ? 'stage' : 'local'
-
-  console.log('env: ', env);
-  console.log('배포 테스트 로그');
   
-
-let privateKey = ''
-let certificate = ''
-let ca = ''
 
 // server setup
 let port
