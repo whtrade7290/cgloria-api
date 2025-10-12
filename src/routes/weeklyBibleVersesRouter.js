@@ -12,14 +12,14 @@ import { singleUpload, deleteFile } from '../utils/multer.js'
 
 const router = express.Router()
 
-router.post('/weekly', async (req, res) => {
+router.post('/weeklyWord', async (req, res) => {
   const { startRow, pageSize, searchWord } = req.body
 
   const data = await getWeeklyList(startRow, pageSize, searchWord)
   res.send(data)
 })
 
-router.get('/weekly_count', async (req, res) => {
+router.get('/weeklyWord_count', async (req, res) => {
   const { searchWord } = req.query
 
   const count = await totalWeeklyCount(searchWord)
@@ -27,7 +27,7 @@ router.get('/weekly_count', async (req, res) => {
   res.json(count)
 })
 
-router.post('/weekly_detail', async (req, res) => {
+router.post('/weeklyWord_detail', async (req, res) => {
   const { id } = req.body
   try {
     const content = await getWeeklyContent(id)
@@ -42,7 +42,7 @@ router.post('/weekly_detail', async (req, res) => {
   }
 })
 
-router.post('/weekly_write', singleUpload, async (req, res) => {
+router.post('/weeklyWord_write', singleUpload, async (req, res) => {
   const { title, content, writer, writer_name, mainContent } = req.body
   const file = req.file
 
@@ -90,7 +90,7 @@ router.post('/weekly_write', singleUpload, async (req, res) => {
   }
 })
 
-router.post('/weekly_delete', async (req, res) => {
+router.post('/weeklyWord_delete', async (req, res) => {
   const { id, deleteKey } = req.body
 
   if (deleteKey) {
@@ -115,7 +115,7 @@ router.post('/weekly_delete', async (req, res) => {
   }
 })
 
-router.post('/weekly_edit', singleUpload, async (req, res) => {
+router.post('/weeklyWord_edit', singleUpload, async (req, res) => {
   const { title, content, id, mainContent, deleteKey } = req.body
   const file = req.file || {}
 
@@ -160,7 +160,7 @@ router.post('/weekly_edit', singleUpload, async (req, res) => {
   }
 })
 
-router.get('/main_weekly', async (req, res) => {
+router.get('/main_weeklyWord', async (req, res) => {
   const data = await getMainWeekly()
 
   res.send(data)

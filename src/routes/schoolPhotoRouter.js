@@ -11,7 +11,7 @@ import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
 
 const router = express.Router()
 
-router.post('/school_photo', async (req, res) => {
+router.post('/schoolPhotoBoard', async (req, res) => {
   const { startRow, pageSize, searchWord } = req.body
 
   const data = await getschoolPhotoList(startRow, pageSize, searchWord)
@@ -19,14 +19,14 @@ router.post('/school_photo', async (req, res) => {
   res.send(data)
 })
 
-router.get('/school_photo_count', async (req, res) => {
+router.get('/schoolPhotoBoard_count', async (req, res) => {
   const { searchWord } = req.query
 
   const count = await totalschoolPhotoCount(searchWord)
   res.json(count)
 })
 
-router.post('/school_photo_detail', async (req, res) => {
+router.post('/schoolPhotoBoard_detail', async (req, res) => {
   const { id } = req.body
   try {
     const content = await getschoolPhotoContent(id)
@@ -41,7 +41,7 @@ router.post('/school_photo_detail', async (req, res) => {
   }
 })
 
-router.post('/school_photo_write', multiUpload, async (req, res) => {
+router.post('/schoolPhotoBoard_write', multiUpload, async (req, res) => {
   const { title, content, writer, writer_name } = req.body
   const files = req.files
 
@@ -75,7 +75,7 @@ router.post('/school_photo_write', multiUpload, async (req, res) => {
   }
 })
 
-router.post('/school_photo_delete', async (req, res) => {
+router.post('/schoolPhotoBoard_delete', async (req, res) => {
   const { id, deleteKeyList = [] } = req.body
   console.log('deleteKeyList: ', deleteKeyList)
 
@@ -111,7 +111,7 @@ router.post('/school_photo_delete', async (req, res) => {
   }
 })
 
-router.post('/school_photo_edit', uploadFields, async (req, res) => {
+router.post('/schoolPhotoBoard_edit', uploadFields, async (req, res) => {
   const { title, content, id, jsonDeleteKeys = '' } = req.body
   let deleteKeyList = []
 

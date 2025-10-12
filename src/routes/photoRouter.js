@@ -11,7 +11,7 @@ import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
 
 const router = express.Router()
 
-router.post('/photo', async (req, res) => {
+router.post('/photoBoard', async (req, res) => {
   const { startRow, pageSize, searchWord } = req.body
 
   try {
@@ -23,13 +23,13 @@ router.post('/photo', async (req, res) => {
   }
 })
 
-router.get('/photo_count', async (req, res) => {
+router.get('/photoBoard_count', async (req, res) => {
   const { searchWord } = req.query
   const count = await totalPhotoCount(searchWord)
   res.json(count)
 })
 
-router.post('/photo_detail', async (req, res) => {
+router.post('/photoBoard_detail', async (req, res) => {
   const { id } = req.body
   try {
     const content = await getPhotoContent(id)
@@ -44,7 +44,7 @@ router.post('/photo_detail', async (req, res) => {
   }
 })
 
-router.post('/photo_write', multiUpload, async (req, res) => {
+router.post('/photoBoard_write', multiUpload, async (req, res) => {
   const { title, content, writer, writer_name } = req.body
   const files = req.files
 
@@ -78,7 +78,7 @@ router.post('/photo_write', multiUpload, async (req, res) => {
   }
 })
 
-router.post('/photo_delete', async (req, res) => {
+router.post('/photoBoard_delete', async (req, res) => {
   const { id, deleteKeyList = [] } = req.body
   console.log('deleteKeyList: ', deleteKeyList)
 
@@ -114,7 +114,7 @@ router.post('/photo_delete', async (req, res) => {
   }
 })
 
-router.post('/photo_edit', uploadFields, async (req, res) => {
+router.post('/photoBoard_edit', uploadFields, async (req, res) => {
   const { title, content, id, jsonDeleteKeys = '' } = req.body
   let deleteKeyList = []
 
