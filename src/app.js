@@ -37,6 +37,11 @@ import withDiaryRouter from './routes/withDiaryRouter.js'
 import photoRouter from './routes/photoRouter.js'
 import schoolPhotoRouter from './routes/schoolPhotoRouter.js'
 import commentRouter from './routes/commentRouter.js'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 
 const app = express()
 
@@ -73,7 +78,7 @@ if (env === 'prod') {
   app.use(cors())
 }
 
-
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')))
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 app.use(morgan('dev'))
