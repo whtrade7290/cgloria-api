@@ -80,6 +80,8 @@ if (env === 'prod') {
 console.log('__dirname: ',__dirname);
 
 app.use('/api/uploads', express.static(path.join(__dirname, '../uploads')))
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
+
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 app.use(morgan('dev'))
