@@ -8,15 +8,16 @@ datasource db {
 }
 
 model User {
-  id         BigInt          @id @default(autoincrement())
-  username   String          @unique
-  password   String
-  create_at  DateTime        @default(now())
-  update_at  DateTime        @default(now())
-  role       Role            @default(USER)
-  name       String?
-  isApproved Boolean         @default(false)
-  diaryRooms UserDiaryRoom[]
+  id                 BigInt          @id @default(autoincrement())
+  username           String          @unique
+  password           String
+  email              String?         
+  create_at          DateTime        @default(now())
+  update_at          DateTime        @updatedAt
+  role               Role            @default(USER)
+  name               String?
+  isApproved         Boolean         @default(false)
+  diaryRooms         UserDiaryRoom[]
 }
 
 model sermons {
