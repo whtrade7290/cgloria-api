@@ -58,59 +58,40 @@ export async function getLibraryContent(id) {
   }
 }
 
-export async function writeLibraryContent({
-  title,
-  content,
-  writer,
-  writer_name,
-  uuid,
-  filename,
-  extension,
-  fileType
-}) {
-  return await prisma.sunday_school_resources.create({
-    data: {
-      title,
-      content,
-      writer,
-      writer_name,
-      uuid,
-      filename,
-      extension,
-      fileType
-    }
-  })
+export async function writeLibraryContent({ title, content, writer, writer_name, files }) {
+  try {
+    return await prisma.sunday_school_resources.create({
+      data: {
+        title,
+        content,
+        writer,
+        writer_name,
+        files
+      }
+    })
+  } catch (error) {
+    console.error(error)
+  }
 }
 
-export function editLibraryContent({ id, title, content, uuid, filename, extension, fileType }) {
+export function editLibraryContent({ id, title, content, files }) {
   try {
-    if (uuid && filename && extension && fileType) {
-      return prisma.sunday_school_resources.update({
-        where: {
-          id: id
-        },
-        data: {
-          title,
-          content,
-          update_at: new Date(),
-          uuid,
-          filename,
-          extension,
-          fileType
-        }
-      })
-    } else {
-      return prisma.sunday_school_resources.update({
-        where: {
-          id: id
-        },
-        data: {
-          title: title,
-          content: content,
-          update_at: new Date()
-        }
-      })
+    const updateData = {
+      title,
+      content,
+      update_at: new Date()
     }
+
+    if (files !== undefined) {
+      updateData.files = files
+    }
+
+    return prisma.sunday_school_resources.update({
+      where: {
+        id: Number(id)
+      },
+      data: updateData
+    })
   } catch (error) {
     console.error(error)
   }
@@ -118,9 +99,9 @@ export function editLibraryContent({ id, title, content, uuid, filename, extensi
 
 export async function logicalDeleteLibrary(id) {
   try {
-    return prisma.notice.update({
+    return prisma.sunday_school_resources.update({
       where: {
-        id: id
+        id: Number(id)
       },
       data: {
         deleted: true

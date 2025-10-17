@@ -42,23 +42,21 @@ router.post('/library_write', singleUpload, async (req, res) => {
   const { title, content, writer, writer_name } = req.body
   const file = req.file
 
-  console.log('file: ', file)
+  let filesPayload = null
 
-  // 파일 정보 초기화
-  let uuid = ''
-  let filename = ''
-  let extension = ''
-  let fileType = ''
-
-  // 파일이 존재할 경우 정보 추출
   if (file) {
-    uuid = file.filename?.split('_')[0] ?? ''
-    filename = file?.originalname ?? ''
-    if (filename) {
-      filename = Buffer.from(filename, 'latin1').toString('utf8')
+    let originalName = file?.originalname ?? ''
+    if (originalName) {
+      originalName = Buffer.from(originalName, 'latin1').toString('utf8')
     }
-    extension = filename ? '.' + filename.split('.').pop() : ''
-    fileType = file?.mimetype ?? ''
+
+    filesPayload = JSON.stringify({
+      key: file.filename,
+      originalName,
+      path: `/uploads/${file.filename}`,
+      mimetype: file.mimetype,
+      size: file.size
+    })
   }
 
   try {
@@ -67,10 +65,7 @@ router.post('/library_write', singleUpload, async (req, res) => {
       content,
       writer,
       writer_name,
-      uuid,
-      filename,
-      extension,
-      fileType
+      files: filesPayload
     })
 
     if (result) {
@@ -113,7 +108,7 @@ router.post('/library_delete', async (req, res) => {
 
 router.post('/library_edit', singleUpload, async (req, res) => {
   const { title, content, id, deleteKey } = req.body
-  const file = req.file || {}
+  const file = req.file
 
   const data = {
     id,
@@ -121,25 +116,37 @@ router.post('/library_edit', singleUpload, async (req, res) => {
     content
   }
 
-  if (deleteKey && file) {
+  let filesPayload
+
+  if (deleteKey) {
     const fileDeleted = deleteFile(deleteKey)
     if (fileDeleted) {
       console.log('file 삭제 완료')
-
-      let filename = file?.originalname ?? ''
-      if (filename) {
-        filename = Buffer.from(filename, 'latin1').toString('utf8')
-      }
-
-      Object.assign(data, {
-        uuid: file.filename?.split('_')[0] ?? '',
-        filename: filename,
-        extension: filename ? '.' + filename.split('.').pop() : '',
-        fileType: file?.mimetype ?? ''
-      })
     } else {
       console.log('file 삭제 실패')
     }
+    if (!file) {
+      filesPayload = null
+    }
+  }
+
+  if (file) {
+    let originalName = file?.originalname ?? ''
+    if (originalName) {
+      originalName = Buffer.from(originalName, 'latin1').toString('utf8')
+    }
+
+    filesPayload = JSON.stringify({
+      key: file.filename,
+      originalName,
+      path: `/uploads/${file.filename}`,
+      mimetype: file.mimetype,
+      size: file.size
+    })
+  }
+
+  if (filesPayload !== undefined) {
+    data.files = filesPayload
   }
 
   try {

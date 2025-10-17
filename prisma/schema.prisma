@@ -8,16 +8,16 @@ datasource db {
 }
 
 model User {
-  id                 BigInt          @id @default(autoincrement())
-  username           String          @unique
-  password           String
-  email              String?         
-  create_at          DateTime        @default(now())
-  update_at          DateTime        @updatedAt
-  role               Role            @default(USER)
-  name               String?
-  isApproved         Boolean         @default(false)
-  diaryRooms         UserDiaryRoom[]
+  id         BigInt          @id @default(autoincrement())
+  username   String          @unique
+  password   String
+  create_at  DateTime        @default(now())
+  update_at  DateTime        @updatedAt
+  role       Role            @default(USER)
+  name       String?
+  isApproved Boolean         @default(false)
+  email      String?
+  diaryRooms UserDiaryRoom[]
 }
 
 model sermons {
@@ -91,12 +91,9 @@ model sunday_school_resources {
   create_at   DateTime @default(now())
   update_at   DateTime @default(now())
   deleted     Boolean  @default(false)
-  content     String   @db.LongText
-  extension   String?
-  filename    String?
+  content     String?  @db.LongText
   writer_name String?
-  fileType    String?
-  uuid        String?
+  files       String?  @db.LongText
 }
 
 model general_forum {
