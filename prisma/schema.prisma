@@ -16,6 +16,7 @@ model User {
   role       Role            @default(USER)
   name       String?
   isApproved Boolean         @default(false)
+  isChanged  Boolean         @default(false)
   email      String?
   diaryRooms UserDiaryRoom[]
 }

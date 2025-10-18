@@ -101,13 +101,13 @@ app.use('/comment', commentRouter)
 app.use('/uploads', express.static(path.join('', env === 'local' ? 'uploads' : 'src/uploads')))
 
 app.post('/signUp', async (req, res) => {
-  const { username, password, name } = req.body
+  const { username, password, name, email } = req.body
 
   // 비밀번호 암호화
   const hashedPassword = await bcrypt.hash(password, 10)
 
   try {
-    const obj = await signUp(username, hashedPassword, name)
+    const obj = await signUp(username, hashedPassword, name, email)
 
     console.log('obj: ', obj)
 
@@ -140,6 +140,7 @@ app.post('/signIn', async (req, res) => {
       id: parseInt(user.id),
       username: user.username,
       name: user.name,
+      email: user.email,
       create_at: user.create_at,
       update_at: user.update_at,
       role: user.role,
