@@ -1,21 +1,14 @@
 import express from 'express'
-import {
-  getPhotoList,
-  totalPhotoCount,
-  getPhotoContent,
-  writePhotoContent,
-  logicalDeletePhoto,
-  editPhotoContent
-} from '../services/photoService.js'
 import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
+import { writeContent, getContentList, getContentById, editContent, totalContentCount, logicalDeleteContent } from '../common/boardUtils.js'
 
 const router = express.Router()
 
 router.post('/photoBoard', async (req, res) => {
-  const { startRow, pageSize, searchWord } = req.body
+  const { startRow, pageSize, searchWord, board } = req.body
 
   try {
-    const data = await getPhotoList(startRow, pageSize, searchWord)
+    const data = await getContentList(startRow, pageSize, searchWord, board)
     res.send(data)
   } catch (error) {
     console.error('Error fetching photo list:', error)
@@ -23,16 +16,18 @@ router.post('/photoBoard', async (req, res) => {
   }
 })
 
-router.get('/photoBoard_count', async (req, res) => {
-  const { searchWord } = req.query
-  const count = await totalPhotoCount(searchWord)
+router.post('/photoBoard_count', async (req, res) => {
+  const { searchWord, board } = req.body
+  const count = await totalContentCount(searchWord, board)
   res.json(count)
 })
 
 router.post('/photoBoard_detail', async (req, res) => {
-  const { id } = req.body
+  const { id, board } = req.body
+
+  if (!id) return
   try {
-    const content = await getPhotoContent(id)
+    const content = await getContentById(id, board)
     if (!content) {
       return res.status(404).json({ error: 'Photo not found' })
     }
@@ -45,24 +40,24 @@ router.post('/photoBoard_detail', async (req, res) => {
 })
 
 router.post('/photoBoard_write', multiUpload, async (req, res) => {
-  const { title, content, writer, writer_name } = req.body
+  const { title, content, writer, writer_name, board } = req.body
   const files = req.files
 
   const pathList = files.map((file) => {
     if (file.originalname) {
       file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
     }
-
     return file
   })
 
   try {
-    const result = await writePhotoContent({
+    const result = await writeContent({
       title,
       content,
       writer,
       writer_name,
-      files: JSON.stringify(pathList)
+      files: JSON.stringify(pathList),
+      board
     })
 
     if (result) {
@@ -79,7 +74,7 @@ router.post('/photoBoard_write', multiUpload, async (req, res) => {
 })
 
 router.post('/photoBoard_delete', async (req, res) => {
-  const { id, deleteKeyList = [] } = req.body
+  const { id, deleteKeyList = [], board } = req.body
   console.log('deleteKeyList: ', deleteKeyList)
 
   if (deleteKeyList) {
@@ -102,7 +97,7 @@ router.post('/photoBoard_delete', async (req, res) => {
   }
 
   try {
-    const result = await logicalDeletePhoto(id)
+    const result = await logicalDeleteContent(id, board)
 
     if (!result) {
       return res.status(404).json({ error: 'Photo not found' })
@@ -115,7 +110,7 @@ router.post('/photoBoard_delete', async (req, res) => {
 })
 
 router.post('/photoBoard_edit', uploadFields, async (req, res) => {
-  const { title, content, id, jsonDeleteKeys = '' } = req.body
+  const { title, content, id, jsonDeleteKeys = '', board } = req.body
   let deleteKeyList = []
 
   console.log('req.body: ', req.body)
@@ -129,7 +124,8 @@ router.post('/photoBoard_edit', uploadFields, async (req, res) => {
   const data = {
     id,
     title,
-    content
+    content,
+    board
   }
 
   if (deleteKeyList.length > 0 && files.length > 0) {
@@ -153,7 +149,7 @@ router.post('/photoBoard_edit', uploadFields, async (req, res) => {
   }
 
   try {
-    const result = await editPhotoContent(data)
+    const result = await editContent(data)
 
     if (!result) {
       return res.status(404).json({ error: 'Sermon not found' })

@@ -7,66 +7,57 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model user {
   id         BigInt          @id @default(autoincrement())
   username   String          @unique
   password   String
   create_at  DateTime        @default(now())
-  update_at  DateTime        @updatedAt
+  update_at  DateTime        @default(now())
   role       Role            @default(USER)
   name       String?
   isApproved Boolean         @default(false)
   isChanged  Boolean         @default(false)
   email      String?
-  diaryRooms UserDiaryRoom[]
+  diaryRooms user_diary_room[]
 }
 
-model sermons {
+model sermon {
   id          BigInt   @id @default(autoincrement())
   title       String
   writer      String
   create_at   DateTime @default(now())
   update_at   DateTime @default(now())
   deleted     Boolean  @default(false)
-  content     String   @db.LongText
-  extension   String?
-  filename    String?
-  mainContent Boolean  @default(false)
+  content     String?  @db.LongText
   writer_name String?
-  fileType    String?
-  uuid        String?
+  files       String?  @db.LongText
+  mainContent Boolean  @default(false)
 }
 
-model columns {
+model column {
   id          BigInt   @id @default(autoincrement())
   title       String
   writer      String
   create_at   DateTime @default(now())
   update_at   DateTime @default(now())
   deleted     Boolean  @default(false)
-  extension   String?
-  filename    String?
-  content     String   @db.LongText
-  mainContent Boolean  @default(false)
+  content     String?  @db.LongText
   writer_name String?
-  fileType    String?
-  uuid        String?
+  files       String?  @db.LongText
+  mainContent Boolean  @default(false)
 }
 
-model weekly_bible_verses {
+model weekly_bible_verse {
   id          BigInt   @id @default(autoincrement())
   title       String
   writer      String
   create_at   DateTime @default(now())
   update_at   DateTime @default(now())
   deleted     Boolean  @default(false)
-  extension   String?
-  filename    String?
-  content     String   @db.LongText
-  mainContent Boolean  @default(false)
+  content     String?  @db.LongText
   writer_name String?
-  fileType    String?
-  uuid        String?
+  files       String?  @db.LongText
+  mainContent Boolean  @default(false)
 }
 
 model class_meeting {
@@ -76,16 +67,13 @@ model class_meeting {
   create_at   DateTime @default(now())
   update_at   DateTime @default(now())
   deleted     Boolean  @default(false)
-  content     String   @db.LongText
-  extension   String?
-  filename    String?
-  mainContent Boolean  @default(false)
+  content     String?  @db.LongText
   writer_name String?
-  fileType    String?
-  uuid        String?
+  files       String?  @db.LongText
+  mainContent Boolean  @default(false)
 }
 
-model sunday_school_resources {
+model sunday_school_resource {
   id          BigInt   @id @default(autoincrement())
   title       String
   writer      String
@@ -104,28 +92,22 @@ model general_forum {
   create_at   DateTime @default(now())
   update_at   DateTime @default(now())
   deleted     Boolean  @default(false)
-  content     String   @db.LongText
-  extension   String?
-  filename    String?
+  content     String?  @db.LongText
   writer_name String?
-  fileType    String?
-  uuid        String?
+  files       String?  @db.LongText
 }
 
-model testimonies {
+model testimony {
   id          BigInt   @id @default(autoincrement())
   title       String
   writer      String
   create_at   DateTime @default(now())
   update_at   DateTime @default(now())
   deleted     Boolean  @default(false)
-  content     String   @db.LongText
-  extension   String?
-  filename    String?
-  mainContent Boolean  @default(false)
+  content     String?  @db.LongText
   writer_name String?
-  fileType    String?
-  uuid        String?
+  files       String?  @db.LongText
+  mainContent Boolean  @default(false)
 }
 
 model notice {
@@ -135,57 +117,51 @@ model notice {
   create_at   DateTime @default(now())
   update_at   DateTime @default(now())
   deleted     Boolean  @default(false)
-  content     String   @db.LongText
-  extension   String?
-  filename    String?
+  content     String?  @db.LongText
   writer_name String?
-  fileType    String?
-  uuid        String?
+  files       String?  @db.LongText
 }
 
-model withDiary {
+model with_diary {
   id          BigInt         @id @default(autoincrement())
   title       String
   content     String         @db.LongText
   writer      String
-  filename    String?
-  extension   String?
+  files       String?        @db.LongText
   create_at   DateTime       @default(now())
   update_at   DateTime       @default(now())
   deleted     Boolean        @default(false)
   writer_name String?
   diaryRoomId Int?
-  fileType    String?
-  uuid        String?
-  diaryRoom   withDiaryRoom? @relation(fields: [diaryRoomId], references: [id])
+  diaryRoom   with_diary_room? @relation(fields: [diaryRoomId], references: [id])
 
   @@index([diaryRoomId], map: "withDiary_diaryRoomId_fkey")
 }
 
-model withDiaryRoom {
+model with_diary_room {
   id           Int             @id @default(autoincrement())
   creator      Int
   create_at    DateTime        @default(now())
   update_at    DateTime        @default(now())
   roomName     String          @default("")
   creator_name String
-  users        UserDiaryRoom[]
-  diaries      withDiary[]
+  users        user_diary_room[]
+  diaries      with_diary[]
 }
 
-model UserDiaryRoom {
+model user_diary_room {
   id          Int           @id @default(autoincrement())
   userId      BigInt
   diaryRoomId Int
   createdAt   DateTime      @default(now())
-  diaryRoom   withDiaryRoom @relation(fields: [diaryRoomId], references: [id])
-  user        User          @relation(fields: [userId], references: [id])
+  diaryRoom   with_diary_room @relation(fields: [diaryRoomId], references: [id])
+  user        user          @relation(fields: [userId], references: [id])
 
   @@unique([userId, diaryRoomId], name: "unique_user_diary_room")
   @@index([diaryRoomId], map: "UserDiaryRoom_diaryRoomId_fkey")
 }
 
-model photo {
+model photo_board {
   id          BigInt   @id @default(autoincrement())
   title       String
   writer      String
@@ -197,7 +173,7 @@ model photo {
   writer_name String?
 }
 
-model school_photo {
+model school_photo_board {
   id          BigInt   @id @default(autoincrement())
   title       String
   writer      String

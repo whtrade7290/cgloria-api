@@ -1,79 +1,63 @@
 import express from 'express'
-import {
-  getWeeklyList,
-  totalWeeklyCount,
-  getWeeklyContent,
-  writeWeeklyContent,
-  logicalDeleteWeekly,
-  editWeeklyContent,
-  getMainWeekly
-} from '../services/weeklyService.js'
-import { singleUpload, deleteFile } from '../utils/multer.js'
+import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
+import { writeContent, getContentList, getContentById, editContent, totalContentCount, logicalDeleteContent } from '../common/boardUtils.js'
 
 const router = express.Router()
 
-router.post('/weeklyWord', async (req, res) => {
-  const { startRow, pageSize, searchWord } = req.body
+router.post('/weekly_bible_verse', async (req, res) => {
+  const { startRow, pageSize, searchWord, board } = req.body
 
-  const data = await getWeeklyList(startRow, pageSize, searchWord)
-  res.send(data)
+  try {
+    const data = await getContentList(startRow, pageSize, searchWord, board)
+    res.send(data)
+  } catch (error) {
+    console.error('Error fetching photo list:', error)
+    res.status(500).send({ error: '사진 목록을 가져오는 중 오류가 발생했습니다.' })
+  }
 })
 
-router.get('/weeklyWord_count', async (req, res) => {
-  const { searchWord } = req.query
-
-  const count = await totalWeeklyCount(searchWord)
-
+router.post('/weekly_bible_verse_count', async (req, res) => {
+  const { searchWord, board } = req.body
+  const count = await totalContentCount(searchWord, board)
   res.json(count)
 })
 
-router.post('/weeklyWord_detail', async (req, res) => {
-  const { id } = req.body
+router.post('/weekly_bible_verse_detail', async (req, res) => {
+  const { id, board } = req.body
+
+  if (!id) return
   try {
-    const content = await getWeeklyContent(id)
+    const content = await getContentById(id, board)
     if (!content) {
-      return res.status(404).json({ error: 'weekly not found' })
+      return res.status(404).json({ error: 'Photo not found' })
     }
 
     res.json(content)
   } catch (error) {
-    console.error('Error fetching weekly:', error)
-    res.status(500).json({ error: 'Error fetching weekly' })
+    console.error('Error fetching photo:', error)
+    res.status(500).json({ error: 'Error fetching photo' })
   }
 })
 
-router.post('/weeklyWord_write', singleUpload, async (req, res) => {
-  const { title, content, writer, writer_name, mainContent } = req.body
-  const file = req.file
+router.post('/weekly_bible_verse_write', multiUpload, async (req, res) => {
+  const { title, content, writer, writer_name, board } = req.body
+  const files = req.files
 
-  // 파일 정보 초기화
-  let uuid = ''
-  let filename = ''
-  let extension = ''
-  let fileType = ''
-
-  // 파일이 존재할 경우 정보 추출
-  if (file) {
-    uuid = file.filename?.split('_')[0] ?? ''
-    filename = file?.originalname ?? ''
-    if (filename) {
-      filename = Buffer.from(filename, 'latin1').toString('utf8')
+  const pathList = files.map((file) => {
+    if (file.originalname) {
+      file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
     }
-    extension = filename ? '.' + filename.split('.').pop() : ''
-    fileType = file?.mimetype ?? ''
-  }
+    return file
+  })
 
   try {
-    const result = await writeWeeklyContent({
+    const result = await writeContent({
       title,
       content,
       writer,
       writer_name,
-      mainContent: mainContent === 'true',
-      uuid,
-      filename,
-      extension,
-      fileType
+      files: JSON.stringify(pathList),
+      board
     })
 
     if (result) {
@@ -83,18 +67,28 @@ router.post('/weeklyWord_write', singleUpload, async (req, res) => {
       // result가 null 또는 falsy일 때 실패 응답
       res.status(400).json({ success: false, message: 'Upload Failed' })
     }
-    return
   } catch (error) {
     console.error('Error fetching:', error)
-    res.status(500).json({ error: 'Error fetching' })
+    res.status(500).json({ error: 'Error fetching photo' })
   }
 })
 
-router.post('/weeklyWord_delete', async (req, res) => {
-  const { id, deleteKey } = req.body
+router.post('/weekly_bible_verse_delete', async (req, res) => {
+  const { id, deleteKeyList = [], board } = req.body
+  console.log('deleteKeyList: ', deleteKeyList)
 
-  if (deleteKey) {
-    const fileDeleted = deleteFile(deleteKey)
+  if (deleteKeyList) {
+    let fileDeleted = true // 초기값을 true로 설정
+
+    deleteKeyList.forEach((file) => {
+      console.log('file: ', file)
+      const filename = `uploads/${file.filename}`
+      const result = deleteFile(filename)
+      if (!result) {
+        fileDeleted = false // 파일 삭제 실패 시 false로 설정
+      }
+    })
+
     if (fileDeleted) {
       console.log('file 삭제 완료')
     } else {
@@ -103,67 +97,68 @@ router.post('/weeklyWord_delete', async (req, res) => {
   }
 
   try {
-    const result = await logicalDeleteWeekly(id)
+    const result = await logicalDeleteContent(id, board)
 
     if (!result) {
-      return res.status(404).json({ error: 'Weekly not found' })
+      return res.status(404).json({ error: 'Photo not found' })
     }
-    res.json(!!result)
+    res.json(true)
   } catch (error) {
-    console.error('Error fetching Weekly:', error)
-    res.status(500).json({ error: 'Error fetching Weekly' })
+    console.error('Error fetching Photo:', error)
+    res.status(500).json({ error: 'Error fetching Photo' })
   }
 })
 
-router.post('/weeklyWord_edit', singleUpload, async (req, res) => {
-  const { title, content, id, mainContent, deleteKey } = req.body
-  const file = req.file || {}
+router.post('/weekly_bible_verse_edit', uploadFields, async (req, res) => {
+  const { title, content, id, jsonDeleteKeys = '', board } = req.body
+  let deleteKeyList = []
+
+  console.log('req.body: ', req.body)
+
+  const files = req?.files['fileField'] ?? []
+
+  if (jsonDeleteKeys) {
+    deleteKeyList = JSON.parse(jsonDeleteKeys)
+  }
 
   const data = {
     id,
     title,
     content,
-    mainContent: mainContent === 'true'
+    board
   }
 
-  if (deleteKey && file) {
-    const fileDeleted = deleteFile(deleteKey)
+  if (deleteKeyList.length > 0 && files.length > 0) {
+    let fileDeleted = true // 초기값을 true로 설정
+
+    deleteKeyList.forEach((file) => {
+      console.log('file: ', file)
+      const filename = `uploads/${file}`
+      const result = deleteFile(filename)
+      if (!result) {
+        fileDeleted = false // 파일 삭제 실패 시 false로 설정
+      }
+    })
+
     if (fileDeleted) {
       console.log('file 삭제 완료')
-
-      let filename = file?.originalname ?? ''
-      if (filename) {
-        filename = Buffer.from(filename, 'latin1').toString('utf8')
-      }
-
-      Object.assign(data, {
-        uuid: file.filename?.split('_')[0] ?? '',
-        filename: filename,
-        extension: filename ? '.' + filename.split('.').pop() : '',
-        fileType: file?.mimetype ?? ''
-      })
+      Object.assign(data, { files: files })
     } else {
       console.log('file 삭제 실패')
     }
   }
 
   try {
-    const result = await editWeeklyContent(data)
+    const result = await editContent(data)
 
     if (!result) {
-      return res.status(404).json({ error: 'weekly not found' })
+      return res.status(404).json({ error: 'weekly_bible_verse not found' })
     }
     res.json(!!result)
   } catch (error) {
     console.error('Error fetching:', error)
-    res.status(500).json({ error: 'Error fetching weekly' })
+    res.status(500).json({ error: 'Error fetching weekly_bible_verse' })
   }
-})
-
-router.get('/main_weeklyWord', async (req, res) => {
-  const data = await getMainWeekly()
-
-  res.send(data)
 })
 
 export default router

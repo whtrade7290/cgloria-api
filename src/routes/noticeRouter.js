@@ -17,7 +17,7 @@ router.post('/notice', async (req, res) => {
   res.send(data)
 })
 
-router.get('/notice_count', async (req, res) => {
+router.post('/notice_count', async (req, res) => {
   const { searchWord } = req.query
   const count = await totalNoticeCount(searchWord)
   res.json(count)
