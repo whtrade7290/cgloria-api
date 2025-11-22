@@ -4,7 +4,7 @@ import { writeContent, getContentList, getContentById, editContent, totalContent
 
 const router = express.Router()
 
-router.post('/photoBoard', async (req, res) => {
+router.post('/photo_board', async (req, res) => {
   const { startRow, pageSize, searchWord, board } = req.body
 
   try {
@@ -16,13 +16,13 @@ router.post('/photoBoard', async (req, res) => {
   }
 })
 
-router.post('/photoBoard_count', async (req, res) => {
+router.post('/photo_board_count', async (req, res) => {
   const { searchWord, board } = req.body
   const count = await totalContentCount(searchWord, board)
   res.json(count)
 })
 
-router.post('/photoBoard_detail', async (req, res) => {
+router.post('/photo_board_detail', async (req, res) => {
   const { id, board } = req.body
 
   if (!id) return
@@ -39,7 +39,7 @@ router.post('/photoBoard_detail', async (req, res) => {
   }
 })
 
-router.post('/photoBoard_write', multiUpload, async (req, res) => {
+router.post('/photo_board_write', multiUpload, async (req, res) => {
   const { title, content, writer, writer_name, board } = req.body
   const files = req.files
 
@@ -73,7 +73,7 @@ router.post('/photoBoard_write', multiUpload, async (req, res) => {
   }
 })
 
-router.post('/photoBoard_delete', async (req, res) => {
+router.post('/photo_board_delete', async (req, res) => {
   const { id, deleteKeyList = [], board } = req.body
   console.log('deleteKeyList: ', deleteKeyList)
 
@@ -109,7 +109,7 @@ router.post('/photoBoard_delete', async (req, res) => {
   }
 })
 
-router.post('/photoBoard_edit', uploadFields, async (req, res) => {
+router.post('/photo_board_edit', uploadFields, async (req, res) => {
   const { title, content, id, jsonDeleteKeys = '', board } = req.body
   let deleteKeyList = []
 

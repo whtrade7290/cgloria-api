@@ -9,26 +9,37 @@ export async function writeContent({
   board,
   mainContent
 }) {
+
+  mainContent = mainContent === 'true'
+
+  const hasMainContent = ['sermon', 'column', 'weekly_bible_verse', 'class_meeting', 'testimony'].includes(board);
+
+
   try {
     return await prisma.$transaction(async (tx) => {
       // mainContent가 true라면 기존 것을 모두 false로
-      if (mainContent === 'true') {
+      if (hasMainContent && mainContent === true) {
         await tx[board].updateMany({
           where: { mainContent: true },
           data: { mainContent: false }
         });
       }
 
-      // 새로운 레코드 생성
-      const created = await tx[board].create({
-        data: {
+      let data = {
           title,
           content,
           writer,
           writer_name,
           files,
-          mainContent: mainContent === 'true'
-        }
+      }
+
+      if (hasMainContent) {
+        data.mainContent = mainContent;
+      }
+
+      // 새로운 레코드 생성
+      const created = await tx[board].create({
+        data: data
       });
 
       return created;
@@ -88,9 +99,11 @@ export async function editContent({ id, title, content, files = [], board, mainC
 
   mainContent = mainContent === 'true'
 
+  const hasMainContent = ['sermon', 'column', 'weekly_bible_verse', 'class_meeting', 'testimony'].includes(board);
+
   try {
     // mainContent가 true라면 다른 모든 레코드를 false로 변경
-    if (mainContent === true) {
+    if (hasMainContent && mainContent === true) {
       await prisma[board].updateMany({
         where: { mainContent: true },
         data: { mainContent: false }
@@ -101,7 +114,7 @@ export async function editContent({ id, title, content, files = [], board, mainC
     const updateData = {
       title,
       content,
-      ...(mainContent !== undefined && { mainContent }),  // 있으면만 적용
+      ...(hasMainContent && { mainContent }),  // 있으면만 적용
       ...(files.length > 0 && { files: JSON.stringify(files) })
     };
 
