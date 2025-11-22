@@ -1,8 +1,20 @@
 import express from 'express'
 import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
-import { writeContent, getContentList, getContentById, editContent, totalContentCount, logicalDeleteContent } from '../common/boardUtils.js'
+import { writeContent, getContentList, getContentById, editContent, totalContentCount, logicalDeleteContent, getMainContent } from '../common/boardUtils.js'
 
 const router = express.Router()
+
+router.post('/main_weekly_bible_verse', async (req, res) => {
+  const { board } = req.body
+
+  try {
+    const data = await getMainContent(board)
+    res.send(data)
+  } catch (error) {
+    console.error('Error fetching:', error)
+    res.status(500).send({ error: 'Error fetching.' })
+  }
+})
 
 router.post('/weekly_bible_verse', async (req, res) => {
   const { startRow, pageSize, searchWord, board } = req.body
@@ -40,7 +52,7 @@ router.post('/weekly_bible_verse_detail', async (req, res) => {
 })
 
 router.post('/weekly_bible_verse_write', multiUpload, async (req, res) => {
-  const { title, content, writer, writer_name, board } = req.body
+  const { title, content, writer, writer_name, board, mainContent } = req.body
   const files = req.files
 
   const pathList = files.map((file) => {
@@ -57,7 +69,8 @@ router.post('/weekly_bible_verse_write', multiUpload, async (req, res) => {
       writer,
       writer_name,
       files: JSON.stringify(pathList),
-      board
+      board,
+      mainContent
     })
 
     if (result) {
@@ -110,7 +123,7 @@ router.post('/weekly_bible_verse_delete', async (req, res) => {
 })
 
 router.post('/weekly_bible_verse_edit', uploadFields, async (req, res) => {
-  const { title, content, id, jsonDeleteKeys = '', board } = req.body
+  const { title, content, id, jsonDeleteKeys = '', board, mainContent } = req.body
   let deleteKeyList = []
 
   console.log('req.body: ', req.body)
@@ -125,7 +138,9 @@ router.post('/weekly_bible_verse_edit', uploadFields, async (req, res) => {
     id,
     title,
     content,
-    board
+    files,
+    board,
+    mainContent
   }
 
   if (deleteKeyList.length > 0 && files.length > 0) {

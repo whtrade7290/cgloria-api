@@ -1,10 +1,22 @@
 import express from 'express'
 import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
-import { writeContent, getContentList, getContentById, editContent, totalContentCount, logicalDeleteContent } from '../common/boardUtils.js'
+import { writeContent, getContentList, getContentById, editContent, totalContentCount, logicalDeleteContent, getMainContent } from '../common/boardUtils.js'
 
 const router = express.Router()
 
-router.post('/classMeeting', async (req, res) => {
+router.post('/main_class_meeting', async (req, res) => {
+  const { board } = req.body
+
+  try {
+    const data = await getMainContent(board)
+    res.send(data)
+  } catch (error) {
+    console.error('Error fetching:', error)
+    res.status(500).send({ error: 'Error fetching.' })
+  }
+})
+
+router.post('/class_meeting', async (req, res) => {
   const { startRow, pageSize, searchWord, board } = req.body
 
   try {
@@ -16,13 +28,13 @@ router.post('/classMeeting', async (req, res) => {
   }
 })
 
-router.post('/classMeeting_count', async (req, res) => {
+router.post('/class_meeting_count', async (req, res) => {
   const { searchWord, board } = req.body
   const count = await totalContentCount(searchWord, board)
   res.json(count)
 })
 
-router.post('/classMeeting_detail', async (req, res) => {
+router.post('/class_meeting_detail', async (req, res) => {
   const { id, board } = req.body
 
   if (!id) return
@@ -39,8 +51,8 @@ router.post('/classMeeting_detail', async (req, res) => {
   }
 })
 
-router.post('/classMeeting_write', multiUpload, async (req, res) => {
-  const { title, content, writer, writer_name, board } = req.body
+router.post('/class_meeting_write', multiUpload, async (req, res) => {
+  const { title, content, writer, writer_name, board, mainContent } = req.body
   const files = req.files
 
   const pathList = files.map((file) => {
@@ -57,7 +69,8 @@ router.post('/classMeeting_write', multiUpload, async (req, res) => {
       writer,
       writer_name,
       files: JSON.stringify(pathList),
-      board
+      board,
+      mainContent
     })
 
     if (result) {
@@ -73,7 +86,7 @@ router.post('/classMeeting_write', multiUpload, async (req, res) => {
   }
 })
 
-router.post('/classMeeting_delete', async (req, res) => {
+router.post('/class_meeting_delete', async (req, res) => {
   const { id, deleteKeyList = [], board } = req.body
   console.log('deleteKeyList: ', deleteKeyList)
 
@@ -109,8 +122,8 @@ router.post('/classMeeting_delete', async (req, res) => {
   }
 })
 
-router.post('/classMeeting_edit', uploadFields, async (req, res) => {
-  const { title, content, id, jsonDeleteKeys = '', board } = req.body
+router.post('/class_meeting_edit', uploadFields, async (req, res) => {
+  const { title, content, id, jsonDeleteKeys = '', board, mainContent } = req.body
   let deleteKeyList = []
 
   console.log('req.body: ', req.body)
@@ -125,7 +138,9 @@ router.post('/classMeeting_edit', uploadFields, async (req, res) => {
     id,
     title,
     content,
-    board
+    files,
+    board,
+    mainContent
   }
 
   if (deleteKeyList.length > 0 && files.length > 0) {
@@ -152,12 +167,12 @@ router.post('/classMeeting_edit', uploadFields, async (req, res) => {
     const result = await editContent(data)
 
     if (!result) {
-      return res.status(404).json({ error: 'classMeeting not found' })
+      return res.status(404).json({ error: 'class_meeting not found' })
     }
     res.json(!!result)
   } catch (error) {
     console.error('Error fetching:', error)
-    res.status(500).json({ error: 'Error fetching classMeeting' })
+    res.status(500).json({ error: 'Error fetching class_meeting' })
   }
 })
 

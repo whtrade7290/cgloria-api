@@ -1,20 +1,45 @@
 import { prisma } from '../utils/prismaClient.js'
 
-export async function writeContent({ title, content, writer, writer_name, files, board }) {
+export async function writeContent({
+  title,
+  content,
+  writer,
+  writer_name,
+  files,
+  board,
+  mainContent
+}) {
   try {
-    return await prismaProxy[board].create({
-      data: {
-        title: title,
-        content: content,
-        writer: writer,
-        writer_name: writer_name,
-        files: files
+    return await prisma.$transaction(async (tx) => {
+      // mainContent가 true라면 기존 것을 모두 false로
+      if (mainContent === 'true') {
+        await tx[board].updateMany({
+          where: { mainContent: true },
+          data: { mainContent: false }
+        });
       }
-    })
+
+      // 새로운 레코드 생성
+      const created = await tx[board].create({
+        data: {
+          title,
+          content,
+          writer,
+          writer_name,
+          files,
+          mainContent: mainContent === 'true'
+        }
+      });
+
+      return created;
+    });
   } catch (error) {
-    console.error(error)
+    console.error("writeContent error:", error);
+    throw error;
   }
 }
+
+
 
 export async function getContentList(startRow, pageSize, searchWord, board) {
   if (searchWord === undefined) {
@@ -22,7 +47,7 @@ export async function getContentList(startRow, pageSize, searchWord, board) {
   }
 
   try {
-    const data = await prismaProxy[board].findMany({
+    const data = await prisma[board].findMany({
       where: {
         deleted: false,
         title: { contains: searchWord }
@@ -46,7 +71,7 @@ export async function getContentList(startRow, pageSize, searchWord, board) {
 
 export async function getContentById(id, board) {
   try {
-    const data = await prismaProxy[board].findUnique({
+    const data = await prisma[board].findUnique({
       where: { id: parseInt(id) } // id는 integer 형식으로 파싱하여 사용
     })
 
@@ -59,32 +84,36 @@ export async function getContentById(id, board) {
   }
 }
 
-export function editContent({ id, title, content, files = [], board }) {
+export async function editContent({ id, title, content, files = [], board, mainContent }) {
+
+  mainContent = mainContent === 'true'
+
   try {
-    if (files.length === 0) {
-      return prismaProxy[board].update({
-        where: {
-          id: id
-        },
-        data: {
-          title: title,
-          content: content
-        }
-      })
-    } else {
-      return prismaProxy[board].update({
-        where: {
-          id: id
-        },
-        data: {
-          title: title,
-          content: content,
-          files: JSON.stringify(files)
-        }
-      })
+    // mainContent가 true라면 다른 모든 레코드를 false로 변경
+    if (mainContent === true) {
+      await prisma[board].updateMany({
+        where: { mainContent: true },
+        data: { mainContent: false }
+      });
     }
+
+    // 수정 데이터 공통 부분
+    const updateData = {
+      title,
+      content,
+      ...(mainContent !== undefined && { mainContent }),  // 있으면만 적용
+      ...(files.length > 0 && { files: JSON.stringify(files) })
+    };
+
+    // 수정 쿼리 실행
+    return await prisma[board].update({
+      where: { id },
+      data: updateData
+    });
+
   } catch (error) {
-    console.error(error)
+    console.error("editContent error:", error);
+    throw error;
   }
 }
 
@@ -94,7 +123,7 @@ export async function totalContentCount(searchWord, board) {
   }
 
   try {
-    return await prismaProxy[board].count({
+    return await prisma[board].count({
       where: {
         deleted: false,
         title: { contains: searchWord }
@@ -107,7 +136,7 @@ export async function totalContentCount(searchWord, board) {
 
 export async function logicalDeleteContent(id, board) {
   try {
-    return prismaProxy[board].update({
+    return prisma[board].update({
       where: {
         id: id
       },
@@ -126,7 +155,7 @@ export async function totalPhotoCount(searchWord) {
   }
 
   try {
-    return await prismaProxy.photo.count({
+    return await prisma.photo.count({
       where: {
         deleted: false,
         title: { contains: searchWord }
@@ -137,18 +166,19 @@ export async function totalPhotoCount(searchWord) {
   }
 }
 
- const prismaProxy = new Proxy(prisma, {
-  get(target, prop) {
-    if (typeof prop === 'string') {
-      const snake = toSnakeCase(prop)
-      return target[snake]
-    }
-    return target[prop]
-  }
-})
+export async function getMainContent(board) {
+  try {
+    const data = await prisma[board].findFirst({
+      where: { mainContent: true }
+    });
 
- function toSnakeCase(str) {
-  return str
-    .replace(/([A-Z])/g, '_$1') 
-    .toLowerCase();             
+    if (!data) return null;
+
+    return {
+      ...data,
+      id: Number(data.id)
+    }
+  } catch (error) {
+    console.error(error);
+  }
 }
