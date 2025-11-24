@@ -2,7 +2,7 @@ import { prisma } from '../utils/prismaClient.js'
 
 export async function getWithDiaryList(startRow = 0, pageSize = 0, roomId = 0) {
   try {
-    const data = await prisma.withDiary.findMany({
+    const data = await prisma.with_diary.findMany({
       where: {
         diaryRoomId: Number(roomId),
         deleted: false
@@ -25,7 +25,7 @@ export async function getWithDiaryList(startRow = 0, pageSize = 0, roomId = 0) {
 
 export async function getWithDiaryAll() {
   try {
-    const data = await prisma.withDiaryRoom.findMany({
+    const data = await prisma.with_diary_room.findMany({
       orderBy: {
         id: 'desc'
       }
@@ -44,7 +44,7 @@ export async function getWithDiaryAll() {
 
 export async function totalWithDiaryCount(id) {
   try {
-    return await prisma.withDiary.count({
+    return await prisma.with_diary.count({
       where: {
         diaryRoomId: id
       }
@@ -56,7 +56,7 @@ export async function totalWithDiaryCount(id) {
 
 export async function getWithDiaryContent(id) {
   try {
-    const data = await prisma.withDiary.findUnique({
+    const data = await prisma.with_diary.findUnique({
       where: { id: parseInt(id) } // id는 integer 형식으로 파싱하여 사용
     })
 
@@ -74,21 +74,17 @@ export async function writeWithDiaryContent({
   content,
   writer,
   writer_name,
-  filename,
-  extension,
-  fileDate,
+  files,
   diaryRoomId
 }) {
   try {
-    return await prisma.withDiary.create({
+    return await prisma.with_diary.create({
       data: {
         title: title,
         content: content,
         writer: writer,
         writer_name: writer_name,
-        filename: filename,
-        extension: extension,
-        fileDate: fileDate,
+        files,
         diaryRoomId: diaryRoomId
       }
     })
@@ -99,7 +95,7 @@ export async function writeWithDiaryContent({
 
 export async function logicalDeleteWithDiary(id) {
   try {
-    return prisma.withDiary.update({
+    return prisma.with_diary.update({
       where: {
         id: id
       },
@@ -112,26 +108,22 @@ export async function logicalDeleteWithDiary(id) {
   }
 }
 
-export function editWithDiaryContent({ id, title, content, uuid, filename, extension, fileType }) {
+export function editWithDiaryContent({ id, title, content, files }) {
   try {
-    if (uuid && filename && extension && fileType) {
-      return prisma.withDiary.update({
+    if (files) {
+      return prisma.with_diary.update({
         where: {
           id: id
         },
         data: {
           title,
           content,
-          mainContent,
           update_at: new Date(),
-          uuid,
-          filename,
-          extension,
-          fileType
+          files
         }
       })
     } else {
-      return prisma.withDiary.update({
+      return prisma.with_diary.update({
         where: {
           id: id
         },
@@ -151,7 +143,7 @@ export async function createDiaryRoomWithUsers(teamName, userIdList, creator, cr
   try {
     const diaryRoom = await prisma.$transaction(async (tx) => {
       // Step 1: Create the diary room
-      const createdDiaryRoom = await tx.withDiaryRoom.create({
+      const createdDiaryRoom = await tx.with_diary_room.create({
         data: {
           roomName: teamName,
           creator: creator,
@@ -165,7 +157,7 @@ export async function createDiaryRoomWithUsers(teamName, userIdList, creator, cr
         diaryRoomId: createdDiaryRoom.id
       }))
 
-      await tx.userDiaryRoom.createMany({
+      await tx.user_diary_room.createMany({
         data: userDiaryRooms
       })
 
@@ -183,7 +175,7 @@ export async function createDiaryRoomWithUsers(teamName, userIdList, creator, cr
 
 export async function fetchWithDiaryRoomList(userId) {
   try {
-    return prisma.userDiaryRoom.findMany({
+    return prisma.user_diary_room.findMany({
       where: { userId },
       include: { diaryRoom: true }
     })
@@ -195,7 +187,7 @@ export async function fetchWithDiaryRoomList(userId) {
 
 export function getWithDiaryRoom(roomId) {
   try {
-    return prisma.withDiaryRoom.findUnique({
+    return prisma.with_diary_room.findUnique({
       where: {
         id: Number(roomId)
       }

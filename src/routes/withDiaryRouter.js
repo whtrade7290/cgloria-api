@@ -11,7 +11,7 @@ import {
   getWithDiaryRoom,
   getWithDiaryAll
 } from '../services/withDiaryService.js'
-import { singleUpload, deleteFile } from '../utils/multer.js'
+import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
 
 const router = express.Router()
 
@@ -52,26 +52,20 @@ router.post('/withDiary_detail', async (req, res) => {
   }
 })
 
-router.post('/withDiary_write', singleUpload, async (req, res) => {
+router.post('/withDiary_write', multiUpload, async (req, res) => {
   const { title, content, writer, writer_name, diaryRoomId } = req.body
-  const file = req.file
+  const files = req.files
 
-  // 파일 정보 초기화
-  let uuid = ''
-  let filename = ''
-  let extension = ''
-  let fileType = ''
-
-  // 파일이 존재할 경우 정보 추출
-  if (file) {
-    uuid = file.filename?.split('_')[0] ?? ''
-    filename = file?.originalname ?? ''
-    if (filename) {
-      filename = Buffer.from(filename, 'latin1').toString('utf8')
-    }
-    extension = filename ? '.' + filename.split('.').pop() : ''
-    fileType = file?.mimetype ?? ''
+  let pathList = []
+  if (files) {
+         pathList = files.map((file) => {
+      if (file.originalname) {
+        file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
+      }
+      return file
+    })
   }
+
 
   try {
     const result = await writeWithDiaryContent({
@@ -79,10 +73,7 @@ router.post('/withDiary_write', singleUpload, async (req, res) => {
       content,
       writer,
       writer_name,
-      uuid,
-      filename,
-      extension,
-      fileType,
+      files: JSON.stringify(pathList),
       diaryRoomId: Number(diaryRoomId)
     })
 
@@ -115,9 +106,9 @@ router.post('/withDiary_delete', async (req, res) => {
   }
 })
 
-router.post('/withDiary_edit', singleUpload, async (req, res) => {
-  const { title, content, id, deleteKey } = req.body
-  const file = req.file || {}
+router.post('/withDiary_edit', uploadFields, async (req, res) => {
+  const { title, content, id, jsonDeleteKeys = '' } = req.body
+  let deleteKeyList = []
 
   const data = {
     id,
@@ -125,25 +116,34 @@ router.post('/withDiary_edit', singleUpload, async (req, res) => {
     content
   }
 
-  if (deleteKey && file) {
-    const fileDeleted = deleteFile(deleteKey)
-    if (fileDeleted) {
-      console.log('file 삭제 완료')
+  const files = req?.files['fileField'] ?? []
 
-      let filename = file?.originalname ?? ''
-      if (filename) {
-        filename = Buffer.from(filename, 'latin1').toString('utf8')
-      }
-
-      Object.assign(data, {
-        uuid: file.filename?.split('_')[0] ?? '',
-        filename: filename,
-        extension: filename ? '.' + filename.split('.').pop() : '',
-        fileType: file?.mimetype ?? ''
-      })
-    } else {
-      console.log('file 삭제 실패')
+  if (files) {
+  const pathList = files.map((file) => {
+    if (file.originalname) {
+      file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
     }
+    return file
+  })
+    data.files = JSON.stringify(pathList)
+  }
+
+  if (jsonDeleteKeys) {
+    deleteKeyList = JSON.parse(jsonDeleteKeys)
+  }
+
+
+  if (deleteKeyList.length > 0 && files.length > 0) {
+    let fileDeleted = true // 초기값을 true로 설정
+
+    deleteKeyList.forEach((file) => {
+      console.log('file: ', file)
+      const filename = `uploads/${file}`
+      const result = deleteFile(filename)
+      if (!result) {
+        fileDeleted = false // 파일 삭제 실패 시 false로 설정
+      }
+    })
   }
 
   try {
