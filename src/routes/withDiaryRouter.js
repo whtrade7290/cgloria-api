@@ -12,6 +12,7 @@ import {
   getWithDiaryAll
 } from '../services/withDiaryService.js'
 import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
+import { processFileUpdates } from '../utils/fileProcess.js'
 
 const router = express.Router()
 
@@ -108,7 +109,13 @@ router.post('/withDiary_delete', async (req, res) => {
 
 router.post('/withDiary_edit', uploadFields, async (req, res) => {
   const { title, content, id, jsonDeleteKeys = '' } = req.body
-  let deleteKeyList = []
+
+  const { files: updatedFiles, hasFileUpdate } = await processFileUpdates({
+    id,
+    jsonDeleteKeys,
+    uploadedFiles: req?.files['fileField'] ?? [],
+    fetchCurrentFiles: getWithDiaryContent
+  })
 
   const data = {
     id,
@@ -116,34 +123,8 @@ router.post('/withDiary_edit', uploadFields, async (req, res) => {
     content
   }
 
-  const files = req?.files['fileField'] ?? []
-
-  if (files) {
-  const pathList = files.map((file) => {
-    if (file.originalname) {
-      file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
-    }
-    return file
-  })
-    data.files = JSON.stringify(pathList)
-  }
-
-  if (jsonDeleteKeys) {
-    deleteKeyList = JSON.parse(jsonDeleteKeys)
-  }
-
-
-  if (deleteKeyList.length > 0 && files.length > 0) {
-    let fileDeleted = true // 초기값을 true로 설정
-
-    deleteKeyList.forEach((file) => {
-      console.log('file: ', file)
-      const filename = `uploads/${file}`
-      const result = deleteFile(filename)
-      if (!result) {
-        fileDeleted = false // 파일 삭제 실패 시 false로 설정
-      }
-    })
+  if (hasFileUpdate) {
+    data.files = JSON.stringify(updatedFiles)
   }
 
   try {

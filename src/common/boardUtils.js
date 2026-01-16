@@ -95,7 +95,7 @@ export async function getContentById(id, board) {
   }
 }
 
-export async function editContent({ id, title, content, files = [], board, mainContent }) {
+export async function editContent({ id, title, content, files, board, mainContent }) {
 
   mainContent = mainContent === 'true'
 
@@ -114,9 +114,12 @@ export async function editContent({ id, title, content, files = [], board, mainC
     const updateData = {
       title,
       content,
-      ...(hasMainContent && { mainContent }),  // 있으면만 적용
-      ...(files.length > 0 && { files: JSON.stringify(files) })
+      ...(hasMainContent && mainContent !== undefined && { mainContent })  // 있으면만 적용
     };
+
+    if (files !== undefined) {
+      updateData.files = JSON.stringify(files)
+    }
 
     // 수정 쿼리 실행
     return await prisma[board].update({

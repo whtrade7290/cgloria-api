@@ -1,5 +1,6 @@
 import express from 'express'
 import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
+import { processFileUpdates } from '../utils/fileProcess.js'
 import { writeContent, getContentList, getContentById, editContent, totalContentCount, logicalDeleteContent, getMainContent } from '../common/boardUtils.js'
 
 const router = express.Router()
@@ -124,43 +125,24 @@ router.post('/testimony_delete', async (req, res) => {
 
 router.post('/testimony_edit', uploadFields, async (req, res) => {
   const { title, content, id, jsonDeleteKeys = '', board, mainContent } = req.body
-  let deleteKeyList = []
 
-  console.log('req.body: ', req.body)
-
-  const files = req?.files['fileField'] ?? []
-
-  if (jsonDeleteKeys) {
-    deleteKeyList = JSON.parse(jsonDeleteKeys)
-  }
+  const { files: updatedFiles, hasFileUpdate } = await processFileUpdates({
+    id,
+    board,
+    jsonDeleteKeys,
+    uploadedFiles: req?.files['fileField'] ?? []
+  })
 
   const data = {
     id,
     title,
     content,
-    files,
     board,
     mainContent
   }
 
-  if (deleteKeyList.length > 0 && files.length > 0) {
-    let fileDeleted = true // 초기값을 true로 설정
-
-    deleteKeyList.forEach((file) => {
-      console.log('file: ', file)
-      const filename = `uploads/${file}`
-      const result = deleteFile(filename)
-      if (!result) {
-        fileDeleted = false // 파일 삭제 실패 시 false로 설정
-      }
-    })
-
-    if (fileDeleted) {
-      console.log('file 삭제 완료')
-      Object.assign(data, { files: files })
-    } else {
-      console.log('file 삭제 실패')
-    }
+  if (hasFileUpdate) {
+    data.files = updatedFiles
   }
 
   try {
