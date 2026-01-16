@@ -182,7 +182,7 @@ app.post('/signIn', async (req, res) => {
 
 
 app.post('/check_Token', async (req, res) => {
-  const { accessToken, refreshToken } = req.body
+  const { accessToken, refreshToken, skipAuth } = req.body
 
   const accessResult = await checkingAccessToken(accessToken)
   const refreshResult = await checkingRefreshToken(refreshToken)
@@ -218,7 +218,8 @@ app.post('/check_Token', async (req, res) => {
     res.status(200).json({
       success: 2,
       message: 'Access Token is valid',
-      accessToken: accessToken
+      accessToken: accessToken,
+      skipAuth
     })
   }
 })
