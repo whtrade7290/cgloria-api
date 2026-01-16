@@ -9,6 +9,7 @@ import path from 'path'
 import {
   signIn,
   signUp,
+  editPassword,
   findUser,
   findDisApproveUsers,
   updateApproveStatus
@@ -118,6 +119,24 @@ app.post('/signUp', async (req, res) => {
   }
 })
 
+app.post('/editPassword', async (req, res) => {
+  const { username, password, name, email } = req.body
+
+  // 비밀번호 암호화
+  const hashedPassword = await bcrypt.hash(password, 10)
+
+  try {
+    const obj = await editPassword(username, hashedPassword, name, email)
+
+    console.log('obj: ', obj)
+
+    res.json(obj)
+  } catch (error) {
+    console.error('Error edit password:', error)
+    res.status(500).json({ error: 'Error edit password' })
+  }
+})
+
 app.post('/signIn', async (req, res) => {
   const { username, password } = req.body
   const payload = {
@@ -220,6 +239,7 @@ app.post('/find_user', async (req, res) => {
       username: user.username,
       name: user.name,
       role: user.role,
+      email: user.email,
       create_at: user.create_at
     })
   } else {
