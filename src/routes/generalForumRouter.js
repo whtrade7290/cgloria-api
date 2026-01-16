@@ -42,7 +42,7 @@ router.post('/generalForum_detail', async (req, res) => {
 
 router.post('/generalForum_write', multiUpload, async (req, res) => {
   const { title, content, writer, writer_name, board } = req.body
-  const files = req.files
+  const files = Array.isArray(req.files) ? req.files : []
 
   const pathList = files.map((file) => {
     if (file.originalname) {

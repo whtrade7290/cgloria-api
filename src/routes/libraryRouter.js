@@ -42,7 +42,7 @@ router.post('/sunday_school_resource_detail', async (req, res) => {
 
 router.post('/sunday_school_resource_write', multiUpload, async (req, res) => {
   const { title, content, writer, writer_name, board } = req.body
-  const files = req.files
+  const files = Array.isArray(req.files) ? req.files : []
 
   const pathList = files.map((file) => {
     if (file.originalname) {

@@ -54,7 +54,7 @@ router.post('/class_meeting_detail', async (req, res) => {
 
 router.post('/class_meeting_write', multiUpload, async (req, res) => {
   const { title, content, writer, writer_name, board, mainContent } = req.body
-  const files = req.files
+  const files = Array.isArray(req.files) ? req.files : []
 
   const pathList = files.map((file) => {
     if (file.originalname) {
