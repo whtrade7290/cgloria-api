@@ -196,3 +196,95 @@ export function getWithDiaryRoom(roomId) {
     console.error(error)
   }
 }
+
+export async function getDiaryRoomUsers(diaryRoomId) {
+  if (!diaryRoomId && diaryRoomId !== 0) {
+    return []
+  }
+
+  try {
+    const rows = await prisma.user_diary_room.findMany({
+      where: {
+        diaryRoomId: Number(diaryRoomId)
+      },
+      orderBy: {
+        createdAt: 'asc'
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            email: true,
+            role: true,
+            create_at: true,
+            update_at: true
+          }
+        }
+      }
+    })
+
+    return rows.map((row) => ({
+      id: row.id,
+      diaryRoomId: row.diaryRoomId,
+      createdAt: row.createdAt,
+      userId: Number(row.userId),
+      user: row.user
+        ? {
+            ...row.user,
+            id: Number(row.user.id)
+          }
+        : null
+    }))
+  } catch (error) {
+    console.error('getDiaryRoomUsers error:', error)
+    throw error
+  }
+}
+
+export async function removeDiaryRoomUser({ diaryRoomId, userId }) {
+  if (!diaryRoomId && diaryRoomId !== 0) {
+    throw new Error('diaryRoomId is required')
+  }
+  if (!userId && userId !== 0) {
+    throw new Error('userId is required')
+  }
+
+  try {
+    const result = await prisma.user_diary_room.deleteMany({
+      where: {
+        diaryRoomId: Number(diaryRoomId),
+        userId: BigInt(userId)
+      }
+    })
+
+    return result.count > 0
+  } catch (error) {
+    console.error('removeDiaryRoomUser error:', error)
+    throw error
+  }
+}
+
+export async function removeDiaryRoom(diaryRoomId) {
+  if (!diaryRoomId && diaryRoomId !== 0) {
+    throw new Error('diaryRoomId is required')
+  }
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      await tx.user_diary_room.deleteMany({
+        where: { diaryRoomId: Number(diaryRoomId) }
+      })
+
+      const result = await tx.with_diary_room.delete({
+        where: { id: Number(diaryRoomId) }
+      })
+
+      return result
+    })
+  } catch (error) {
+    console.error('removeDiaryRoom error:', error)
+    throw error
+  }
+}

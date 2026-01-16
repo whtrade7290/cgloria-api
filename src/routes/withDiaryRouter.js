@@ -9,7 +9,10 @@ import {
   createDiaryRoomWithUsers,
   fetchWithDiaryRoomList,
   getWithDiaryRoom,
-  getWithDiaryAll
+  getWithDiaryAll,
+  getDiaryRoomUsers,
+  removeDiaryRoomUser,
+  removeDiaryRoom
 } from '../services/withDiaryService.js'
 import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
 import { processFileUpdates } from '../utils/fileProcess.js'
@@ -206,6 +209,67 @@ router.post('/fetch_withDiary', async (req, res) => {
   } catch (error) {
     console.error('Error fetching:', error)
     res.status(500).json({ error: 'Error fetching WithDiaryRoom' })
+  }
+})
+
+router.post('/fetch_withDiary_room_users', async (req, res) => {
+  const { diaryRoomId } = req.body
+
+  if (!diaryRoomId && diaryRoomId !== 0) {
+    return res.status(400).json({ error: '일기방 ID를 입력해주세요.' })
+  }
+
+  try {
+    const users = await getDiaryRoomUsers(diaryRoomId)
+    res.status(200).json(users)
+  } catch (error) {
+    console.error('Error fetching diary room users:', error)
+    res.status(500).json({ error: '일기방 구성원 조회 중 오류가 발생했습니다.' })
+  }
+})
+
+router.post('/remove_withDiary_room_user', async (req, res) => {
+  const { diaryRoomId, userId } = req.body
+
+  if (diaryRoomId === undefined || diaryRoomId === null) {
+    return res.status(400).json({ error: '일기방 ID를 입력해주세요.' })
+  }
+  if (userId === undefined || userId === null) {
+    return res.status(400).json({ error: '사용자 ID를 입력해주세요.' })
+  }
+
+  try {
+    const removed = await removeDiaryRoomUser({ diaryRoomId, userId })
+
+    if (!removed) {
+      return res.status(404).json({ error: '해당 사용자를 찾을 수 없습니다.' })
+    }
+
+    res.status(200).json({ success: true })
+  } catch (error) {
+    console.error('Error removing diary room user:', error)
+    res.status(500).json({ error: '일기방 구성원 삭제 중 오류가 발생했습니다.' })
+  }
+})
+
+router.post('/remove_withDiary_room', async (req, res) => {
+  const { diaryRoomId } = req.body
+
+  if (diaryRoomId === undefined || diaryRoomId === null) {
+    return res.status(400).json({ error: '일기방 ID를 입력해주세요.' })
+  }
+
+  try {
+    const removedRoom = await removeDiaryRoom(diaryRoomId)
+
+    if (!removedRoom) {
+      return res.status(404).json({ error: '해당 일기방을 찾을 수 없습니다.' })
+    }
+
+    res.status(200).json({ success: true })
+  } catch (error) {
+    console.error('Error removing diary room:', error)
+    res.status(500).json({ error: '일기방 삭제 중 오류가 발생했습니다.' })
   }
 })
 
