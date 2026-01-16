@@ -12,7 +12,10 @@ import {
   editPassword,
   findUser,
   findDisApproveUsers,
-  updateApproveStatus
+  approveUser,
+  revokeApproveStatus,
+  getApprovedUsers,
+  updateUserRole
 } from '../src/services/userService.js'
 import {
   auth,
@@ -271,12 +274,12 @@ app.get('/disapproveUsers', async (req, res) => {
   }
 })
 
-app.post('/updateApproveStatus', async (req, res) => {
+const approveUserHandler = async (req, res) => {
   try {
     const { id } = req.body
     if (!id) return res.status(400).json({ message: 'ID is required' })
 
-    const result = await updateApproveStatus(id)
+    const result = await approveUser(id)
     if (!result) return res.status(404).json({ message: 'Update failed or user not found' })
 
     res.status(200).json({
@@ -286,5 +289,56 @@ app.post('/updateApproveStatus', async (req, res) => {
   } catch (error) {
     console.error('Error updating approval status:', error)
     res.status(500).json({ message: 'An error occurred while updating approval status' })
+  }
+}
+
+app.post('/approveUser', approveUserHandler)
+app.post('/updateApproveStatus', approveUserHandler)
+
+app.post('/approvedUsers', async (req, res) => {
+  const { startRow = 0, pageSize = 10, searchWord = '' } = req.body ?? {}
+
+  try {
+    const users = await getApprovedUsers({ startRow, pageSize, searchWord })
+    res.status(200).json(users)
+  } catch (error) {
+    console.error('Error fetching approved users:', error)
+    res.status(500).json({ message: 'An error occurred while fetching approved users' })
+  }
+})
+
+app.post('/revokeApproveStatus', async (req, res) => {
+  try {
+    const { id } = req.body
+    if (!id) return res.status(400).json({ message: 'ID is required' })
+
+    const result = await revokeApproveStatus(id)
+    if (!result) return res.status(404).json({ message: 'Update failed or user not found' })
+
+    res.status(200).json({
+      ...result,
+      id: Number(result.id)
+    })
+  } catch (error) {
+    console.error('Error revoking approval status:', error)
+    res.status(500).json({ message: 'An error occurred while revoking approval status' })
+  }
+})
+
+app.post('/updateUserRole', async (req, res) => {
+  try {
+    const { id, role } = req.body
+    if (!id) return res.status(400).json({ message: 'ID is required' })
+    if (!role) return res.status(400).json({ message: 'Role is required' })
+
+    const result = await updateUserRole(id, role)
+    if (!result) {
+      return res.status(404).json({ message: 'Update failed or user not found' })
+    }
+
+    res.status(200).json(result)
+  } catch (error) {
+    console.error('Error updating user role:', error)
+    res.status(500).json({ message: 'An error occurred while updating user role' })
   }
 })
