@@ -1,11 +1,18 @@
 import express from 'express'
 import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
 import { processFileUpdates } from '../utils/fileProcess.js'
-import { writeContent, getContentList, getContentById, editContent, totalContentCount, logicalDeleteContent } from '../common/boardUtils.js'
+import {
+  writeContent,
+  getContentList,
+  getContentById,
+  editContent,
+  totalContentCount,
+  logicalDeleteContent
+} from '../common/boardUtils.js'
 
 const router = express.Router()
 
-router.post('/generalForum', async (req, res) => {
+router.post('/general_forum', async (req, res) => {
   const { startRow, pageSize, searchWord, board } = req.body
 
   try {
@@ -17,13 +24,13 @@ router.post('/generalForum', async (req, res) => {
   }
 })
 
-router.post('/generalForum_count', async (req, res) => {
+router.post('/general_forum_count', async (req, res) => {
   const { searchWord, board } = req.body
   const count = await totalContentCount(searchWord, board)
   res.json(count)
 })
 
-router.post('/generalForum_detail', async (req, res) => {
+router.post('/general_forum_detail', async (req, res) => {
   const { id, board } = req.body
 
   if (!id) return
@@ -40,7 +47,7 @@ router.post('/generalForum_detail', async (req, res) => {
   }
 })
 
-router.post('/generalForum_write', multiUpload, async (req, res) => {
+router.post('/general_forum_write', multiUpload, async (req, res) => {
   const { title, content, writer, writer_name, board } = req.body
   const files = Array.isArray(req.files) ? req.files : []
 
@@ -74,7 +81,7 @@ router.post('/generalForum_write', multiUpload, async (req, res) => {
   }
 })
 
-router.post('/generalForum_delete', async (req, res) => {
+router.post('/general_forum_delete', async (req, res) => {
   const { id, deleteKeyList = [], board } = req.body
   console.log('deleteKeyList: ', deleteKeyList)
 
@@ -110,7 +117,7 @@ router.post('/generalForum_delete', async (req, res) => {
   }
 })
 
-router.post('/generalForum_edit', uploadFields, async (req, res) => {
+router.post('/general_forum_edit', uploadFields, async (req, res) => {
   const { title, content, id, jsonDeleteKeys = '', board } = req.body
 
   const { files: updatedFiles, hasFileUpdate } = await processFileUpdates({
