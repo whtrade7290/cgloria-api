@@ -1,4 +1,5 @@
 import { prisma } from '../utils/prismaClient.js'
+import { fetchProfileImageUrlByWriter } from '../utils/profileImage.js'
 
 export async function getWithDiaryList(startRow = 0, pageSize = 0, roomId = 0) {
   try {
@@ -60,9 +61,16 @@ export async function getWithDiaryContent(id) {
       where: { id: parseInt(id) } // id는 integer 형식으로 파싱하여 사용
     })
 
+    if (!data) {
+      return null
+    }
+
+    const writerProfileImageUrl = await fetchProfileImageUrlByWriter(data.writer)
+
     return {
       ...data,
-      id: Number(data.id)
+      id: Number(data.id),
+      writerProfileImageUrl
     }
   } catch (error) {
     console.error(error)
