@@ -346,7 +346,8 @@ app.post('/find_user', async (req, res) => {
       name: user.name,
       role: user.role,
       email: user.email,
-      create_at: user.create_at
+      create_at: user.create_at,
+      profileImageUrl: buildProfileImageUrl(req, user.profile_image_url)
     })
   } else {
     res.status(200).json(user)
