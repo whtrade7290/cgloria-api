@@ -10,7 +10,7 @@ export async function signIn(username) {
   }
 }
 
-export async function signUp(username, hashedPassword, name, email) {
+export async function signUp(username, hashedPassword, name, email, profileImagePath) {
   // 사용자 생성
   try {
     const user = await prisma.user.create({
@@ -18,7 +18,8 @@ export async function signUp(username, hashedPassword, name, email) {
         username,
         password: hashedPassword,
         name,
-        email
+        email,
+        ...(profileImagePath && { profile_image_url: profileImagePath })
       }
     })
     const obj = {

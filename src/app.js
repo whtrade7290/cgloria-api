@@ -205,18 +205,40 @@ app.use('/schedule', scheduleRouter)
 
 app.use('/uploads', express.static(path.join('', env === 'local' ? 'uploads' : 'src/uploads')))
 
-app.post('/signUp', async (req, res) => {
-  const { username, password, name, email } = req.body
+app.post('/signUp', handleProfileUpload, async (req, res) => {
+  let payload = {}
+  try {
+    payload = parseProfileRequestBody(req) ?? {}
+  } catch (error) {
+    return res.status(400).json({ error: 'data 필드를 JSON으로 파싱할 수 없습니다.' })
+  }
+
+  const { username, password, name, email } = payload
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'username과 password는 필수입니다.' })
+  }
 
   // 비밀번호 암호화
   const hashedPassword = await bcrypt.hash(password, 10)
 
   try {
-    const obj = await signUp(username, hashedPassword, name, email)
+    let profilePath
+    if (req.file) {
+      try {
+        profilePath = await saveProfileImageFile({ file: req.file, userId: username })
+      } catch (error) {
+        console.error('프로필 이미지 저장 실패:', error)
+        return res.status(500).json({ error: '프로필 이미지 저장 중 오류가 발생했습니다.' })
+      }
+    }
 
-    console.log('obj: ', obj)
-
-    res.json(obj)
+    const obj = await signUp(username, hashedPassword, name, email, profilePath)
+    
+    res.json({
+      ...obj,
+      profileImageUrl: buildProfileImageUrl(req, profilePath)
+    })
   } catch (error) {
     console.error('Error signing up:', error)
     res.status(500).json({ error: 'Error signing up' })
