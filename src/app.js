@@ -41,6 +41,7 @@ import withDiaryRouter from './routes/withDiaryRouter.js'
 import photoRouter from './routes/photoRouter.js'
 import schoolPhotoRouter from './routes/schoolPhotoRouter.js'
 import commentRouter from './routes/commentRouter.js'
+import scheduleRouter from './routes/scheduleRouter.js'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -101,6 +102,7 @@ app.use('/withDiary', auth, withDiaryRouter)
 app.use('/photo_board', photoRouter)
 app.use('/school_photo_board', schoolPhotoRouter)
 app.use('/comment', commentRouter)
+app.use('/schedule', scheduleRouter)
 
 app.use('/uploads', express.static(path.join('', env === 'local' ? 'uploads' : 'src/uploads')))
 

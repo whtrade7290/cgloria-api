@@ -79,6 +79,28 @@ export async function findUser(username) {
   }
 }
 
+export async function findUserById(id) {
+  if (id === undefined || id === null) {
+    return null
+  }
+
+  try {
+    const normalizedId =
+      typeof id === 'bigint'
+        ? id
+        : typeof id === 'number'
+        ? BigInt(id)
+        : BigInt(String(id))
+
+    return await prisma.user.findUnique({
+      where: { id: normalizedId }
+    })
+  } catch (error) {
+    console.error('findUserById error:', error)
+    return null
+  }
+}
+
 export async function findDisApproveUsers() {
   try {
     return await prisma.user.findMany({

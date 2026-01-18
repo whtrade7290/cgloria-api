@@ -197,6 +197,28 @@ model comments {
   deleted     Boolean  @default(false)
 }
 
+model schedule {
+  id          BigInt   @id @default(autoincrement())
+  title       String
+  start       DateTime
+  end         DateTime
+  color       String?  @default("#0F2854")
+  created_by  String?
+  create_at   DateTime @default(now())
+  update_at   DateTime @default(now())
+  deleted     Boolean  @default(false)
+}
+
+model schedule_upload_log {
+  id           BigInt   @id @default(autoincrement())
+  filename     String?
+  uploader     String?
+  successCount Int      @default(0)
+  failCount    Int      @default(0)
+  errors       String?  @db.LongText
+  create_at    DateTime @default(now())
+}
+
 enum Role {
   ADMIN
   DIARY
