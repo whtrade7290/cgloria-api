@@ -18,6 +18,7 @@ model user {
   isApproved Boolean         @default(false)
   isChanged  Boolean         @default(false)
   email      String?
+  profile_image_url String?
   diaryRooms user_diary_room[]
 }
 

@@ -6,6 +6,9 @@ import cors from 'cors'
 import morgan from 'morgan'
 import bcrypt from 'bcrypt'
 import path from 'path'
+import multer from 'multer'
+import fs from 'fs'
+import { promises as fsPromises } from 'fs'
 import {
   signIn,
   signUp,
@@ -15,7 +18,9 @@ import {
   approveUser,
   revokeApproveStatus,
   getApprovedUsers,
-  updateUserRole
+  updateUserRole,
+  updateProfile,
+  findUserById
 } from '../src/services/userService.js'
 import {
   auth,
@@ -43,6 +48,100 @@ import schoolPhotoRouter from './routes/schoolPhotoRouter.js'
 import commentRouter from './routes/commentRouter.js'
 import scheduleRouter from './routes/scheduleRouter.js'
 import { fileURLToPath } from 'url'
+
+const PROFILE_UPLOAD_ROOT = path.join(process.cwd(), 'uploads')
+const PROFILE_SUBDIR = 'profile'
+const PROFILE_UPLOAD_DIR = path.join(PROFILE_UPLOAD_ROOT, PROFILE_SUBDIR)
+const ALLOWED_PROFILE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+
+const profileUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter(req, file, cb) {
+    if (!ALLOWED_PROFILE_MIME_TYPES.has(file.mimetype)) {
+      cb(new Error('프로필 이미지는 jpg, png, webp 형식만 허용됩니다.'))
+    } else {
+      cb(null, true)
+    }
+  }
+})
+
+const handleProfileUpload = (req, res, next) => {
+  profileUpload.single('profileImage')(req, res, (err) => {
+    if (err) {
+      let message = '프로필 이미지 업로드에 실패했습니다.'
+      if (err instanceof multer.MulterError) {
+        message =
+          err.code === 'LIMIT_FILE_SIZE'
+            ? '프로필 이미지는 최대 5MB까지 업로드할 수 있습니다.'
+            : `프로필 이미지 업로드 오류: ${err.message}`
+      } else if (err?.message) {
+        message = err.message
+      }
+      return res.status(400).json({ success: false, message })
+    }
+    next()
+  })
+}
+
+const ensureProfileDirExists = async () => {
+  if (!fs.existsSync(PROFILE_UPLOAD_DIR)) {
+    await fsPromises.mkdir(PROFILE_UPLOAD_DIR, { recursive: true })
+  }
+}
+
+const getProfileImageExtension = (filename = '') => {
+  const ext = (path.extname(filename) || '').toLowerCase()
+  if (ext === '.jpeg') return '.jpg'
+  if (ext === '.jpg' || ext === '.png' || ext === '.webp') return ext
+  return '.jpg'
+}
+
+const normalizeStoredProfilePath = (value) => {
+  if (!value) return ''
+  if (value.startsWith('http://') || value.startsWith('https://')) {
+    const match = value.match(/\/uploads\/(.+)$/)
+    return match ? match[1] : ''
+  }
+  return value.replace(/^\/?uploads\//, '').replace(/\\+/g, '/')
+}
+
+const saveProfileImageFile = async ({ file, userId }) => {
+  await ensureProfileDirExists()
+  const ext = getProfileImageExtension(file.originalname)
+  const filename = `${userId}_${Date.now()}${ext}`
+  const relativePath = path.posix.join(PROFILE_SUBDIR, filename)
+  const absolutePath = path.join(PROFILE_UPLOAD_DIR, filename)
+  await fsPromises.writeFile(absolutePath, file.buffer)
+  return relativePath
+}
+
+const deleteProfileImageFile = async (storedValue) => {
+  const relativePath = normalizeStoredProfilePath(storedValue)
+  if (!relativePath) return
+  const absolutePath = path.join(PROFILE_UPLOAD_ROOT, relativePath)
+  try {
+    await fsPromises.unlink(absolutePath)
+  } catch (error) {
+    // ignore missing files
+  }
+}
+
+const buildProfileImageUrl = (req, storedValue) => {
+  const relativePath = normalizeStoredProfilePath(storedValue)
+  if (!relativePath) return null
+  const normalizedPath = relativePath.replace(/\\+/g, '/')
+  return `${req.protocol}://${req.get('host')}/uploads/${normalizedPath}`
+}
+
+const parseProfileRequestBody = (req) => {
+  if (req.body?.data && typeof req.body.data === 'string') {
+    return JSON.parse(req.body.data)
+  }
+  return req.body
+}
+
+const toBoolean = (value) => value === true || value === 'true' || value === 1 || value === '1'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -169,7 +268,8 @@ app.post('/signIn', async (req, res) => {
       update_at: user.update_at,
       role: user.role,
       deleted: user.deleted,
-      withDiary: user.withDiary ?? 0
+      withDiary: user.withDiary ?? 0,
+      profileImageUrl: buildProfileImageUrl(req, user.profile_image_url)
     }
 
     res.status(200).json({
@@ -342,5 +442,106 @@ app.post('/updateUserRole', async (req, res) => {
   } catch (error) {
     console.error('Error updating user role:', error)
     res.status(500).json({ message: 'An error occurred while updating user role' })
+  }
+})
+
+app.post('/updateProfile', auth, handleProfileUpload, async (req, res) => {
+  try {
+    let payload = {}
+    try {
+      payload = parseProfileRequestBody(req) ?? {}
+    } catch (error) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'data 필드를 JSON으로 파싱할 수 없습니다.' })
+    }
+
+    const { id, name, email, password, removeProfileImage } = payload
+    const decodedUsername = req.decoded?.username
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'ID is required' })
+    }
+
+    if (!decodedUsername) {
+      return res.status(401).json({ success: false, message: '인증 정보가 필요합니다.' })
+    }
+
+    const targetUser = await findUserById(id)
+    if (!targetUser) {
+      return res.status(404).json({ success: false, message: '사용자를 찾을 수 없습니다.' })
+    }
+
+    if (targetUser.username !== decodedUsername) {
+      return res.status(403).json({ success: false, message: '본인만 수정할 수 있습니다.' })
+    }
+
+    let hashedPassword
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10)
+    }
+
+    const removeImage = toBoolean(removeProfileImage)
+    const existingImagePath = targetUser.profile_image_url
+    let newProfileImagePath
+
+    if (req.file) {
+      try {
+        newProfileImagePath = await saveProfileImageFile({
+          file: req.file,
+          userId: targetUser.id
+        })
+      } catch (error) {
+        console.error('프로필 이미지 저장 실패:', error)
+        return res
+          .status(500)
+          .json({ success: false, message: '프로필 이미지 저장 중 오류가 발생했습니다.' })
+      }
+    }
+
+    let profileImagePathValue
+    if (newProfileImagePath) {
+      profileImagePathValue = newProfileImagePath
+    } else if (removeImage) {
+      profileImagePathValue = null
+    }
+
+    let updated
+    try {
+      updated = await updateProfile({
+        id: targetUser.id,
+        name,
+        email,
+        password: hashedPassword,
+        profileImagePath: profileImagePathValue
+      })
+    } catch (error) {
+      if (newProfileImagePath) {
+        await deleteProfileImageFile(newProfileImagePath)
+      }
+      throw error
+    }
+
+    if (newProfileImagePath && existingImagePath) {
+      await deleteProfileImageFile(existingImagePath)
+    } else if (!newProfileImagePath && removeImage && existingImagePath) {
+      await deleteProfileImageFile(existingImagePath)
+    }
+
+    res.status(200).json({
+      success: true,
+      user: {
+        id: updated.id,
+        username: updated.username,
+        name: updated.name,
+        email: updated.email,
+        role: updated.role,
+        update_at: updated.update_at,
+        profileImageUrl: buildProfileImageUrl(req, updated.profile_image_url)
+      }
+    })
+  } catch (error) {
+    console.error('Error updating profile:', error)
+    res.status(500).json({ success: false, message: '프로필 수정 중 오류가 발생했습니다.' })
   }
 })

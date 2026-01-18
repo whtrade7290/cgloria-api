@@ -1,4 +1,5 @@
 import { prisma } from '../utils/prismaClient.js'
+import { fetchProfileImageUrlByWriter } from '../utils/profileImage.js'
 
 export async function getCommentList(boardId, boardName) {
   try {
@@ -13,10 +14,18 @@ export async function getCommentList(boardId, boardName) {
       }
     })
 
-    return data.map((item) => ({
+    const normalized = data.map((item) => ({
       ...item,
       id: Number(item.id)
     }))
+
+    await Promise.all(
+      normalized.map(async (item) => {
+        item.writerProfileImageUrl = await fetchProfileImageUrlByWriter(item.writer)
+      })
+    )
+
+    return normalized
   } catch (error) {
     console.error(error)
   }

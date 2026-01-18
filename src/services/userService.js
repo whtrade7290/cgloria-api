@@ -195,3 +195,50 @@ export async function updateUserRole(id, role) {
     throw error
   }
 }
+
+export async function updateProfile({ id, name, email, password, profileImagePath }) {
+  if (!id) {
+    throw new Error('id is required')
+  }
+
+  const normalizedId =
+    typeof id === 'bigint'
+      ? id
+      : typeof id === 'number'
+      ? BigInt(id)
+      : BigInt(String(id))
+
+  const data = {
+    update_at: new Date()
+  }
+
+  if (name !== undefined) {
+    data.name = name
+  }
+
+  if (email !== undefined) {
+    data.email = email
+  }
+
+  if (password) {
+    data.password = password
+  }
+  if (profileImagePath !== undefined) {
+    data.profile_image_url = profileImagePath
+  }
+
+  try {
+    const updated = await prisma.user.update({
+      where: { id: normalizedId },
+      data
+    })
+
+    return {
+      ...updated,
+      id: Number(updated.id)
+    }
+  } catch (error) {
+    console.error('updateProfile error:', error)
+    throw error
+  }
+}
