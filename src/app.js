@@ -47,6 +47,7 @@ import photoRouter from './routes/photoRouter.js'
 import schoolPhotoRouter from './routes/schoolPhotoRouter.js'
 import commentRouter from './routes/commentRouter.js'
 import scheduleRouter from './routes/scheduleRouter.js'
+import { normalizeProfileImagePath } from './utils/profileImage.js'
 import { fileURLToPath } from 'url'
 
 const PROFILE_UPLOAD_ROOT = path.join(process.cwd(), 'uploads')
@@ -369,7 +370,7 @@ app.post('/find_user', async (req, res) => {
       role: user.role,
       email: user.email,
       create_at: user.create_at,
-      profileImageUrl: buildProfileImageUrl(req, user.profile_image_url)
+      profileImageUrl: normalizeProfileImagePath(user.profile_image_url)
     })
   } else {
     res.status(200).json(user)
