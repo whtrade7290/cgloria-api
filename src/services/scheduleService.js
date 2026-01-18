@@ -90,3 +90,34 @@ export async function getSchedulesBetween(start, end) {
     throw error
   }
 }
+
+export async function updateSchedule(id, data) {
+  if (!id) {
+    throw new Error('스케줄 ID가 필요합니다.')
+  }
+
+  try {
+    return await prisma.schedule.update({
+      where: { id: BigInt(id) },
+      data
+    })
+  } catch (error) {
+    console.error('스케줄 수정 실패:', error)
+    throw error
+  }
+}
+
+export async function deleteSchedule(id) {
+  if (!id) {
+    throw new Error('스케줄 ID가 필요합니다.')
+  }
+
+  try {
+    await prisma.schedule.delete({
+      where: { id: BigInt(id) }
+    })
+  } catch (error) {
+    console.error('스케줄 삭제 실패:', error)
+    throw error
+  }
+}
