@@ -7,7 +7,15 @@ const router = express.Router()
 router.post('/', async (req, res) => {
   try {
     const { filePath, outputFilename } = await generateBiblePlanCsv(req.body?.days)
-    res.download(filePath, outputFilename, (err) => {
+    const encodedFilename = encodeURIComponent(outputFilename)
+    const options = {
+      headers: {
+        'Content-Disposition': `attachment; filename="${outputFilename}"; filename*=UTF-8''${encodedFilename}`,
+        'Content-Type': 'text/csv; charset=utf-8'
+      }
+    }
+
+    res.download(filePath, outputFilename, options, (err) => {
       if (err) {
         console.error('파일 다운로드 오류:', err)
         if (!res.headersSent) {
