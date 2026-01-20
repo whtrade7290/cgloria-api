@@ -47,6 +47,7 @@ import photoRouter from './routes/photoRouter.js'
 import schoolPhotoRouter from './routes/schoolPhotoRouter.js'
 import commentRouter from './routes/commentRouter.js'
 import scheduleRouter from './routes/scheduleRouter.js'
+import biblePlanerRouter from './routes/biblePlanerRouter.js'
 import { normalizeProfileImagePath } from './utils/profileImage.js'
 import { fileURLToPath } from 'url'
 
@@ -203,6 +204,7 @@ app.use('/photo_board', photoRouter)
 app.use('/school_photo_board', schoolPhotoRouter)
 app.use('/comment', commentRouter)
 app.use('/schedule', scheduleRouter)
+app.use('/bible', biblePlanerRouter)
 
 app.use('/uploads', express.static(path.join('', env === 'local' ? 'uploads' : 'src/uploads')))
 

@@ -198,6 +198,22 @@ model comments {
   deleted     Boolean  @default(false)
 }
 
+model bible {
+  idx            Int      @id @default(autoincrement())
+  cate           Int
+  book           Int
+  chapter        Int
+  paragraph      Int
+  sentence       String   @db.TinyText
+  testament      String   @db.VarChar(10)
+  long_label     String   @db.VarChar(30)
+  short_label    String   @db.VarChar(10)
+  count          Int      @default(0)
+  countOfChapter Int      @default(0)
+
+  @@index([book])
+}
+
 model schedule {
   id          BigInt   @id @default(autoincrement())
   title       String
