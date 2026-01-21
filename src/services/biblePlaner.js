@@ -63,7 +63,7 @@ export function buildReadingPlan(results, days) {
 
 export async function createPlanCsv(bibleList, days) {
   ensureResultDir()
-  const outputFilename = `성경통독표(${days}일).csv`
+  const outputFilename = `bible_${days}days.csv`
   const filePath = path.join(RESULT_DIR, outputFilename)
 
   const csvWriter = createObjectCsvWriter({
