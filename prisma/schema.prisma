@@ -46,6 +46,7 @@ model column {
   writer_name String?
   files       String?  @db.LongText
   mainContent Boolean  @default(false)
+  language    Language @default(ko)
 }
 
 model weekly_bible_verse {
@@ -72,6 +73,7 @@ model class_meeting {
   writer_name String?
   files       String?  @db.LongText
   mainContent Boolean  @default(false)
+  language    Language @default(ko)
 }
 
 model sunday_school_resource {
@@ -196,6 +198,11 @@ model comments {
   create_at   DateTime @default(now())
   update_at   DateTime @default(now())
   deleted     Boolean  @default(false)
+}
+
+enum Language {
+  ko
+  ja
 }
 
 model bible {

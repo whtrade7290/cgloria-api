@@ -6,10 +6,10 @@ import { writeContent, getContentList, getContentById, editContent, totalContent
 const router = express.Router()
 
 router.post('/main_class_meeting', async (req, res) => {
-  const { board } = req.body
+  const { board, language } = req.body
 
   try {
-    const data = await getMainContent(board)
+    const data = await getMainContent(board, language)
     res.send(data)
   } catch (error) {
     console.error('Error fetching:', error)
@@ -53,7 +53,7 @@ router.post('/class_meeting_detail', async (req, res) => {
 })
 
 router.post('/class_meeting_write', multiUpload, async (req, res) => {
-  const { title, content, writer, writer_name, board, mainContent } = req.body
+  const { title, content, writer, writer_name, board, mainContent, language } = req.body
   const files = Array.isArray(req.files) ? req.files : []
 
   const pathList = files.map((file) => {
@@ -71,7 +71,8 @@ router.post('/class_meeting_write', multiUpload, async (req, res) => {
       writer_name,
       files: JSON.stringify(pathList),
       board,
-      mainContent
+      mainContent,
+      language
     })
 
     if (result) {
@@ -124,7 +125,7 @@ router.post('/class_meeting_delete', async (req, res) => {
 })
 
 router.post('/class_meeting_edit', uploadFields, async (req, res) => {
-  const { title, content, id, jsonDeleteKeys = '', board, mainContent } = req.body
+  const { title, content, id, jsonDeleteKeys = '', board, mainContent, language } = req.body
 
   const { files: updatedFiles, hasFileUpdate } = await processFileUpdates({
     id,
@@ -138,7 +139,8 @@ router.post('/class_meeting_edit', uploadFields, async (req, res) => {
     title,
     content,
     board,
-    mainContent
+    mainContent,
+    language
   }
 
   if (hasFileUpdate) {
