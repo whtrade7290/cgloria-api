@@ -2,6 +2,8 @@ import express from 'express'
 import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
 import { processFileUpdates } from '../utils/fileProcess.js'
 import { writeContent, getContentList, getContentById, editContent, totalContentCount, logicalDeleteContent, getMainContent } from '../common/boardUtils.js'
+import { getWeeklyBibleVersesWithBiblesByDateRange, getWeeklyBibleVerseWithBible, getBibleIdsByWeeklyDateRange } from '../services/weeklyBibleVerseService.js'
+import { getBibleVersesByIds } from '../services/bibleService.js'
 
 const router = express.Router()
 
@@ -36,11 +38,14 @@ router.post('/weekly_bible_verse_count', async (req, res) => {
 })
 
 router.post('/weekly_bible_verse_detail', async (req, res) => {
-  const { id, board } = req.body
+  const { id, board, includeBible } = req.body
 
   if (!id) return
   try {
-    const content = await getContentById(id, board)
+    const content = await (includeBible
+      ? getWeeklyBibleVerseWithBible(id, includeBible)
+      : getContentById(id, board))
+
     if (!content) {
       return res.status(404).json({ error: 'Photo not found' })
     }
@@ -52,9 +57,64 @@ router.post('/weekly_bible_verse_detail', async (req, res) => {
   }
 })
 
+router.post('/weekly_bible_verse_bibles', async (req, res) => {
+  const { fromDate, toDate } = req.body ?? {}
+
+  try {
+    if (!fromDate || !toDate) {
+      return res.status(400).json({ error: 'fromDate와 toDate를 모두 입력해주세요.' })
+    }
+
+    const data = await getWeeklyBibleVersesWithBiblesByDateRange({
+      from: fromDate,
+      to: toDate
+    })
+
+    res.json(data)
+  } catch (error) {
+    console.error('Error fetching weekly bible references:', error)
+    res.status(500).json({ error: error?.message ?? '조회 중 오류가 발생했습니다.' })
+  }
+})
+
+router.post('/remember_bible_download', async (req, res) => {
+  const { fromDate, toDate } = req.body ?? {}
+
+  try {
+    if (!fromDate || !toDate) {
+      return res.status(400).json({ error: 'fromDate와 toDate를 모두 입력해주세요.' })
+    }
+
+    const bibleIds = await getBibleIdsByWeeklyDateRange({
+      from: fromDate,
+      to: toDate
+    })
+
+    if (bibleIds.length === 0) {
+      return res.json({ bibleIds: [], verses: [] })
+    }
+
+    const verses = await getBibleVersesByIds(bibleIds)
+
+    res.json({ bibleIds, verses })
+  } catch (error) {
+    console.error('Error fetching bible ids by weekly range:', error)
+    res.status(500).json({ error: error?.message ?? 'bible_id 조회 중 오류가 발생했습니다.' })
+  }
+})
+
+const parseMemoryVerseIdx = (value) => {
+  const parsed = Number(value)
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return null
+  }
+  return parsed
+}
+
 router.post('/weekly_bible_verse_write', multiUpload, async (req, res) => {
-  const { title, content, writer, writer_name, board, mainContent } = req.body
+  const { title, content, writer, writer_name, board, mainContent, memoryVerseIdx } = req.body
   const files = Array.isArray(req.files) ? req.files : []
+  const bibleId = parseMemoryVerseIdx(memoryVerseIdx)
 
   const pathList = files.map((file) => {
     if (file.originalname) {
@@ -71,7 +131,8 @@ router.post('/weekly_bible_verse_write', multiUpload, async (req, res) => {
       writer_name,
       files: JSON.stringify(pathList),
       board,
-      mainContent
+      mainContent,
+      extraData: bibleId ? { bible_id: bibleId } : {}
     })
 
     if (result) {
@@ -124,7 +185,7 @@ router.post('/weekly_bible_verse_delete', async (req, res) => {
 })
 
 router.post('/weekly_bible_verse_edit', uploadFields, async (req, res) => {
-  const { title, content, id, jsonDeleteKeys = '', board, mainContent } = req.body
+  const { title, content, id, jsonDeleteKeys = '', board, mainContent, memoryVerseIdx } = req.body
 
   const { files: updatedFiles, hasFileUpdate } = await processFileUpdates({
     id,
@@ -133,12 +194,15 @@ router.post('/weekly_bible_verse_edit', uploadFields, async (req, res) => {
     uploadedFiles: req?.files['fileField'] ?? []
   })
 
+  const bibleId = parseMemoryVerseIdx(memoryVerseIdx)
+
   const data = {
     id,
     title,
     content,
     board,
-    mainContent
+    mainContent,
+    extraData: bibleId ? { bible_id: bibleId } : {}
   }
 
   if (hasFileUpdate) {

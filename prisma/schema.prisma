@@ -60,6 +60,8 @@ model weekly_bible_verse {
   writer_name String?
   files       String?  @db.LongText
   mainContent Boolean  @default(false)
+  bible_id    Int?
+  bible       bible?   @relation(fields: [bible_id], references: [idx])
 }
 
 model class_meeting {
@@ -217,6 +219,7 @@ model bible {
   short_label    String   @db.VarChar(10)
   count          Int      @default(0)
   countOfChapter Int      @default(0)
+  weekly_bible_verses weekly_bible_verse[]
 
   @@index([book])
 }

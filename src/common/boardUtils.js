@@ -66,7 +66,8 @@ export async function writeContent({
   files,
   board,
   mainContent,
-  language
+  language,
+  extraData = {}
 }) {
 
   const normalizedMainContent = parseMainContentFlag(mainContent) === true
@@ -94,6 +95,13 @@ export async function writeContent({
 
       if (boardLanguage) {
         data.language = boardLanguage
+      }
+
+      if (extraData && typeof extraData === 'object') {
+        data = {
+          ...data,
+          ...extraData
+        }
       }
 
       // 새로운 레코드 생성
@@ -159,7 +167,16 @@ export async function getContentById(id, board) {
   }
 }
 
-export async function editContent({ id, title, content, files, board, mainContent, language }) {
+export async function editContent({
+  id,
+  title,
+  content,
+  files,
+  board,
+  mainContent,
+  language,
+  extraData = {}
+}) {
   const normalizedMainContent = parseMainContentFlag(mainContent) === true
   const boardSupportsMainContent = hasMainContentFeature(board)
   const boardHasLanguage = hasLanguageField(board)
@@ -180,6 +197,10 @@ export async function editContent({ id, title, content, files, board, mainConten
 
     if (boardHasLanguage && normalizeLanguage(language)) {
       updateData.language = normalizeLanguage(language)
+    }
+
+    if (extraData && typeof extraData === 'object') {
+      Object.assign(updateData, extraData)
     }
 
     if (boardSupportsMainContent && normalizedMainContent) {
