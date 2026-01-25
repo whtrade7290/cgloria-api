@@ -167,6 +167,25 @@ export async function getApprovedUsers({ startRow = 0, pageSize = 10, searchWord
   }
 }
 
+export async function getApprovedUsersCount(searchWord = '') {
+  const keyword = searchWord ?? ''
+
+  try {
+    return await prisma.user.count({
+      where: {
+        isApproved: true,
+        OR: [
+          { username: { contains: keyword } },
+          { name: { contains: keyword } }
+        ]
+      }
+    })
+  } catch (error) {
+    console.error('getApprovedUsersCount error:', error)
+    throw error
+  }
+}
+
 export async function updateUserRole(id, role) {
   if (role === undefined || role === null) {
     throw new Error('role is required')

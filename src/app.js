@@ -18,6 +18,7 @@ import {
   approveUser,
   revokeApproveStatus,
   getApprovedUsers,
+  getApprovedUsersCount,
   updateUserRole,
   updateProfile,
   findUserById
@@ -432,6 +433,18 @@ app.post('/approvedUsers', async (req, res) => {
   } catch (error) {
     console.error('Error fetching approved users:', error)
     res.status(500).json({ message: 'An error occurred while fetching approved users' })
+  }
+})
+
+app.post('/approvedUsersCount', async (req, res) => {
+  const { searchWord = '' } = req.body ?? {}
+
+  try {
+    const count = await getApprovedUsersCount(searchWord)
+    res.status(200).json({ count })
+  } catch (error) {
+    console.error('Error fetching approved user count:', error)
+    res.status(500).json({ message: 'An error occurred while fetching approved user count' })
   }
 })
 
