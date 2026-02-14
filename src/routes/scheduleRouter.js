@@ -20,6 +20,15 @@ const upload = multer({
 })
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/
+const COLOR_OPTIONS = ['#0F2854', '#1C4D8D', '#4988C4', '#BDE8F5', '#FA5C5C', '#FD8A6B', '#FEC288']
+
+const getRandomColor = () => {
+  if (!Array.isArray(COLOR_OPTIONS) || COLOR_OPTIONS.length === 0) {
+    return DEFAULT_SCHEDULE_COLOR
+  }
+  const index = Math.floor(Math.random() * COLOR_OPTIONS.length)
+  return COLOR_OPTIONS[index] ?? DEFAULT_SCHEDULE_COLOR
+}
 const parseCsv = (buffer) => {
   return parse(buffer.toString('utf8'), {
     columns: true,
@@ -28,7 +37,38 @@ const parseCsv = (buffer) => {
   })
 }
 
-const normalizeDate = (value) => (typeof value === 'string' ? value.trim() : '')
+const normalizeDate = (value) => {
+  if (typeof value !== 'string') return ''
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+
+  const parts = trimmed.split(/[-/\\.]/)
+  if (parts.length === 3) {
+    const [yearStr, monthStr, dayStr] = parts
+    let year = Number(yearStr)
+    const month = Number(monthStr)
+    const day = Number(dayStr)
+
+    if (
+      Number.isInteger(year) &&
+      Number.isInteger(month) &&
+      Number.isInteger(day) &&
+      month >= 1 &&
+      month <= 12 &&
+      day >= 1 &&
+      day <= 31
+    ) {
+      if (yearStr.length === 2) {
+        year += 2000
+      }
+      return `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day
+        .toString()
+        .padStart(2, '0')}`
+    }
+  }
+
+  return trimmed
+}
 const normalizeText = (value) => (typeof value === 'string' ? value.trim() : '')
 
 const buildDate = (dateString, endOfDay = false) => {
@@ -117,6 +157,8 @@ const buildSchedulePayload = ({ title, start, end, color, adminUser, errors }) =
 
   if (!startDate || !endDate) {
     errors.push('날짜 변환에 실패했습니다.')
+  } else if (endDate < startDate) {
+    errors.push('종료일은 시작일 이후여야 합니다.')
   }
 
   if (errors.length > 0) {
@@ -172,7 +214,7 @@ router.post('/csv_upload', upload.single('file'), async (req, res) => {
     const title = normalizeText(row.title)
     const start = normalizeDate(row.start)
     let end = normalizeDate(row.end)
-    const color = DEFAULT_SCHEDULE_COLOR
+    const color = getRandomColor()
     const reasons = []
 
     if (!title) {
@@ -201,6 +243,11 @@ router.post('/csv_upload', upload.single('file'), async (req, res) => {
 
     if (!startDate || !endDate) {
       errors.push({ row: rowNumber, reason: '날짜 변환에 실패했습니다.' })
+      return
+    }
+
+    if (endDate < startDate) {
+      errors.push({ row: rowNumber, reason: '종료일은 시작일 이후여야 합니다.' })
       return
     }
 
