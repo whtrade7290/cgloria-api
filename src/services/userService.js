@@ -84,6 +84,7 @@ export async function findUserByName(keyword) {
   try {
     return await prisma.user.findFirst({
       where: {
+        isApproved: true,
         OR: [{ username: keyword }, { name: keyword }]
       }
     })
@@ -99,11 +100,7 @@ export async function findUserById(id) {
 
   try {
     const normalizedId =
-      typeof id === 'bigint'
-        ? id
-        : typeof id === 'number'
-        ? BigInt(id)
-        : BigInt(String(id))
+      typeof id === 'bigint' ? id : typeof id === 'number' ? BigInt(id) : BigInt(String(id))
 
     return await prisma.user.findUnique({
       where: { id: normalizedId }
@@ -157,10 +154,7 @@ export async function getApprovedUsers({ startRow = 0, pageSize = 10, searchWord
     const users = await prisma.user.findMany({
       where: {
         isApproved: true,
-        OR: [
-          { username: { contains: keyword } },
-          { name: { contains: keyword } }
-        ]
+        OR: [{ username: { contains: keyword } }, { name: { contains: keyword } }]
       },
       orderBy: {
         id: 'desc'
@@ -186,10 +180,7 @@ export async function getApprovedUsersCount(searchWord = '') {
     return await prisma.user.count({
       where: {
         isApproved: true,
-        OR: [
-          { username: { contains: keyword } },
-          { name: { contains: keyword } }
-        ]
+        OR: [{ username: { contains: keyword } }, { name: { contains: keyword } }]
       }
     })
   } catch (error) {
@@ -207,10 +198,10 @@ export async function updateUserRole(id, role) {
     role === 0 || role === '0'
       ? 'ADMIN'
       : role === 1 || role === '1'
-      ? 'USER'
-      : typeof role === 'string'
-      ? role.toUpperCase()
-      : role
+        ? 'USER'
+        : typeof role === 'string'
+          ? role.toUpperCase()
+          : role
 
   try {
     const result = await prisma.user.update({
@@ -234,11 +225,7 @@ export async function updateProfile({ id, name, email, password, profileImagePat
   }
 
   const normalizedId =
-    typeof id === 'bigint'
-      ? id
-      : typeof id === 'number'
-      ? BigInt(id)
-      : BigInt(String(id))
+    typeof id === 'bigint' ? id : typeof id === 'number' ? BigInt(id) : BigInt(String(id))
 
   const data = {
     update_at: new Date()
