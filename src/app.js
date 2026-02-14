@@ -14,6 +14,7 @@ import {
   signUp,
   editPassword,
   findUser,
+  findUserByName,
   findDisApproveUsers,
   approveUser,
   revokeApproveStatus,
@@ -149,12 +150,10 @@ const toBoolean = (value) => value === true || value === 'true' || value === 1 |
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-
 const app = express()
 
 const env =
   process.env.NODE_ENV === 'prod' ? 'prod' : process.env.NODE_ENV === 'stage' ? 'stage' : 'local'
-  
 
 // server setup
 let port
@@ -184,7 +183,7 @@ if (env === 'prod') {
 } else {
   app.use(cors())
 }
-console.log('__dirname: ',__dirname);
+console.log('__dirname: ', __dirname)
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 
@@ -238,7 +237,7 @@ app.post('/signUp', handleProfileUpload, async (req, res) => {
     }
 
     const obj = await signUp(username, hashedPassword, name, email, profilePath)
-    
+
     res.json({
       ...obj,
       profileImageUrl: buildProfileImageUrl(req, profilePath)
@@ -311,7 +310,6 @@ app.post('/signIn', async (req, res) => {
   }
 })
 
-
 app.post('/check_Token', async (req, res) => {
   const { accessToken, refreshToken, skipAuth } = req.body
 
@@ -374,6 +372,29 @@ app.post('/find_user', async (req, res) => {
       email: user.email,
       create_at: user.create_at,
       profileImageUrl: normalizeProfileImagePath(user.profile_image_url)
+    })
+  } else {
+    res.status(200).json(user)
+  }
+})
+
+app.post('/find_user_by_name', async (req, res) => {
+  const { usernameOrName } = req.body ?? {}
+
+  if (!usernameOrName) {
+    return res.status(400).json({ error: 'usernameOrName is required' })
+  }
+
+  const user = await findUserByName(usernameOrName)
+
+  if (user) {
+    res.status(200).json({
+      id: Number(user.id),
+      username: user.username,
+      name: user.name,
+      role: user.role,
+      email: user.email,
+      create_at: user.create_at
     })
   } else {
     res.status(200).json(user)

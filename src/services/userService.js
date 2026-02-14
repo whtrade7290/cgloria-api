@@ -80,6 +80,18 @@ export async function findUser(username) {
   }
 }
 
+export async function findUserByName(keyword) {
+  try {
+    return await prisma.user.findFirst({
+      where: {
+        OR: [{ username: keyword }, { name: keyword }]
+      }
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
 export async function findUserById(id) {
   if (id === undefined || id === null) {
     return null
