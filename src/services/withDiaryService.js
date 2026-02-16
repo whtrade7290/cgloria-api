@@ -1,9 +1,8 @@
 import { prisma } from '../utils/prismaClient.js'
-import { fetchProfileImageUrlByWriter } from '../utils/profileImage.js'
 
 export async function getWithDiaryList(startRow = 0, pageSize = 0, roomId = 0) {
   try {
-    const data = await prisma.with_diary.findMany({
+    const data = await prisma.withDiary.findMany({
       where: {
         diaryRoomId: Number(roomId),
         deleted: false
@@ -26,7 +25,7 @@ export async function getWithDiaryList(startRow = 0, pageSize = 0, roomId = 0) {
 
 export async function getWithDiaryAll() {
   try {
-    const data = await prisma.with_diary_room.findMany({
+    const data = await prisma.withDiaryRoom.findMany({
       orderBy: {
         id: 'desc'
       }
@@ -45,7 +44,7 @@ export async function getWithDiaryAll() {
 
 export async function totalWithDiaryCount(id) {
   try {
-    return await prisma.with_diary.count({
+    return await prisma.withDiary.count({
       where: {
         diaryRoomId: id
       }
@@ -57,20 +56,13 @@ export async function totalWithDiaryCount(id) {
 
 export async function getWithDiaryContent(id) {
   try {
-    const data = await prisma.with_diary.findUnique({
+    const data = await prisma.withDiary.findUnique({
       where: { id: parseInt(id) } // id는 integer 형식으로 파싱하여 사용
     })
 
-    if (!data) {
-      return null
-    }
-
-    const writerProfileImageUrl = await fetchProfileImageUrlByWriter(data.writer)
-
     return {
       ...data,
-      id: Number(data.id),
-      writerProfileImageUrl
+      id: Number(data.id)
     }
   } catch (error) {
     console.error(error)
@@ -82,17 +74,21 @@ export async function writeWithDiaryContent({
   content,
   writer,
   writer_name,
-  files,
+  filename,
+  extension,
+  fileDate,
   diaryRoomId
 }) {
   try {
-    return await prisma.with_diary.create({
+    return await prisma.withDiary.create({
       data: {
         title: title,
         content: content,
         writer: writer,
         writer_name: writer_name,
-        files,
+        filename: filename,
+        extension: extension,
+        fileDate: fileDate,
         diaryRoomId: diaryRoomId
       }
     })
@@ -103,7 +99,7 @@ export async function writeWithDiaryContent({
 
 export async function logicalDeleteWithDiary(id) {
   try {
-    return prisma.with_diary.update({
+    return prisma.withDiary.update({
       where: {
         id: id
       },
@@ -116,22 +112,26 @@ export async function logicalDeleteWithDiary(id) {
   }
 }
 
-export function editWithDiaryContent({ id, title, content, files }) {
+export function editWithDiaryContent({ id, title, content, uuid, filename, extension, fileType }) {
   try {
-    if (files) {
-      return prisma.with_diary.update({
+    if (uuid && filename && extension && fileType) {
+      return prisma.withDiary.update({
         where: {
           id: id
         },
         data: {
           title,
           content,
+          mainContent,
           update_at: new Date(),
-          files
+          uuid,
+          filename,
+          extension,
+          fileType
         }
       })
     } else {
-      return prisma.with_diary.update({
+      return prisma.withDiary.update({
         where: {
           id: id
         },
@@ -151,7 +151,7 @@ export async function createDiaryRoomWithUsers(teamName, userIdList, creator, cr
   try {
     const diaryRoom = await prisma.$transaction(async (tx) => {
       // Step 1: Create the diary room
-      const createdDiaryRoom = await tx.with_diary_room.create({
+      const createdDiaryRoom = await tx.withDiaryRoom.create({
         data: {
           roomName: teamName,
           creator: creator,
@@ -165,7 +165,7 @@ export async function createDiaryRoomWithUsers(teamName, userIdList, creator, cr
         diaryRoomId: createdDiaryRoom.id
       }))
 
-      await tx.user_diary_room.createMany({
+      await tx.userDiaryRoom.createMany({
         data: userDiaryRooms
       })
 
@@ -183,7 +183,7 @@ export async function createDiaryRoomWithUsers(teamName, userIdList, creator, cr
 
 export async function fetchWithDiaryRoomList(userId) {
   try {
-    return prisma.user_diary_room.findMany({
+    return prisma.userDiaryRoom.findMany({
       where: { userId },
       include: { diaryRoom: true }
     })
@@ -195,104 +195,12 @@ export async function fetchWithDiaryRoomList(userId) {
 
 export function getWithDiaryRoom(roomId) {
   try {
-    return prisma.with_diary_room.findUnique({
+    return prisma.withDiaryRoom.findUnique({
       where: {
         id: Number(roomId)
       }
     })
   } catch (error) {
     console.error(error)
-  }
-}
-
-export async function getDiaryRoomUsers(diaryRoomId) {
-  if (!diaryRoomId && diaryRoomId !== 0) {
-    return []
-  }
-
-  try {
-    const rows = await prisma.user_diary_room.findMany({
-      where: {
-        diaryRoomId: Number(diaryRoomId)
-      },
-      orderBy: {
-        createdAt: 'asc'
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            name: true,
-            email: true,
-            role: true,
-            create_at: true,
-            update_at: true
-          }
-        }
-      }
-    })
-
-    return rows.map((row) => ({
-      id: row.id,
-      diaryRoomId: row.diaryRoomId,
-      createdAt: row.createdAt,
-      userId: Number(row.userId),
-      user: row.user
-        ? {
-            ...row.user,
-            id: Number(row.user.id)
-          }
-        : null
-    }))
-  } catch (error) {
-    console.error('getDiaryRoomUsers error:', error)
-    throw error
-  }
-}
-
-export async function removeDiaryRoomUser({ diaryRoomId, userId }) {
-  if (!diaryRoomId && diaryRoomId !== 0) {
-    throw new Error('diaryRoomId is required')
-  }
-  if (!userId && userId !== 0) {
-    throw new Error('userId is required')
-  }
-
-  try {
-    const result = await prisma.user_diary_room.deleteMany({
-      where: {
-        diaryRoomId: Number(diaryRoomId),
-        userId: BigInt(userId)
-      }
-    })
-
-    return result.count > 0
-  } catch (error) {
-    console.error('removeDiaryRoomUser error:', error)
-    throw error
-  }
-}
-
-export async function removeDiaryRoom(diaryRoomId) {
-  if (!diaryRoomId && diaryRoomId !== 0) {
-    throw new Error('diaryRoomId is required')
-  }
-
-  try {
-    return await prisma.$transaction(async (tx) => {
-      await tx.user_diary_room.deleteMany({
-        where: { diaryRoomId: Number(diaryRoomId) }
-      })
-
-      const result = await tx.with_diary_room.delete({
-        where: { id: Number(diaryRoomId) }
-      })
-
-      return result
-    })
-  } catch (error) {
-    console.error('removeDiaryRoom error:', error)
-    throw error
   }
 }

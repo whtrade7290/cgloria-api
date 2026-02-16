@@ -1,5 +1,4 @@
 import { prisma } from '../utils/prismaClient.js'
-import { fetchProfileImageUrlByWriter } from '../utils/profileImage.js'
 
 export async function getCommentList(boardId, boardName) {
   try {
@@ -14,18 +13,10 @@ export async function getCommentList(boardId, boardName) {
       }
     })
 
-    const normalized = data.map((item) => ({
+    return data.map((item) => ({
       ...item,
       id: Number(item.id)
     }))
-
-    await Promise.all(
-      normalized.map(async (item) => {
-        item.writerProfileImageUrl = await fetchProfileImageUrlByWriter(item.writer)
-      })
-    )
-
-    return normalized
   } catch (error) {
     console.error(error)
   }
@@ -55,32 +46,13 @@ export async function writeComment(boardId, boardName, comment, writerName, writ
   }
 }
 
-export async function deleteComment(id) {
-  const commentId = Number(id)
-  try {
-    return await prisma.comments.update({
-      where: { id: commentId },
-      data: { deleted: true }
-    })
-  } catch (error) {
-    console.error(error)
-    throw error
-  }
-}
-
-export async function editComment({ id, comment, writerName }) {
-  const commentId = Number(id)
-  try {
-    return await prisma.comments.update({
-      where: { id: commentId },
-      data: {
-        content: comment,
-        ...(writerName && { writer_name: writerName }),
-        update_at: new Date()
-      }
-    })
-  } catch (error) {
-    console.error(error)
-    throw error
-  }
-}
+// export async function logicalDeleteSermon(id) {
+//   return prisma.sermons.update({
+//     where: {
+//       id: id
+//     },
+//     data: {
+//       deleted: true
+//     }
+//   })
+// }

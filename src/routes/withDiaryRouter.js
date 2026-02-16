@@ -9,13 +9,9 @@ import {
   createDiaryRoomWithUsers,
   fetchWithDiaryRoomList,
   getWithDiaryRoom,
-  getWithDiaryAll,
-  getDiaryRoomUsers,
-  removeDiaryRoomUser,
-  removeDiaryRoom
+  getWithDiaryAll
 } from '../services/withDiaryService.js'
-import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
-import { processFileUpdates } from '../utils/fileProcess.js'
+import { singleUpload, deleteFile } from '../utils/multer.js'
 
 const router = express.Router()
 
@@ -56,20 +52,26 @@ router.post('/withDiary_detail', async (req, res) => {
   }
 })
 
-router.post('/withDiary_write', multiUpload, async (req, res) => {
+router.post('/withDiary_write', singleUpload, async (req, res) => {
   const { title, content, writer, writer_name, diaryRoomId } = req.body
-  const files = req.files
+  const file = req.file
 
-  let pathList = []
-  if (files) {
-         pathList = files.map((file) => {
-      if (file.originalname) {
-        file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
-      }
-      return file
-    })
+  // 파일 정보 초기화
+  let uuid = ''
+  let filename = ''
+  let extension = ''
+  let fileType = ''
+
+  // 파일이 존재할 경우 정보 추출
+  if (file) {
+    uuid = file.filename?.split('_')[0] ?? ''
+    filename = file?.originalname ?? ''
+    if (filename) {
+      filename = Buffer.from(filename, 'latin1').toString('utf8')
+    }
+    extension = filename ? '.' + filename.split('.').pop() : ''
+    fileType = file?.mimetype ?? ''
   }
-
 
   try {
     const result = await writeWithDiaryContent({
@@ -77,7 +79,10 @@ router.post('/withDiary_write', multiUpload, async (req, res) => {
       content,
       writer,
       writer_name,
-      files: JSON.stringify(pathList),
+      uuid,
+      filename,
+      extension,
+      fileType,
       diaryRoomId: Number(diaryRoomId)
     })
 
@@ -110,15 +115,9 @@ router.post('/withDiary_delete', async (req, res) => {
   }
 })
 
-router.post('/withDiary_edit', uploadFields, async (req, res) => {
-  const { title, content, id, jsonDeleteKeys = '' } = req.body
-
-  const { files: updatedFiles, hasFileUpdate } = await processFileUpdates({
-    id,
-    jsonDeleteKeys,
-    uploadedFiles: req?.files['fileField'] ?? [],
-    fetchCurrentFiles: getWithDiaryContent
-  })
+router.post('/withDiary_edit', singleUpload, async (req, res) => {
+  const { title, content, id, deleteKey } = req.body
+  const file = req.file || {}
 
   const data = {
     id,
@@ -126,8 +125,25 @@ router.post('/withDiary_edit', uploadFields, async (req, res) => {
     content
   }
 
-  if (hasFileUpdate) {
-    data.files = JSON.stringify(updatedFiles)
+  if (deleteKey && file) {
+    const fileDeleted = deleteFile(deleteKey)
+    if (fileDeleted) {
+      console.log('file 삭제 완료')
+
+      let filename = file?.originalname ?? ''
+      if (filename) {
+        filename = Buffer.from(filename, 'latin1').toString('utf8')
+      }
+
+      Object.assign(data, {
+        uuid: file.filename?.split('_')[0] ?? '',
+        filename: filename,
+        extension: filename ? '.' + filename.split('.').pop() : '',
+        fileType: file?.mimetype ?? ''
+      })
+    } else {
+      console.log('file 삭제 실패')
+    }
   }
 
   try {
@@ -209,67 +225,6 @@ router.post('/fetch_withDiary', async (req, res) => {
   } catch (error) {
     console.error('Error fetching:', error)
     res.status(500).json({ error: 'Error fetching WithDiaryRoom' })
-  }
-})
-
-router.post('/fetch_withDiary_room_users', async (req, res) => {
-  const { diaryRoomId } = req.body
-
-  if (!diaryRoomId && diaryRoomId !== 0) {
-    return res.status(400).json({ error: '일기방 ID를 입력해주세요.' })
-  }
-
-  try {
-    const users = await getDiaryRoomUsers(diaryRoomId)
-    res.status(200).json(users)
-  } catch (error) {
-    console.error('Error fetching diary room users:', error)
-    res.status(500).json({ error: '일기방 구성원 조회 중 오류가 발생했습니다.' })
-  }
-})
-
-router.post('/remove_withDiary_room_user', async (req, res) => {
-  const { diaryRoomId, userId } = req.body
-
-  if (diaryRoomId === undefined || diaryRoomId === null) {
-    return res.status(400).json({ error: '일기방 ID를 입력해주세요.' })
-  }
-  if (userId === undefined || userId === null) {
-    return res.status(400).json({ error: '사용자 ID를 입력해주세요.' })
-  }
-
-  try {
-    const removed = await removeDiaryRoomUser({ diaryRoomId, userId })
-
-    if (!removed) {
-      return res.status(404).json({ error: '해당 사용자를 찾을 수 없습니다.' })
-    }
-
-    res.status(200).json({ success: true })
-  } catch (error) {
-    console.error('Error removing diary room user:', error)
-    res.status(500).json({ error: '일기방 구성원 삭제 중 오류가 발생했습니다.' })
-  }
-})
-
-router.post('/remove_withDiary_room', async (req, res) => {
-  const { diaryRoomId } = req.body
-
-  if (diaryRoomId === undefined || diaryRoomId === null) {
-    return res.status(400).json({ error: '일기방 ID를 입력해주세요.' })
-  }
-
-  try {
-    const removedRoom = await removeDiaryRoom(diaryRoomId)
-
-    if (!removedRoom) {
-      return res.status(404).json({ error: '해당 일기방을 찾을 수 없습니다.' })
-    }
-
-    res.status(200).json({ success: true })
-  } catch (error) {
-    console.error('Error removing diary room:', error)
-    res.status(500).json({ error: '일기방 삭제 중 오류가 발생했습니다.' })
   }
 })
 

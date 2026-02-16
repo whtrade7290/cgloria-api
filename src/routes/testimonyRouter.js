@@ -1,77 +1,77 @@
 import express from 'express'
-import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
-import { processFileUpdates } from '../utils/fileProcess.js'
-import { writeContent, getContentList, getContentById, editContent, totalContentCount, logicalDeleteContent, getMainContent } from '../common/boardUtils.js'
+import {
+  getTestimonyList,
+  totalTestimonyCount,
+  getTestimonyContent,
+  writeTestimonyContent,
+  logicalDeleteTestimony,
+  editTestimonyContent,
+  getMainTestimony
+} from '../services/testimonyService.js'
+import { singleUpload, deleteFile } from '../utils/multer.js'
 
 const router = express.Router()
 
-router.post('/main_testimony', async (req, res) => {
-  const { board } = req.body
-
-  try {
-    const data = await getMainContent(board)
-    res.send(data)
-  } catch (error) {
-    console.error('Error fetching:', error)
-    res.status(500).send({ error: 'Error fetching.' })
-  }
-})
-
 router.post('/testimony', async (req, res) => {
-  const { startRow, pageSize, searchWord, board } = req.body
-
-  try {
-    const data = await getContentList(startRow, pageSize, searchWord, board)
-    res.send(data)
-  } catch (error) {
-    console.error('Error fetching photo list:', error)
-    res.status(500).send({ error: '사진 목록을 가져오는 중 오류가 발생했습니다.' })
-  }
+  const { startRow, pageSize, searchWord } = req.body
+  const data = await getTestimonyList(startRow, pageSize, searchWord)
+  res.send(data)
 })
 
-router.post('/testimony_count', async (req, res) => {
-  const { searchWord, board } = req.body
-  const count = await totalContentCount(searchWord, board)
+router.get('/testimony_count', async (req, res) => {
+  const { searchWord } = req.query
+  const count = await totalTestimonyCount(searchWord)
   res.json(count)
 })
 
 router.post('/testimony_detail', async (req, res) => {
-  const { id, board } = req.body
-
-  if (!id) return
+  const { id } = req.body
   try {
-    const content = await getContentById(id, board)
+    const content = await getTestimonyContent(id)
     if (!content) {
-      return res.status(404).json({ error: 'Photo not found' })
+      return res.status(404).json({ error: 'testimony not found' })
     }
 
     res.json(content)
   } catch (error) {
-    console.error('Error fetching photo:', error)
-    res.status(500).json({ error: 'Error fetching photo' })
+    console.error('Error fetching testimony:', error)
+    res.status(500).json({ error: 'Error fetching testimony' })
   }
 })
 
-router.post('/testimony_write', multiUpload, async (req, res) => {
-  const { title, content, writer, writer_name, board, mainContent } = req.body
-  const files = Array.isArray(req.files) ? req.files : []
+router.post('/testimony_write', singleUpload, async (req, res) => {
+  const { title, content, writer, writer_name, mainContent } = req.body
 
-  const pathList = files.map((file) => {
-    if (file.originalname) {
-      file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
+  const file = req.file
+
+  // 파일 정보 초기화
+  let uuid = ''
+  let filename = ''
+  let extension = ''
+  let fileType = ''
+
+  // 파일이 존재할 경우 정보 추출
+  if (file) {
+    uuid = file.filename?.split('_')[0] ?? ''
+    filename = file?.originalname ?? ''
+    if (filename) {
+      filename = Buffer.from(filename, 'latin1').toString('utf8')
     }
-    return file
-  })
+    extension = filename ? '.' + filename.split('.').pop() : ''
+    fileType = file?.mimetype ?? ''
+  }
 
   try {
-    const result = await writeContent({
+    const result = await writeTestimonyContent({
       title,
       content,
       writer,
       writer_name,
-      files: JSON.stringify(pathList),
-      board,
-      mainContent
+      mainContent: mainContent === 'true',
+      uuid,
+      filename,
+      extension,
+      fileType
     })
 
     if (result) {
@@ -81,28 +81,18 @@ router.post('/testimony_write', multiUpload, async (req, res) => {
       // result가 null 또는 falsy일 때 실패 응답
       res.status(400).json({ success: false, message: 'Upload Failed' })
     }
+    return
   } catch (error) {
     console.error('Error fetching:', error)
-    res.status(500).json({ error: 'Error fetching photo' })
+    res.status(500).json({ error: 'Error fetching testimony' })
   }
 })
 
 router.post('/testimony_delete', async (req, res) => {
-  const { id, deleteKeyList = [], board } = req.body
-  console.log('deleteKeyList: ', deleteKeyList)
+  const { id, deleteKey } = req.body
 
-  if (deleteKeyList) {
-    let fileDeleted = true // 초기값을 true로 설정
-
-    deleteKeyList.forEach((file) => {
-      console.log('file: ', file)
-      const filename = `uploads/${file.filename}`
-      const result = deleteFile(filename)
-      if (!result) {
-        fileDeleted = false // 파일 삭제 실패 시 false로 설정
-      }
-    })
-
+  if (deleteKey) {
+    const fileDeleted = deleteFile(deleteKey)
     if (fileDeleted) {
       console.log('file 삭제 완료')
     } else {
@@ -111,51 +101,66 @@ router.post('/testimony_delete', async (req, res) => {
   }
 
   try {
-    const result = await logicalDeleteContent(id, board)
+    const result = await logicalDeleteTestimony(id)
 
     if (!result) {
-      return res.status(404).json({ error: 'Photo not found' })
+      return res.status(404).json({ error: 'Testimony not found' })
     }
-    res.json(true)
+    res.json(!!result)
   } catch (error) {
-    console.error('Error fetching Photo:', error)
-    res.status(500).json({ error: 'Error fetching Photo' })
+    console.error('Error fetching Testimony:', error)
+    res.status(500).json({ error: 'Error fetching Testimony' })
   }
 })
 
-router.post('/testimony_edit', uploadFields, async (req, res) => {
-  const { title, content, id, jsonDeleteKeys = '', board, mainContent } = req.body
-
-  const { files: updatedFiles, hasFileUpdate } = await processFileUpdates({
-    id,
-    board,
-    jsonDeleteKeys,
-    uploadedFiles: req?.files['fileField'] ?? []
-  })
+router.post('/testimony_edit', singleUpload, async (req, res) => {
+  const { title, content, id, mainContent, deleteKey } = req.body
+  const file = req.file || {}
 
   const data = {
     id,
     title,
     content,
-    board,
-    mainContent
+    mainContent: mainContent === 'true'
   }
 
-  if (hasFileUpdate) {
-    data.files = updatedFiles
+  if (deleteKey && file) {
+    const fileDeleted = deleteFile(deleteKey)
+    if (fileDeleted) {
+      console.log('file 삭제 완료')
+
+      let filename = file?.originalname ?? ''
+      if (filename) {
+        filename = Buffer.from(filename, 'latin1').toString('utf8')
+      }
+
+      Object.assign(data, {
+        uuid: file.filename?.split('_')[0] ?? '',
+        filename: filename,
+        extension: filename ? '.' + filename.split('.').pop() : '',
+        fileType: file?.mimetype ?? ''
+      })
+    } else {
+      console.log('file 삭제 실패')
+    }
   }
 
   try {
-    const result = await editContent(data)
+    const result = await editTestimonyContent(data)
 
     if (!result) {
-      return res.status(404).json({ error: 'testimony not found' })
+      return res.status(404).json({ error: 'Testimony not found' })
     }
     res.json(!!result)
   } catch (error) {
     console.error('Error fetching:', error)
-    res.status(500).json({ error: 'Error fetching testimony' })
+    res.status(500).json({ error: 'Error fetching Testimony' })
   }
+})
+
+router.get('/main_testimony', async (req, res) => {
+  const data = await getMainTestimony()
+  res.send(data)
 })
 
 export default router

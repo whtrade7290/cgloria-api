@@ -1,64 +1,65 @@
 import express from 'express'
+import {
+  getschoolPhotoList,
+  totalschoolPhotoCount,
+  getschoolPhotoContent,
+  writeSchoolPhotoContent,
+  logicalDeleteSchoolPhoto,
+  editSchoolPhotoContent
+} from '../services/schoolPhotoService.js'
 import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
-import { processFileUpdates } from '../utils/fileProcess.js'
-import { writeContent, getContentList, getContentById, editContent, totalContentCount, logicalDeleteContent } from '../common/boardUtils.js'
 
 const router = express.Router()
 
-router.post('/school_photo_board', async (req, res) => {
-  const { startRow, pageSize, searchWord, board } = req.body
+router.post('/school_photo', async (req, res) => {
+  const { startRow, pageSize, searchWord } = req.body
 
-  try {
-    const data = await getContentList(startRow, pageSize, searchWord, board)
-    res.send(data)
-  } catch (error) {
-    console.error('Error fetching photo list:', error)
-    res.status(500).send({ error: '사진 목록을 가져오는 중 오류가 발생했습니다.' })
-  }
+  const data = await getschoolPhotoList(startRow, pageSize, searchWord)
+
+  res.send(data)
 })
 
-router.post('/school_photo_board_count', async (req, res) => {
-  const { searchWord, board } = req.body
-  const count = await totalContentCount(searchWord, board)
+router.get('/school_photo_count', async (req, res) => {
+  const { searchWord } = req.query
+
+  const count = await totalschoolPhotoCount(searchWord)
   res.json(count)
 })
 
-router.post('/school_photo_board_detail', async (req, res) => {
-  const { id, board } = req.body
-
-  if (!id) return
+router.post('/school_photo_detail', async (req, res) => {
+  const { id } = req.body
   try {
-    const content = await getContentById(id, board)
+    const content = await getschoolPhotoContent(id)
     if (!content) {
-      return res.status(404).json({ error: 'Photo not found' })
+      return res.status(404).json({ error: 'school_photo not found' })
     }
 
     res.json(content)
   } catch (error) {
-    console.error('Error fetching photo:', error)
-    res.status(500).json({ error: 'Error fetching photo' })
+    console.error('Error fetching school_photo:', error)
+    res.status(500).json({ error: 'Error fetching school_photo' })
   }
 })
 
-router.post('/school_photo_board_write', multiUpload, async (req, res) => {
-  const { title, content, writer, writer_name, board } = req.body
-  const files = Array.isArray(req.files) ? req.files : []
+router.post('/school_photo_write', multiUpload, async (req, res) => {
+  const { title, content, writer, writer_name } = req.body
+  const files = req.files
 
   const pathList = files.map((file) => {
     if (file.originalname) {
       file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
     }
+
     return file
   })
 
   try {
-    const result = await writeContent({
+    const result = await writeSchoolPhotoContent({
       title,
       content,
       writer,
       writer_name,
-      files: JSON.stringify(pathList),
-      board
+      files: JSON.stringify(pathList)
     })
 
     if (result) {
@@ -70,12 +71,12 @@ router.post('/school_photo_board_write', multiUpload, async (req, res) => {
     }
   } catch (error) {
     console.error('Error fetching:', error)
-    res.status(500).json({ error: 'Error fetching photo' })
+    res.status(500).json({ error: 'Error fetching school_photo' })
   }
 })
 
-router.post('/school_photo_board_delete', async (req, res) => {
-  const { id, deleteKeyList = [], board } = req.body
+router.post('/school_photo_delete', async (req, res) => {
+  const { id, deleteKeyList = [] } = req.body
   console.log('deleteKeyList: ', deleteKeyList)
 
   if (deleteKeyList) {
@@ -98,7 +99,7 @@ router.post('/school_photo_board_delete', async (req, res) => {
   }
 
   try {
-    const result = await logicalDeleteContent(id, board)
+    const result = await logicalDeleteSchoolPhoto(id)
 
     if (!result) {
       return res.status(404).json({ error: 'Photo not found' })
@@ -110,29 +111,44 @@ router.post('/school_photo_board_delete', async (req, res) => {
   }
 })
 
-router.post('/school_photo_board_edit', uploadFields, async (req, res) => {
-  const { title, content, id, jsonDeleteKeys = '', board } = req.body
+router.post('/school_photo_edit', uploadFields, async (req, res) => {
+  const { title, content, id, jsonDeleteKeys = '' } = req.body
+  let deleteKeyList = []
 
-  const { files: updatedFiles, hasFileUpdate } = await processFileUpdates({
-    id,
-    board,
-    jsonDeleteKeys,
-    uploadedFiles: req?.files['fileField'] ?? []
-  })
+  const files = req?.files['fileField'] ?? []
+
+  if (jsonDeleteKeys) {
+    deleteKeyList = JSON.parse(jsonDeleteKeys)
+  }
 
   const data = {
     id,
     title,
-    content,
-    board
+    content
   }
 
-  if (hasFileUpdate) {
-    data.files = updatedFiles
+  if (deleteKeyList.length > 0 && files.length > 0) {
+    let fileDeleted = true // 초기값을 true로 설정
+
+    deleteKeyList.forEach((file) => {
+      console.log('file: ', file)
+      const filename = `uploads/${file}`
+      const result = deleteFile(filename)
+      if (!result) {
+        fileDeleted = false // 파일 삭제 실패 시 false로 설정
+      }
+    })
+
+    if (fileDeleted) {
+      console.log('file 삭제 완료')
+      Object.assign(data, { files: files })
+    } else {
+      console.log('file 삭제 실패')
+    }
   }
 
   try {
-    const result = await editContent(data)
+    const result = await editSchoolPhotoContent(data)
 
     if (!result) {
       return res.status(404).json({ error: 'Sermon not found' })

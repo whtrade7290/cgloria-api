@@ -71,8 +71,8 @@ export async function writeClassMeetingContent({
 }) {
   try {
     if (mainContent) {
-     return prisma.$transaction(async (tx) => {
-        const createResult = await tx.class_meeting.create({
+      prisma.$transaction(async (prisma) => {
+        const createResult = await prisma.class_meeting.create({
           data: {
             title,
             content,
@@ -85,7 +85,7 @@ export async function writeClassMeetingContent({
             fileType
           }
         })
-        return await tx.class_meeting.updateMany({
+        return await prisma.class_meeting.updateMany({
           data: {
             mainContent: !mainContent
           },
@@ -143,11 +143,11 @@ export async function editClassMeetingContent({
 
   try {
     if (mainContent) {
-      return await prisma.$transaction(async (tx) => {
+      result = await prisma.$transaction(async (prisma) => {
         let updateResult
 
         if (uuid && filename && extension && fileType) {
-          updateResult = await tx.class_meeting.update({
+          updateResult = await prisma.class_meeting.update({
             where: { id },
             data: {
               title,
@@ -161,7 +161,7 @@ export async function editClassMeetingContent({
             }
           })
         } else {
-          updateResult = await tx.class_meeting.update({
+          updateResult = await prisma.class_meeting.update({
             where: { id },
             data: {
               title,
@@ -172,7 +172,7 @@ export async function editClassMeetingContent({
           })
         }
 
-        const updateManyResult = await tx.class_meeting.updateMany({
+        const updateManyResult = await prisma.class_meeting.updateMany({
           data: { mainContent: false },
           where: { id: { not: updateResult.id } }
         })

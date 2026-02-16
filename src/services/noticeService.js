@@ -1,12 +1,12 @@
 import { prisma } from '../utils/prismaClient.js'
 
-export async function getLibraryList(startRow, pageSize, searchWord) {
+export async function getNoticeList(startRow, pageSize, searchWord) {
   if (searchWord === undefined) {
     searchWord = ''
   }
 
   try {
-    const data = await prisma.sunday_school_resources.findMany({
+    const data = await prisma.notice.findMany({
       where: {
         deleted: false,
         title: { contains: searchWord }
@@ -17,6 +17,7 @@ export async function getLibraryList(startRow, pageSize, searchWord) {
       take: pageSize,
       skip: startRow
     })
+
     return data.map((item) => ({
       ...item,
       id: Number(item.id)
@@ -26,13 +27,12 @@ export async function getLibraryList(startRow, pageSize, searchWord) {
   }
 }
 
-export async function totalLibraryCount(searchWord) {
+export async function totalNoticeCount(searchWord) {
   if (searchWord === undefined) {
     searchWord = ''
   }
-
   try {
-    return await prisma.sunday_school_resources.count({
+    return await prisma.notice.count({
       where: {
         deleted: false,
         title: { contains: searchWord }
@@ -43,9 +43,9 @@ export async function totalLibraryCount(searchWord) {
   }
 }
 
-export async function getLibraryContent(id) {
+export async function getNoticeContent(id) {
   try {
-    const data = await prisma.sunday_school_resources.findUnique({
+    const data = await prisma.notice.findUnique({
       where: { id: parseInt(id) } // id는 integer 형식으로 파싱하여 사용
     })
 
@@ -58,7 +58,7 @@ export async function getLibraryContent(id) {
   }
 }
 
-export async function writeLibraryContent({
+export async function writeNoticeContent({
   title,
   content,
   writer,
@@ -68,24 +68,43 @@ export async function writeLibraryContent({
   extension,
   fileType
 }) {
-  return await prisma.sunday_school_resources.create({
-    data: {
-      title,
-      content,
-      writer,
-      writer_name,
-      uuid,
-      filename,
-      extension,
-      fileType
-    }
-  })
+  try {
+    return await prisma.notice.create({
+      data: {
+        title,
+        content,
+        writer,
+        writer_name,
+        uuid,
+        filename,
+        extension,
+        fileType
+      }
+    })
+  } catch (error) {
+    console.error(error)
+  }
 }
 
-export function editLibraryContent({ id, title, content, uuid, filename, extension, fileType }) {
+export async function logicalDeleteNotice(id) {
+  try {
+    return prisma.notice.update({
+      where: {
+        id: id
+      },
+      data: {
+        deleted: true
+      }
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+export function editNoticeContent({ id, title, content, uuid, filename, extension, fileType }) {
   try {
     if (uuid && filename && extension && fileType) {
-      return prisma.sunday_school_resources.update({
+      return prisma.notice.update({
         where: {
           id: id
         },
@@ -100,7 +119,7 @@ export function editLibraryContent({ id, title, content, uuid, filename, extensi
         }
       })
     } else {
-      return prisma.sunday_school_resources.update({
+      return prisma.notice.update({
         where: {
           id: id
         },
@@ -111,21 +130,6 @@ export function editLibraryContent({ id, title, content, uuid, filename, extensi
         }
       })
     }
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-export async function logicalDeleteLibrary(id) {
-  try {
-    return prisma.notice.update({
-      where: {
-        id: id
-      },
-      data: {
-        deleted: true
-      }
-    })
   } catch (error) {
     console.error(error)
   }

@@ -1,7 +1,6 @@
 import multer from 'multer'
 import { v4 as uuidv4 } from 'uuid'
 import fs from 'fs'
-import { processUploadedImages } from './imageProcessor.js'
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -21,24 +20,6 @@ const upload = multer({
   })
 })
 
-const withImageProcessing = (multerMiddleware) => {
-  return (req, res, next) => {
-    multerMiddleware(req, res, async (err) => {
-      if (err) {
-        return next(err)
-      }
-
-      try {
-        await processUploadedImages(req)
-      } catch (error) {
-        console.error('이미지 후처리 중 오류가 발생했습니다.', error)
-      }
-
-      next()
-    })
-  }
-}
-
 export const deleteFile = (deleteKey) => {
   console.log('deleteKey: ', deleteKey)
   if (deleteKey) {
@@ -55,13 +36,11 @@ export const deleteFile = (deleteKey) => {
   return true
 }
 
-export const singleUpload = withImageProcessing(upload.single('fileField'))
+export const singleUpload = upload.single('fileField')
 
-export const multiUpload = withImageProcessing(upload.array('fileField', 6))
+export const multiUpload = upload.array('fileField', 6)
 
-export const uploadFields = withImageProcessing(
-  upload.fields([
-    { name: 'deleteFile', maxCount: 6 }, // 'deleteFile' 필드에서 최대 6개의 파일 허용
-    { name: 'fileField', maxCount: 6 } // 'fileField' 필드에서 최대 6개의 파일 허용
-  ])
-)
+export const uploadFields = upload.fields([
+  { name: 'deleteFile', maxCount: 6 }, // 'deleteFile' 필드에서 최대 6개의 파일 허용
+  { name: 'fileField', maxCount: 6 } // 'fileField' 필드에서 최대 6개의 파일 허용
+])
