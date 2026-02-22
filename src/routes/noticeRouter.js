@@ -1,104 +1,32 @@
 import express from 'express'
-import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
-import { processFileUpdates } from '../utils/fileProcess.js'
 import {
-  writeContent,
-  getContentList,
-  getContentById,
-  editContent,
-  totalContentCount,
-  logicalDeleteContent
-} from '../common/boardUtils.js'
+  getNoticeList,
+  totalNoticeCount,
+  getNoticeContent,
+  writeNoticeContent,
+  logicalDeleteNotice,
+  editNoticeContent
+} from '../services/noticeService.js'
+import { singleUpload, deleteFile } from '../utils/multer.js'
 
 const router = express.Router()
-const BOARD_NAME = 'notice'
-
-const resolveBoard = (board) => board || BOARD_NAME
-
-const decodeOriginalName = (file) => {
-  if (file?.originalname) {
-    file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
-  }
-  return file
-}
-
-const normalizeSingleDeleteKey = (deleteKey) => {
-  if (!deleteKey) return []
-
-  if (typeof deleteKey === 'string') {
-    return [{ filename: deleteKey.replace(/^uploads\//, '') }]
-  }
-
-  if (typeof deleteKey === 'object' && deleteKey.filename) {
-    return [{ filename: deleteKey.filename.replace(/^uploads\//, '') }]
-  }
-
-  return []
-}
-
-const gatherDeleteKeyList = ({ deleteKeyList = [], deleteKey }) => {
-  if (Array.isArray(deleteKeyList) && deleteKeyList.length > 0) {
-    return deleteKeyList
-  }
-  return normalizeSingleDeleteKey(deleteKey)
-}
-
-const removePhysicalFiles = (deleteKeyList = []) => {
-  if (!Array.isArray(deleteKeyList) || deleteKeyList.length === 0) {
-    return
-  }
-
-  let fileDeleted = true
-
-  deleteKeyList.forEach((file) => {
-    const filename = typeof file === 'string' ? file : file?.filename
-    if (!filename) return
-    const result = deleteFile(`uploads/${filename.replace(/^uploads\//, '')}`)
-    if (!result) {
-      fileDeleted = false
-    }
-  })
-
-  if (fileDeleted) {
-    console.log('file 삭제 완료')
-  } else {
-    console.log('file 삭제 실패')
-  }
-}
 
 router.post('/notice', async (req, res) => {
-  const { startRow, pageSize, searchWord, board } = req.body
-  const resolvedBoard = resolveBoard(board)
-
-  try {
-    const data = await getContentList(startRow, pageSize, searchWord, resolvedBoard)
-    res.send(data)
-  } catch (error) {
-    console.error('Error fetching notice list:', error)
-    res.status(500).send({ error: '공지 목록을 가져오는 중 오류가 발생했습니다.' })
-  }
+  const { startRow, pageSize, searchWord } = req.body
+  const data = await getNoticeList(startRow, pageSize, searchWord)
+  res.send(data)
 })
 
-router.post('/notice_count', async (req, res) => {
-  const { searchWord, board } = req.body
-  const resolvedBoard = resolveBoard(board)
-  try {
-    const count = await totalContentCount(searchWord, resolvedBoard)
-    res.json(count)
-  } catch (error) {
-    console.error('Error fetching notice count:', error)
-    res.status(500).send({ error: '공지 카운트를 가져오는 중 오류가 발생했습니다.' })
-  }
+router.get('/notice_count', async (req, res) => {
+  const { searchWord } = req.query
+  const count = await totalNoticeCount(searchWord)
+  res.json(count)
 })
 
 router.post('/notice_detail', async (req, res) => {
-  const { id, board } = req.body
-
-  if (!id) return res.status(400).json({ error: '잘못된 요청입니다.' })
-
-  const resolvedBoard = resolveBoard(board)
+  const { id } = req.body
   try {
-    const content = await getContentById(id, resolvedBoard)
+    const content = await getNoticeContent(id)
     if (!content) {
       return res.status(404).json({ error: 'Notice not found' })
     }
@@ -106,90 +34,125 @@ router.post('/notice_detail', async (req, res) => {
     res.json(content)
   } catch (error) {
     console.error('Error fetching notice:', error)
-    res.status(500).json({ error: '공지 상세 조회 중 오류가 발생했습니다.' })
+    res.status(500).json({ error: 'Error fetching notice' })
   }
 })
 
-router.post('/notice_write', multiUpload, async (req, res) => {
-  const { title, content, writer, writer_name, board } = req.body
-  const resolvedBoard = resolveBoard(board)
-  const files = Array.isArray(req.files) ? req.files : []
-  const normalizedFiles = files.map(decodeOriginalName)
+router.post('/notice_write', singleUpload, async (req, res) => {
+  const { title, content, writer, writer_name } = req.body
+  const file = req.file
+
+  console.log('file: ', file)
+
+  // 파일 정보 초기화
+  let uuid = ''
+  let filename = ''
+  let extension = ''
+  let fileType = ''
+
+  // 파일이 존재할 경우 정보 추출
+  if (file) {
+    uuid = file.filename?.split('_')[0] ?? ''
+    filename = file?.originalname ?? ''
+    if (filename) {
+      filename = Buffer.from(filename, 'latin1').toString('utf8')
+    }
+    extension = filename ? '.' + filename.split('.').pop() : ''
+    fileType = file?.mimetype ?? ''
+  }
 
   try {
-    const result = await writeContent({
+    const result = await writeNoticeContent({
       title,
       content,
       writer,
       writer_name,
-      files: JSON.stringify(normalizedFiles),
-      board: resolvedBoard
+      uuid,
+      filename,
+      extension,
+      fileType
     })
 
     if (result) {
+      // result가 truthy일 때 성공 응답
       res.status(200).json({ success: true, message: 'Upload Success' })
     } else {
+      // result가 null 또는 falsy일 때 실패 응답
       res.status(400).json({ success: false, message: 'Upload Failed' })
     }
+    return
   } catch (error) {
-    console.error('Error creating notice:', error)
-    res.status(500).json({ error: '공지 생성 중 오류가 발생했습니다.' })
+    console.error('Error fetching:', error)
+    res.status(500).json({ error: 'Error fetching sermon' })
   }
 })
 
 router.post('/notice_delete', async (req, res) => {
-  const { id, board } = req.body
-  const resolvedBoard = resolveBoard(board)
-  const deleteKeyList = gatherDeleteKeyList(req.body)
+  const { id, deleteKey } = req.body
 
-  removePhysicalFiles(deleteKeyList)
+  if (deleteKey) {
+    const fileDeleted = deleteFile(deleteKey)
+    if (fileDeleted) {
+      console.log('file 삭제 완료')
+    } else {
+      console.log('file 삭제 실패')
+    }
+  }
 
   try {
-    const result = await logicalDeleteContent(id, resolvedBoard)
+    const result = await logicalDeleteNotice(id)
 
     if (!result) {
       return res.status(404).json({ error: 'Notice not found' })
     }
     res.json(!!result)
   } catch (error) {
-    console.error('Error deleting notice:', error)
-    res.status(500).json({ error: '공지 삭제 중 오류가 발생했습니다.' })
+    console.error('Error fetching Notice:', error)
+    res.status(500).json({ error: 'Error fetching Notice' })
   }
 })
 
-router.post('/notice_edit', uploadFields, async (req, res) => {
-  const { title, content, id, board } = req.body
-  const resolvedBoard = resolveBoard(board)
-  const jsonDeleteKeys = gatherDeleteKeyList(req.body)
-
-  const { files: updatedFiles, hasFileUpdate } = await processFileUpdates({
-    id,
-    board: resolvedBoard,
-    jsonDeleteKeys,
-    uploadedFiles: req?.files['fileField'] ?? []
-  })
+router.post('/notice_edit', singleUpload, async (req, res) => {
+  const { title, content, id, deleteKey } = req.body
+  const file = req.file || {}
 
   const data = {
     id,
     title,
-    content,
-    board: resolvedBoard
+    content
   }
 
-  if (hasFileUpdate) {
-    data.files = updatedFiles
+  if (deleteKey && file) {
+    const fileDeleted = deleteFile(deleteKey)
+    if (fileDeleted) {
+      console.log('file 삭제 완료')
+
+      let filename = file?.originalname ?? ''
+      if (filename) {
+        filename = Buffer.from(filename, 'latin1').toString('utf8')
+      }
+
+      Object.assign(data, {
+        uuid: file.filename?.split('_')[0] ?? '',
+        filename: filename,
+        extension: filename ? '.' + filename.split('.').pop() : '',
+        fileType: file?.mimetype ?? ''
+      })
+    } else {
+      console.log('file 삭제 실패')
+    }
   }
 
   try {
-    const result = await editContent(data)
+    const result = await editNoticeContent(data)
 
     if (!result) {
-      return res.status(404).json({ error: 'Notice not found' })
+      return res.status(404).json({ error: 'column not found' })
     }
     res.json(!!result)
   } catch (error) {
-    console.error('Error editing notice:', error)
-    res.status(500).json({ error: '공지 수정 중 오류가 발생했습니다.' })
+    console.error('Error fetching:', error)
+    res.status(500).json({ error: 'Error fetching column' })
   }
 })
 

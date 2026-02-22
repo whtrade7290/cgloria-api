@@ -1,126 +1,60 @@
-import { deleteFile } from './multer.js'
-import { getContentById } from '../common/boardUtils.js'
+import { fileURLToPath } from 'url'
+import path from 'path'
+import fs from 'fs'
 
-const normalizeUploadedFiles = (files = []) => {
-  if (!Array.isArray(files) || files.length === 0) {
-    return []
-  }
+export let tempFilePath
 
-  return files.map((file) => {
-    if (file?.originalname) {
-      file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
+export function uploadFile(files) {
+  const uploadedFile = files.upload
+  const __filename = fileURLToPath(import.meta.url)
+  const __dirname = path.dirname(__filename)
+  const absolutePath = path.resolve(__dirname, '..')
+  const uploadDirectory = path.join(absolutePath, '/uploads/')
+  tempFilePath = path.join(uploadDirectory, uploadedFile.name)
+
+  uploadedFile.mv(tempFilePath, (err) => {
+    if (err) {
+      console.log('err: ', err)
+      return false
     }
-    return file
+  })
+
+  return true
+}
+
+const cleanTempFolder = () => {
+  const tempDir = 'src/uploads/upload'
+  console.log('폴더 비우기 실행', new Date())
+
+  fs.readdir(tempDir, (err, files) => {
+    if (err) {
+      console.error('Error reading temp directory:', err)
+      return
+    }
+
+    if (files.length === 0) {
+      console.log('upload 폴더에 파일이 존재하지 않음')
+      return
+    }
+
+    // 모든 파일을 삭제하는 비동기 함수
+    const deleteFiles = () => {
+      files.forEach((file) => {
+        const filePath = path.join(tempDir, file)
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error(`Error deleting file ${file}:`, err)
+          } else {
+            console.log(`Deleted file: ${file}`)
+          }
+        })
+      })
+    }
+
+    // 모든 파일 삭제 후 폴더 삭제
+    deleteFiles()
   })
 }
 
-const parseDeleteKeys = (jsonDeleteKeys) => {
-  if (!jsonDeleteKeys) return []
-
-  if (Array.isArray(jsonDeleteKeys)) {
-    return jsonDeleteKeys
-  }
-
-  try {
-    return JSON.parse(jsonDeleteKeys) ?? []
-  } catch (error) {
-    console.error('삭제 파일 파싱 실패:', error)
-    return []
-  }
-}
-
-const normalizeDeleteKeyFilenames = (deleteKeys) => {
-  if (!Array.isArray(deleteKeys) || deleteKeys.length === 0) {
-    return []
-  }
-
-  return deleteKeys
-    .map((file) => {
-      if (typeof file === 'string') {
-        return file.replace(/^uploads\//, '')
-      }
-      if (file && typeof file === 'object') {
-        return file.filename ?? ''
-      }
-      return ''
-    })
-    .filter((filename) => filename)
-}
-
-const removePhysicalFiles = (normalizedDeleteKeys) => {
-  normalizedDeleteKeys.forEach((filename) => {
-    deleteFile(`uploads/${filename}`)
-  })
-}
-
-const parseStoredFiles = (storedFiles) => {
-  if (!storedFiles) {
-    return []
-  }
-
-  if (Array.isArray(storedFiles)) {
-    return storedFiles
-  }
-
-  if (typeof storedFiles === 'string') {
-    try {
-      return JSON.parse(storedFiles) ?? []
-    } catch (error) {
-      console.error('DB 파일 파싱 실패:', error)
-      return []
-    }
-  }
-
-  return []
-}
-
-export async function processFileUpdates({
-  id,
-  board,
-  jsonDeleteKeys,
-  uploadedFiles = [],
-  fetchCurrentFiles
-}) {
-  const normalizedUploads = normalizeUploadedFiles(uploadedFiles)
-  const deleteKeyList = parseDeleteKeys(jsonDeleteKeys)
-  const normalizedDeleteKeys = normalizeDeleteKeyFilenames(deleteKeyList)
-
-  if (normalizedDeleteKeys.length > 0) {
-    removePhysicalFiles(normalizedDeleteKeys)
-  }
-
-  const hasFileUpdate = normalizedDeleteKeys.length > 0 || normalizedUploads.length > 0
-
-  if (!hasFileUpdate) {
-    return { files: undefined, hasFileUpdate }
-  }
-
-  let existingFiles = []
-
-  try {
-    let currentContent
-    if (typeof fetchCurrentFiles === 'function') {
-      currentContent = await fetchCurrentFiles(id, board)
-    } else if (board) {
-      currentContent = await getContentById(id, board)
-    }
-
-    if (currentContent?.files) {
-      existingFiles = parseStoredFiles(currentContent.files)
-    }
-  } catch (error) {
-    console.error('기존 파일 조회 실패:', error)
-  }
-
-  if (normalizedDeleteKeys.length > 0) {
-    existingFiles = existingFiles.filter(
-      (file) => file && !normalizedDeleteKeys.includes(file.filename)
-    )
-  }
-
-  if (normalizedUploads.length > 0) {
-    existingFiles = [...existingFiles, ...normalizedUploads]
-  }
-
-  return { files: existingFiles, hasFileUpdate }
-}
+// 주기적으로 temp 폴더 비우기 (예: 매일 자정에 실행)
+setInterval(cleanTempFolder, 24 * 60 * 60 * 1000) // 24시간마다 실행
