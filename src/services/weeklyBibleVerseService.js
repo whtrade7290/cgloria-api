@@ -25,6 +25,11 @@ export async function getWeeklyBibleVersesWithBiblesByDateRange({ from, to }) {
     rangeEnd = fromDate
   }
 
+  rangeStart = new Date(rangeStart)
+  rangeEnd = new Date(rangeEnd)
+  rangeStart.setHours(0, 0, 0, 0)
+  rangeEnd.setHours(23, 59, 59, 999)
+
   const weeklyRecords = await prisma.weekly_bible_verse.findMany({
     where: {
       deleted: false,
@@ -62,6 +67,11 @@ export async function getBibleIdsByWeeklyDateRange({ from, to }) {
     rangeStart = toDate
     rangeEnd = fromDate
   }
+
+  rangeStart = new Date(rangeStart)
+  rangeEnd = new Date(rangeEnd)
+  rangeStart.setHours(0, 0, 0, 0)
+  rangeEnd.setHours(23, 59, 59, 999)
 
   const records = await prisma.weekly_bible_verse.findMany({
     where: {
