@@ -178,8 +178,10 @@ router.post('/fetch_withDiaryList', async (req, res) => {
     console.log('results: ', results.length)
 
     const newResult = results.map((item) => {
+      const { with_diary_room, ...rest } = item
       return {
-        ...item,
+        ...rest,
+        diaryRoom: with_diary_room,
         userId: Number(item.userId)
       }
     })

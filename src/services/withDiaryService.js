@@ -185,11 +185,11 @@ export async function fetchWithDiaryRoomList(userId) {
   try {
     return prisma.user_diary_room.findMany({
       where: { userId },
-      include: { diaryRoom: true }
+      include: { with_diary_room: true }
     })
   } catch (error) {
-    console.error('Error fetching:', error)
-    res.status(500).json({ error: 'Error fetching WithDiary RoomList' })
+    console.error('Error fetching WithDiary room list:', error)
+    throw error
   }
 }
 
