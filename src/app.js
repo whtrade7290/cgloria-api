@@ -168,7 +168,12 @@ async function configServer() {
 configServer()
 
 if (env === 'prod') {
-  const allowedOrigins = ['https://cgloria.duckdns.org', 'https://www.cgloria.duckdns.org']
+  const allowedOrigins = [
+    'https://cgloria.duckdns.org',
+    'https://www.cgloria.duckdns.org',
+    'https://www.cgloria.org',
+    'https://cgloria.org'
+  ]
   app.use((req, res, next) => {
     const origin = req.headers.origin
     if (allowedOrigins.includes(origin)) {
