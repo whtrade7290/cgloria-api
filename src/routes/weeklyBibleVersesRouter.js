@@ -2,8 +2,7 @@ import express from 'express'
 import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
 import { processFileUpdates } from '../utils/fileProcess.js'
 import { writeContent, getContentList, getContentById, editContent, totalContentCount, logicalDeleteContent, getMainContent } from '../common/boardUtils.js'
-import { getWeeklyBibleVersesWithBiblesByDateRange, getWeeklyBibleVerseWithBible, getBibleIdsByWeeklyDateRange } from '../services/weeklyBibleVerseService.js'
-import { getBibleVersesByIds } from '../services/bibleService.js'
+import { getWeeklyBibleVersesByDateRange, getWeeklyBibleVerse, getWeeklyVerseReferencesByDateRange } from '../services/weeklyBibleVerseService.js'
 
 const router = express.Router()
 
@@ -42,9 +41,7 @@ router.post('/weekly_bible_verse_detail', async (req, res) => {
 
   if (!id) return
   try {
-    const content = await (includeBible
-      ? getWeeklyBibleVerseWithBible(id, includeBible)
-      : getContentById(id, board))
+    const content = await (includeBible ? getWeeklyBibleVerse(id) : getContentById(id, board))
 
     if (!content) {
       return res.status(404).json({ error: 'Photo not found' })
@@ -65,7 +62,7 @@ router.post('/weekly_bible_verse_bibles', async (req, res) => {
       return res.status(400).json({ error: 'fromDate와 toDate를 모두 입력해주세요.' })
     }
 
-    const data = await getWeeklyBibleVersesWithBiblesByDateRange({
+    const data = await getWeeklyBibleVersesByDateRange({
       from: fromDate,
       to: toDate
     })
@@ -85,25 +82,21 @@ router.post('/remember_bible_download', async (req, res) => {
       return res.status(400).json({ error: 'fromDate와 toDate를 모두 입력해주세요.' })
     }
 
-    const bibleIds = await getBibleIdsByWeeklyDateRange({
+    const verses = await getWeeklyVerseReferencesByDateRange({
       from: fromDate,
       to: toDate
     })
 
-    if (bibleIds.length === 0) {
-      return res.json({ bibleIds: [], verses: [] })
-    }
-
-    const verses = await getBibleVersesByIds(bibleIds)
-
-    res.json({ bibleIds, verses })
+    res.json({ verses })
   } catch (error) {
-    console.error('Error fetching bible ids by weekly range:', error)
-    res.status(500).json({ error: error?.message ?? 'bible_id 조회 중 오류가 발생했습니다.' })
+    console.error('Error fetching bible references by weekly range:', error)
+    res.status(500).json({ error: error?.message ?? '주간 말씀 참조 조회 중 오류가 발생했습니다.' })
   }
 })
 
-const parseMemoryVerseIdx = (value) => {
+const hasOwnProperty = (obj = {}, key) => Object.prototype.hasOwnProperty.call(obj, key)
+
+const parsePositiveInt = (value) => {
   const parsed = Number(value)
   if (!Number.isInteger(parsed) || parsed <= 0) {
     return null
@@ -111,10 +104,74 @@ const parseMemoryVerseIdx = (value) => {
   return parsed
 }
 
+const normalizeLongLabel = (value) => {
+  if (value === null || value === undefined) {
+    return null
+  }
+
+  const trimmed = String(value).trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+const normalizeSentence = (value) => {
+  if (value === null || value === undefined) {
+    return null
+  }
+
+  const text = String(value).trim()
+  return text.length > 0 ? text : null
+}
+
+const normalizeReadingPart = (value) => {
+  if (value === null || value === undefined) {
+    return null
+  }
+
+  const normalizedMap = {
+    전체: 'all',
+    all: 'all',
+    상: 'upper',
+    upper: 'upper',
+    하: 'lower',
+    lower: 'lower'
+  }
+
+  const key = String(value).trim().toLowerCase()
+  return normalizedMap[key] ?? null
+}
+
+const buildWeeklyVerseExtraData = (body = {}) => {
+  const extraData = {}
+
+  if (hasOwnProperty(body, 'longLabel')) {
+    extraData.longLabel = normalizeLongLabel(body.longLabel)
+  }
+
+  if (hasOwnProperty(body, 'chapter')) {
+    extraData.chapter = parsePositiveInt(body.chapter)
+  }
+
+  if (hasOwnProperty(body, 'paragraph')) {
+    extraData.paragraph = parsePositiveInt(body.paragraph)
+  }
+
+  if (hasOwnProperty(body, 'sentence')) {
+    extraData.sentence = normalizeSentence(body.sentence)
+  }
+
+  if (hasOwnProperty(body, 'readingPart')) {
+    extraData.readingPart = normalizeReadingPart(body.readingPart)
+  }
+
+  return Object.fromEntries(
+    Object.entries(extraData).filter(([, value]) => value !== undefined)
+  )
+}
+
 router.post('/weekly_bible_verse_write', multiUpload, async (req, res) => {
-  const { title, content, writer, writer_name, board, mainContent, memoryVerseIdx } = req.body
+  const { title, content, writer, writer_name, board, mainContent } = req.body
   const files = Array.isArray(req.files) ? req.files : []
-  const bibleId = parseMemoryVerseIdx(memoryVerseIdx)
+  const extraData = buildWeeklyVerseExtraData(req.body)
 
   const pathList = files.map((file) => {
     if (file.originalname) {
@@ -124,16 +181,21 @@ router.post('/weekly_bible_verse_write', multiUpload, async (req, res) => {
   })
 
   try {
-    const result = await writeContent({
+    const payload = {
       title,
       content,
       writer,
       writer_name,
       files: JSON.stringify(pathList),
       board,
-      mainContent,
-      extraData: bibleId ? { bible_id: bibleId } : {}
-    })
+      mainContent
+    }
+
+    if (Object.keys(extraData).length > 0) {
+      payload.extraData = extraData
+    }
+
+    const result = await writeContent(payload)
 
     if (result) {
       // result가 truthy일 때 성공 응답
@@ -185,7 +247,7 @@ router.post('/weekly_bible_verse_delete', async (req, res) => {
 })
 
 router.post('/weekly_bible_verse_edit', uploadFields, async (req, res) => {
-  const { title, content, id, jsonDeleteKeys = '', board, mainContent, memoryVerseIdx } = req.body
+  const { title, content, id, jsonDeleteKeys = '', board, mainContent } = req.body
 
   const { files: updatedFiles, hasFileUpdate } = await processFileUpdates({
     id,
@@ -194,15 +256,17 @@ router.post('/weekly_bible_verse_edit', uploadFields, async (req, res) => {
     uploadedFiles: req?.files['fileField'] ?? []
   })
 
-  const bibleId = parseMemoryVerseIdx(memoryVerseIdx)
-
   const data = {
     id,
     title,
     content,
     board,
-    mainContent,
-    extraData: bibleId ? { bible_id: bibleId } : {}
+    mainContent
+  }
+
+  const extraData = buildWeeklyVerseExtraData(req.body)
+  if (Object.keys(extraData).length > 0) {
+    data.extraData = extraData
   }
 
   if (hasFileUpdate) {

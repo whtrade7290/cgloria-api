@@ -69,8 +69,6 @@ model bible {
   short_label        String               @db.VarChar(10)
   count              Int                  @default(0)
   countOfChapter     Int                  @default(0)
-  weekly_bible_verse weekly_bible_verse[]
-
   @@index([book])
 }
 
@@ -210,10 +208,11 @@ model weekly_bible_verse {
   writer_name String?
   files       String?  @db.LongText
   mainContent Boolean  @default(false)
-  bible_id    Int?
-  bible       bible?   @relation(fields: [bible_id], references: [idx])
-
-  @@index([bible_id], map: "weekly_bible_verse_bible_id_fkey")
+  longLabel   String?
+  chapter     Int?
+  paragraph   Int?
+  sentence    String?  @db.LongText
+  readingPart weekly_bible_verse_reading_part @default(all)
 }
 
 model with_diary {
@@ -258,4 +257,10 @@ enum class_meeting_language {
 enum column_language {
   ko
   ja
+}
+
+enum weekly_bible_verse_reading_part {
+  all
+  upper
+  lower
 }

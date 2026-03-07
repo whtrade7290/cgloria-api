@@ -9,7 +9,7 @@ const validateDateInput = (value) => {
   return parsed
 }
 
-export async function getWeeklyBibleVersesWithBiblesByDateRange({ from, to }) {
+export async function getWeeklyBibleVersesByDateRange({ from, to }) {
   const fromDate = validateDateInput(from)
   const toDate = validateDateInput(to)
 
@@ -38,21 +38,37 @@ export async function getWeeklyBibleVersesWithBiblesByDateRange({ from, to }) {
         lte: rangeEnd
       }
     },
-    include: {
-      bible: true
-    },
     orderBy: {
       create_at: 'asc'
+    },
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      writer: true,
+      writer_name: true,
+      files: true,
+      mainContent: true,
+      create_at: true,
+      update_at: true,
+      longLabel: true,
+      chapter: true,
+      paragraph: true,
+      sentence: true,
+      readingPart: true
     }
   })
 
   return weeklyRecords.map((record) => ({
     ...record,
-    id: Number(record.id)
+    id: Number(record.id),
+    chapter: record.chapter ?? null,
+    paragraph: record.paragraph ?? null,
+    readingPart: record.readingPart ?? 'all'
   }))
 }
 
-export async function getBibleIdsByWeeklyDateRange({ from, to }) {
+export async function getWeeklyVerseReferencesByDateRange({ from, to }) {
   const fromDate = validateDateInput(from)
   const toDate = validateDateInput(to)
 
@@ -76,26 +92,45 @@ export async function getBibleIdsByWeeklyDateRange({ from, to }) {
   const records = await prisma.weekly_bible_verse.findMany({
     where: {
       deleted: false,
-      bible_id: { not: null },
+      OR: [
+        { longLabel: { not: null } },
+        { chapter: { not: null } },
+        { paragraph: { not: null } },
+        { sentence: { not: null } }
+      ],
       create_at: {
         gte: rangeStart,
         lte: rangeEnd
       }
     },
     select: {
-      bible_id: true
-    },
+      id: true,
+      longLabel: true,
+      chapter: true,
+      paragraph: true,
+    sentence: true,
+    readingPart: true,
+    title: true,
+    content: true
+  },
     orderBy: {
       create_at: 'asc'
     }
   })
 
-  return records
-    .map((row) => Number(row.bible_id))
-    .filter((id, index, arr) => Number.isInteger(id) && id > 0 && arr.indexOf(id) === index)
+  return records.map((row) => ({
+    id: Number(row.id),
+    longLabel: row.longLabel ?? null,
+    chapter: row.chapter ?? null,
+    paragraph: row.paragraph ?? null,
+    sentence: row.sentence ?? null,
+    readingPart: row.readingPart ?? 'all',
+    title: row.title ?? '',
+    content: row.content ?? ''
+  }))
 }
 
-export async function getWeeklyBibleVerseWithBible(id, includeBible) {
+export async function getWeeklyBibleVerse(id) {
   const record = await prisma.weekly_bible_verse.findUnique({
     where: { id: Number(id) }
   })
@@ -109,16 +144,5 @@ export async function getWeeklyBibleVerseWithBible(id, includeBible) {
     id: Number(record.id)
   }
 
-  if (!includeBible || !record?.bible_id) {
-    return formattedRecord
-  }
-
-  const bible = await prisma.bible.findUnique({
-    where: { idx: Number(record.bible_id) }
-  })
-
-  return {
-    ...formattedRecord,
-    bible
-  }
+  return formattedRecord
 }
