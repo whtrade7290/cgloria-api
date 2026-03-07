@@ -8,16 +8,16 @@ datasource db {
 }
 
 model class_meeting {
-  id          BigInt                 @id @default(autoincrement())
+  id          BigInt   @id @default(autoincrement())
   title       String
   writer      String
-  create_at   DateTime               @default(now())
-  update_at   DateTime               @default(now())
-  deleted     Boolean                @default(false)
-  content     String?                @db.LongText
+  create_at   DateTime @default(now())
+  update_at   DateTime @default(now())
+  deleted     Boolean  @default(false)
+  content     String?  @db.LongText
   writer_name String?
-  files       String?                @db.LongText
-  mainContent Boolean                @default(false)
+  files       String?  @db.LongText
+  mainContent Boolean  @default(false)
   language    class_meeting_language @default(ko)
 }
 
@@ -75,16 +75,16 @@ model bible {
 }
 
 model column {
-  id          BigInt          @id @default(autoincrement())
+  id          BigInt   @id @default(autoincrement())
   title       String
   writer      String
-  create_at   DateTime        @default(now())
-  update_at   DateTime        @default(now())
-  deleted     Boolean         @default(false)
-  content     String?         @db.LongText
+  create_at   DateTime @default(now())
+  update_at   DateTime @default(now())
+  deleted     Boolean  @default(false)
+  content     String?  @db.LongText
   writer_name String?
-  files       String?         @db.LongText
-  mainContent Boolean         @default(false)
+  files       String?  @db.LongText
+  mainContent Boolean  @default(false)
   language    column_language @default(ko)
 }
 
@@ -249,7 +249,6 @@ enum user_role {
   USER
   GUEST
 }
-
 enum class_meeting_language {
   ko
   ja
