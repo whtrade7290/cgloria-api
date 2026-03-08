@@ -108,11 +108,11 @@ export async function getWeeklyVerseReferencesByDateRange({ from, to }) {
       longLabel: true,
       chapter: true,
       paragraph: true,
-    sentence: true,
-    readingPart: true,
-    title: true,
-    content: true
-  },
+      sentence: true,
+      readingPart: true,
+      title: true,
+      content: true
+    },
     orderBy: {
       create_at: 'asc'
     }
@@ -128,21 +128,4 @@ export async function getWeeklyVerseReferencesByDateRange({ from, to }) {
     title: row.title ?? '',
     content: row.content ?? ''
   }))
-}
-
-export async function getWeeklyBibleVerse(id) {
-  const record = await prisma.weekly_bible_verse.findUnique({
-    where: { id: Number(id) }
-  })
-
-  if (!record) {
-    return null
-  }
-
-  const formattedRecord = {
-    ...record,
-    id: Number(record.id)
-  }
-
-  return formattedRecord
 }

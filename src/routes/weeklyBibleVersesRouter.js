@@ -1,8 +1,19 @@
 import express from 'express'
 import { multiUpload, uploadFields, deleteFile } from '../utils/multer.js'
 import { processFileUpdates } from '../utils/fileProcess.js'
-import { writeContent, getContentList, getContentById, editContent, totalContentCount, logicalDeleteContent, getMainContent } from '../common/boardUtils.js'
-import { getWeeklyBibleVersesByDateRange, getWeeklyBibleVerse, getWeeklyVerseReferencesByDateRange } from '../services/weeklyBibleVerseService.js'
+import {
+  writeContent,
+  getContentList,
+  getContentById,
+  editContent,
+  totalContentCount,
+  logicalDeleteContent,
+  getMainContent
+} from '../common/boardUtils.js'
+import {
+  getWeeklyBibleVersesByDateRange,
+  getWeeklyVerseReferencesByDateRange
+} from '../services/weeklyBibleVerseService.js'
 
 const router = express.Router()
 
@@ -37,11 +48,11 @@ router.post('/weekly_bible_verse_count', async (req, res) => {
 })
 
 router.post('/weekly_bible_verse_detail', async (req, res) => {
-  const { id, board, includeBible } = req.body
+  const { id, board } = req.body
 
   if (!id) return
   try {
-    const content = await (includeBible ? getWeeklyBibleVerse(id) : getContentById(id, board))
+    const content = await getContentById(id, board)
 
     if (!content) {
       return res.status(404).json({ error: 'Photo not found' })
@@ -163,9 +174,7 @@ const buildWeeklyVerseExtraData = (body = {}) => {
     extraData.readingPart = normalizeReadingPart(body.readingPart)
   }
 
-  return Object.fromEntries(
-    Object.entries(extraData).filter(([, value]) => value !== undefined)
-  )
+  return Object.fromEntries(Object.entries(extraData).filter(([, value]) => value !== undefined))
 }
 
 router.post('/weekly_bible_verse_write', multiUpload, async (req, res) => {
