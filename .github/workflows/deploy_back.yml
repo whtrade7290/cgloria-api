@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - prod # 트리거 브랜치
+  pull_request:
+    branches:
+      - prod # PR 머지 시에도 실행
 
 jobs: # ✅ 무조건 있어야 함
   deploy: # job 이름
