@@ -7,7 +7,8 @@ import {
   getContentById,
   editContent,
   totalContentCount,
-  logicalDeleteContent
+  logicalDeleteContent,
+  getMainContent
 } from '../common/boardUtils.js'
 
 const router = express.Router()
@@ -66,6 +67,19 @@ const removePhysicalFiles = (deleteKeyList = []) => {
   }
 }
 
+router.post('/main_notice', async (req, res) => {
+  const { board } = req.body
+  const resolvedBoard = resolveBoard(board)
+
+  try {
+    const data = await getMainContent(resolvedBoard)
+    res.send(data)
+  } catch (error) {
+    console.error('Error fetching main notice:', error)
+    res.status(500).send({ error: '메인 공지를 가져오는 중 오류가 발생했습니다.' })
+  }
+})
+
 router.post('/notice', async (req, res) => {
   const { startRow, pageSize, searchWord, board } = req.body
   const resolvedBoard = resolveBoard(board)
@@ -111,7 +125,7 @@ router.post('/notice_detail', async (req, res) => {
 })
 
 router.post('/notice_write', multiUpload, async (req, res) => {
-  const { title, content, writer, writer_name, board } = req.body
+  const { title, content, writer, writer_name, board, mainContent } = req.body
   const resolvedBoard = resolveBoard(board)
   const files = Array.isArray(req.files) ? req.files : []
   const normalizedFiles = files.map(decodeOriginalName)
@@ -123,7 +137,8 @@ router.post('/notice_write', multiUpload, async (req, res) => {
       writer,
       writer_name,
       files: JSON.stringify(normalizedFiles),
-      board: resolvedBoard
+      board: resolvedBoard,
+      mainContent
     })
 
     if (result) {
@@ -158,7 +173,7 @@ router.post('/notice_delete', async (req, res) => {
 })
 
 router.post('/notice_edit', uploadFields, async (req, res) => {
-  const { title, content, id, board } = req.body
+  const { title, content, id, board, mainContent } = req.body
   const resolvedBoard = resolveBoard(board)
   const jsonDeleteKeys = gatherDeleteKeyList(req.body)
 
@@ -173,7 +188,8 @@ router.post('/notice_edit', uploadFields, async (req, res) => {
     id,
     title,
     content,
-    board: resolvedBoard
+    board: resolvedBoard,
+    mainContent
   }
 
   if (hasFileUpdate) {

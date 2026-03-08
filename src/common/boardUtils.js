@@ -1,7 +1,7 @@
 import { prisma } from '../utils/prismaClient.js'
 import { fetchProfileImageUrlByWriter } from '../utils/profileImage.js'
 
-const MAIN_CONTENT_BOARDS = ['sermon', 'column', 'weekly_bible_verse', 'class_meeting', 'testimony']
+const MAIN_CONTENT_BOARDS = ['sermon', 'column', 'weekly_bible_verse', 'class_meeting', 'notice']
 const LANGUAGE_AWARE_BOARDS = ['column', 'class_meeting']
 const SUPPORTED_LANGUAGES = ['ko', 'ja']
 const DEFAULT_LANGUAGE = 'ko'
@@ -284,6 +284,10 @@ export async function totalPhotoCount(searchWord) {
 }
 
 export async function getMainContent(board, language) {
+  if (!hasMainContentFeature(board)) {
+    return null
+  }
+
   try {
     const where = { mainContent: true }
 

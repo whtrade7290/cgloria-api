@@ -42,6 +42,7 @@ model notice {
   deleted     Boolean  @default(false)
   content     String?  @db.LongText
   writer_name String?
+  mainContent Boolean                @default(false)
   files       String?  @db.LongText
 }
 
@@ -167,7 +168,6 @@ model testimony {
   content     String?  @db.LongText
   writer_name String?
   files       String?  @db.LongText
-  mainContent Boolean  @default(false)
 }
 
 model user {

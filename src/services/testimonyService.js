@@ -54,57 +54,20 @@ export async function getTestimonyContent(id) {
   }
 }
 
-export async function writeTestimonyContent({
-  title,
-  content,
-  writer,
-  writer_name,
-  mainContent,
-  uuid,
-  filename,
-  extension,
-  fileType
-}) {
+export async function writeTestimonyContent({ title, content, writer, writer_name, uuid, filename, extension, fileType }) {
   try {
-    if (mainContent) {
-     return prisma.$transaction(async (tx) => {
-        const createResult = await tx.testimonies.create({
-          data: {
-            title,
-            content,
-            writer,
-            writer_name,
-            mainContent,
-            uuid,
-            filename,
-            extension,
-            fileType
-          }
-        })
-        return await tx.testimonies.updateMany({
-          data: {
-            mainContent: !mainContent
-          },
-          where: {
-            id: { not: createResult.id }
-          }
-        })
-      })
-    } else {
-      return await prisma.testimonies.create({
-        data: {
-          title,
-          content,
-          writer,
-          writer_name,
-          mainContent,
-          uuid,
-          filename,
-          extension,
-          fileType
-        }
-      })
-    }
+    return await prisma.testimonies.create({
+      data: {
+        title,
+        content,
+        writer,
+        writer_name,
+        uuid,
+        filename,
+        extension,
+        fileType
+      }
+    })
   } catch (error) {
     console.error(error)
   }
@@ -125,84 +88,22 @@ export async function logicalDeleteTestimony(id) {
   }
 }
 
-export async function editTestimonyContent({
-  id,
-  title,
-  content,
-  mainContent,
-  uuid,
-  filename,
-  extension,
-  fileType
-}) {
-  let result = {}
+export async function editTestimonyContent({ id, title, content, uuid, filename, extension, fileType }) {
   try {
-    if (mainContent) {
-      result = await prisma.$transaction(async (tx) => {
-        let updateResult
-
-        if (uuid && filename && extension && fileType) {
-          updateResult = await tx.testimonies.update({
-            where: { id },
-            data: {
-              title,
-              content,
-              mainContent,
-              update_at: new Date(),
-              uuid,
-              filename,
-              extension,
-              fileType
-            }
-          })
-        } else {
-          updateResult = await tx.testimonies.update({
-            where: { id },
-            data: {
-              title,
-              content,
-              mainContent,
-              update_at: new Date()
-            }
-          })
-        }
-
-        const updateManyResult = await tx.testimonies.updateMany({
-          data: { mainContent: false },
-          where: { id: { not: updateResult.id } }
-        })
-
-        return { updateResult, updateManyResult }
-      })
-    } else {
-      if (uuid && filename && extension && fileType) {
-        result = await prisma.testimonies.update({
-          where: { id },
-          data: {
-            title,
-            content,
-            mainContent,
-            update_at: new Date(),
-            uuid,
-            filename,
-            extension,
-            fileType
-          }
-        })
-      } else {
-        result = await prisma.testimonies.update({
-          where: { id },
-          data: {
-            title,
-            content,
-            mainContent,
-            update_at: new Date()
-          }
-        })
-      }
+    const data = {
+      title,
+      content,
+      update_at: new Date()
     }
 
-    return result
+    if (uuid && filename && extension && fileType) {
+      Object.assign(data, { uuid, filename, extension, fileType })
+    }
+
+    return await prisma.testimonies.update({
+      where: { id },
+      data
+    })
   } catch (error) {
     console.error(error)
   }
@@ -212,17 +113,14 @@ export async function getMainTestimony() {
   try {
     const data = await prisma.testimonies.findFirst({
       where: {
-        deleted: false,
-        mainContent: true
+        deleted: false
+      },
+      orderBy: {
+        id: 'desc'
       }
     })
 
-    if (data) {
-      return {
-        ...data,
-        id: Number(data.id)
-      }
-    } else {
+    if (!data) {
       return {
         id: 999999,
         title: '',
@@ -235,9 +133,13 @@ export async function getMainTestimony() {
         filename: null,
         fileType: null,
         content: '',
-        mainContent: true,
         writer_name: null
       }
+    }
+
+    return {
+      ...data,
+      id: Number(data.id)
     }
   } catch (error) {
     console.error(error)

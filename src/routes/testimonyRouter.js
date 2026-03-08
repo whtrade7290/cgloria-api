@@ -53,7 +53,7 @@ router.post('/testimony_detail', async (req, res) => {
 })
 
 router.post('/testimony_write', multiUpload, async (req, res) => {
-  const { title, content, writer, writer_name, board, mainContent } = req.body
+  const { title, content, writer, writer_name, board } = req.body
   const files = Array.isArray(req.files) ? req.files : []
 
   const pathList = files.map((file) => {
@@ -70,8 +70,7 @@ router.post('/testimony_write', multiUpload, async (req, res) => {
       writer,
       writer_name,
       files: JSON.stringify(pathList),
-      board,
-      mainContent
+      board
     })
 
     if (result) {
@@ -124,7 +123,7 @@ router.post('/testimony_delete', async (req, res) => {
 })
 
 router.post('/testimony_edit', uploadFields, async (req, res) => {
-  const { title, content, id, jsonDeleteKeys = '', board, mainContent } = req.body
+  const { title, content, id, jsonDeleteKeys = '', board } = req.body
 
   const { files: updatedFiles, hasFileUpdate } = await processFileUpdates({
     id,
@@ -137,8 +136,7 @@ router.post('/testimony_edit', uploadFields, async (req, res) => {
     id,
     title,
     content,
-    board,
-    mainContent
+    board
   }
 
   if (hasFileUpdate) {
