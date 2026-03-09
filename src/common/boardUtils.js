@@ -1,5 +1,6 @@
 import { prisma } from '../utils/prismaClient.js'
 import { fetchProfileImageUrlByWriter } from '../utils/profileImage.js'
+import { getCommentCounts } from '../services/commentService.js'
 
 const MAIN_CONTENT_BOARDS = ['sermon', 'column', 'weekly_bible_verse', 'class_meeting', 'notice']
 const LANGUAGE_AWARE_BOARDS = ['column', 'class_meeting']
@@ -137,10 +138,17 @@ export async function getContentList(startRow, pageSize, searchWord, board) {
       skip: startRow
     })
 
-    return data.map((item) => ({
-      ...item,
-      id: Number(item.id)
-    }))
+    const ids = data.map((item) => Number(item.id))
+    const commentCounts = await getCommentCounts(board, ids)
+
+    return data.map((item) => {
+      const numericId = Number(item.id)
+      return {
+        ...item,
+        id: numericId,
+        commentCount: commentCounts[numericId] ?? 0
+      }
+    })
   } catch (error) {
     console.error('Error fetching photo list from the database:', error)
     throw new Error('데이터를 가져오는 중 오류가 발생했습니다.')

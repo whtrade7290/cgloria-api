@@ -1,5 +1,8 @@
 import { prisma } from '../utils/prismaClient.js'
 import { fetchProfileImageUrlByWriter } from '../utils/profileImage.js'
+import { getCommentCounts } from './commentService.js'
+
+const WITH_DIARY_BOARDS = ['withDiary']
 
 export async function getWithDiaryList(startRow = 0, pageSize = 0, roomId = 0) {
   try {
@@ -15,10 +18,17 @@ export async function getWithDiaryList(startRow = 0, pageSize = 0, roomId = 0) {
       skip: startRow
     })
 
-    return data.map((item) => ({
-      ...item,
-      id: Number(item.id)
-    }))
+    const ids = data.map((item) => Number(item.id))
+    const commentCounts = await getCommentCounts(WITH_DIARY_BOARDS, ids)
+
+    return data.map((item) => {
+      const numericId = Number(item.id)
+      return {
+        ...item,
+        id: numericId,
+        commentCount: commentCounts[numericId] ?? 0
+      }
+    })
   } catch (error) {
     console.error(error)
   }

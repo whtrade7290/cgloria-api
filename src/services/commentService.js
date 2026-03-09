@@ -84,3 +84,48 @@ export async function editComment({ id, comment, writerName }) {
     throw error
   }
 }
+
+export async function getCommentCounts(boardName, boardIds = []) {
+  if (!Array.isArray(boardIds) || boardIds.length === 0) {
+    return {}
+  }
+
+  const normalizedBoardName =
+    typeof boardName === 'string'
+      ? boardName.trim()
+      : String(boardName ?? '').trim()
+
+  if (!normalizedBoardName) {
+    return {}
+  }
+
+  const normalizedIds = boardIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id))
+
+  if (normalizedIds.length === 0) {
+    return {}
+  }
+
+  try {
+    const grouped = await prisma.comments.groupBy({
+      by: ['board_id'],
+      where: {
+        board_name: normalizedBoardName,
+        deleted: false,
+        board_id: {
+          in: normalizedIds
+        }
+      },
+      _count: {
+        board_id: true
+      }
+    })
+
+    return grouped.reduce((acc, item) => {
+      acc[item.board_id] = item._count.board_id
+      return acc
+    }, {})
+  } catch (error) {
+    console.error(error)
+    throw error
+  }
+}
