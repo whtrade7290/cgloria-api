@@ -19,6 +19,49 @@ import { processFileUpdates } from '../utils/fileProcess.js'
 
 const router = express.Router()
 
+const parseRoomIds = (value) => {
+  if (!value) return []
+
+  const toNumbers = (arr) => arr.map((num) => Number(num)).filter((num) => Number.isFinite(num))
+
+  if (Array.isArray(value)) {
+    return toNumbers(value)
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed || trimmed === '[]') return []
+
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (Array.isArray(parsed)) {
+        return toNumbers(parsed)
+      }
+    } catch (error) {
+      console.warn('roomIdList parse error:', error)
+    }
+  }
+
+  return []
+}
+
+const resolveTargetRoomIds = (diaryRoomId, roomIdList) => {
+  const roomIds = parseRoomIds(roomIdList)
+  const numericDiaryRoomId = Number(diaryRoomId)
+
+  if (roomIds.length > 0) return roomIds
+  if (Number.isFinite(numericDiaryRoomId)) return [numericDiaryRoomId]
+  return []
+}
+
+const normalizeUploadedFiles = (files = []) =>
+  files.map((file) => {
+    if (file.originalname) {
+      file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
+    }
+    return file
+  })
+
 router.post('/withDiary', async (req, res) => {
   const { startRow, pageSize, roomId } = req.body
   console.log('roomId: ', roomId)
@@ -57,37 +100,34 @@ router.post('/withDiary_detail', async (req, res) => {
 })
 
 router.post('/withDiary_write', multiUpload, async (req, res) => {
-  const { title, content, writer, writer_name, diaryRoomId } = req.body
-  const files = req.files
+  const { title, content, writer, writer_name, diaryRoomId, roomIdList } = req.body
 
-  let pathList = []
-  if (files) {
-         pathList = files.map((file) => {
-      if (file.originalname) {
-        file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
-      }
-      return file
-    })
+  const targetRoomIds = resolveTargetRoomIds(diaryRoomId, roomIdList)
+
+  if (targetRoomIds.length === 0) {
+    return res.status(400).json({ success: false, message: '등록할 다이어리방 ID를 선택해주세요.' })
   }
 
+  const pathList = normalizeUploadedFiles(req.files)
 
   try {
-    const result = await writeWithDiaryContent({
-      title,
-      content,
-      writer,
-      writer_name,
-      files: JSON.stringify(pathList),
-      diaryRoomId: Number(diaryRoomId)
-    })
+    for (const targetRoomId of targetRoomIds) {
+      const result = await writeWithDiaryContent({
+        title,
+        content,
+        writer,
+        writer_name,
+        files: JSON.stringify(pathList),
+        diaryRoomId: targetRoomId
+      })
 
-    if (result) {
-      // result가 truthy일 때 성공 응답
-      res.status(200).json({ success: true, message: 'Upload Success' })
-    } else {
-      // result가 null 또는 falsy일 때 실패 응답
-      res.status(400).json({ success: false, message: 'Upload Failed' })
+      if (!result) {
+        return res.status(400).json({ success: false, message: `${targetRoomId} 방 업로드 실패` })
+      }
     }
+
+    const message = targetRoomIds.length > 1 ? '모든 방에 업로드되었습니다.' : 'Upload Success'
+    res.status(200).json({ success: true, message })
     return
   } catch (error) {
     console.error('Error fetching:', error)
@@ -146,11 +186,6 @@ router.post('/withDiary_edit', uploadFields, async (req, res) => {
 router.post('/make_withDiary', async (req, res) => {
   const { teamName, userIdList, creator, creator_name } = req.body
 
-  console.log('teamName: ', teamName)
-  console.log('userIdList: ', userIdList)
-  console.log('creator: ', creator)
-  console.log('creator_name: ', creator_name)
-
   if (!teamName || userIdList.length === 0) {
     res.status(500).json({ error: 'Error fetching teamName' })
   }
@@ -170,7 +205,9 @@ router.post('/make_withDiary', async (req, res) => {
 router.post('/fetch_withDiaryList', async (req, res) => {
   const { userId } = req.body
 
-  console.log('userId: ', userId)
+  if (!userId) {
+    return res.status(400).json({ success: false, message: 'userId가 없습니다.' })
+  }
 
   try {
     const results = await fetchWithDiaryRoomList(userId)
