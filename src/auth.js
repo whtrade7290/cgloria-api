@@ -12,14 +12,14 @@ const REFRESH_SECRET_KEY = fs.readFileSync(
 
 const makeAccessToken = (payload) => {
   return jwt.sign(payload, SECRET_KEY, {
-    expiresIn: '1h'
+    expiresIn: '1d'
   })
 }
 
 const makeRefreshToken = (payload) => {
   return jwt.sign(payload, REFRESH_SECRET_KEY, {
     algorithm: 'HS256',
-    expiresIn: '24h'
+    expiresIn: '1y'
   })
 }
 
