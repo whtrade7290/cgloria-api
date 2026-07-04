@@ -57,11 +57,11 @@ export const deleteFile = (deleteKey) => {
 
 export const singleUpload = withImageProcessing(upload.single('fileField'))
 
-export const multiUpload = withImageProcessing(upload.array('fileField', 6))
+export const multiUpload = withImageProcessing(upload.array('fileField', 10))
 
 export const uploadFields = withImageProcessing(
   upload.fields([
-    { name: 'deleteFile', maxCount: 6 }, // 'deleteFile' 필드에서 최대 6개의 파일 허용
-    { name: 'fileField', maxCount: 6 } // 'fileField' 필드에서 최대 6개의 파일 허용
+    { name: 'deleteFile', maxCount: 10 }, // 'deleteFile' 필드에서 최대 10개의 파일 허용
+    { name: 'fileField', maxCount: 10 } // 'fileField' 필드에서 최대 10개의 파일 허용
   ])
 )
