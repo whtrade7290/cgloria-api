@@ -159,9 +159,10 @@ const env =
 let port
 async function configServer() {
   const port = 3000 || (await detectPort(3000))
-  app.listen(port, () => {
+  const server = app.listen(port, () => {
     console.log(`production server :${port}`)
   })
+  server.setTimeout(5 * 60 * 1000) // 5분
 }
 
 // auth()
@@ -609,4 +610,11 @@ app.post('/updateProfile', auth, handleProfileUpload, async (req, res) => {
     console.error('Error updating profile:', error)
     res.status(500).json({ success: false, message: '프로필 수정 중 오류가 발생했습니다.' })
   }
+})
+
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({ success: false, message: `파일 업로드 오류: ${err.message}` })
+  }
+  next(err)
 })
